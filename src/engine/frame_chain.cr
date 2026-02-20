@@ -7,7 +7,9 @@ module Minanime
       reference_path = File.join(cut_path, "reference.png")
       raise "Reference image not found: #{reference_path}" unless File.exists?(reference_path)
 
-      current_seed_path = reference_path
+      # First frame uses file path (base64 encoded), subsequent frames use UUID
+      current_seed = reference_path
+      current_seed_is_uuid = false
       frame_number = 0
 
       script.scenes.each do |scene|
@@ -16,11 +18,13 @@ module Minanime
 
           request = GenerationRequest.new(
             prompt: frame_spec.prompt,
-            seed_image_path: current_seed_path,
+            seed_image: current_seed,
+            seed_is_uuid: current_seed_is_uuid,
             width: frame_spec.width || script.settings.width,
             height: frame_spec.height || script.settings.height,
             model: frame_spec.model || script.settings.model,
-            strength: frame_spec.strength || script.settings.strength
+            strength: frame_spec.strength || script.settings.strength,
+            steps: frame_spec.steps || script.settings.steps
           )
 
           start_time = Time.instant
@@ -31,7 +35,7 @@ module Minanime
             frame_number: frame_number,
             scene: scene.name,
             prompt: frame_spec.prompt,
-            seed_image: current_seed_path == reference_path ? "reference" : "frame_%04d" % (frame_number - 1),
+            seed_image: current_seed_is_uuid ? current_seed : "reference",
             model: frame_spec.model || script.settings.model,
             strength: frame_spec.strength || script.settings.strength,
             width: frame_spec.width || script.settings.width,
@@ -42,8 +46,16 @@ module Minanime
             api_response_id: result.response_id
           )
 
-          stored_path = @store.save_frame(cut_path, cut_id, frame_number, result.image_data, metadata)
-          current_seed_path = stored_path
+          @store.save_frame(cut_path, cut_id, frame_number, result.image_data, metadata)
+
+          # Use the image UUID for the next frame if available, fall back to file
+          if uuid = result.image_uuid
+            current_seed = uuid
+            current_seed_is_uuid = true
+          else
+            current_seed = File.join(cut_path, "frames", "%04d.png" % frame_number)
+            current_seed_is_uuid = false
+          end
 
           yield frame_number, script.total_frames
         end
@@ -53,13 +65,13 @@ module Minanime
     def render_single(cut_path : String, cut_id : Int64, script : MotionScript, frame_number : Int32)
       reference_path = File.join(cut_path, "reference.png")
 
-      seed_path = if frame_number == 1
-                    reference_path
-                  else
-                    File.join(cut_path, "frames", "%04d.png" % (frame_number - 1))
-                  end
+      seed_image = if frame_number == 1
+                     reference_path
+                   else
+                     File.join(cut_path, "frames", "%04d.png" % (frame_number - 1))
+                   end
 
-      raise "Seed image not found: #{seed_path}" unless File.exists?(seed_path)
+      raise "Seed image not found: #{seed_image}" unless File.exists?(seed_image)
 
       current = 0
       frame_spec : FrameSpec? = nil
@@ -80,11 +92,13 @@ module Minanime
       fs = frame_spec.not_nil!
       request = GenerationRequest.new(
         prompt: fs.prompt,
-        seed_image_path: seed_path,
+        seed_image: seed_image,
+        seed_is_uuid: false,
         width: fs.width || script.settings.width,
         height: fs.height || script.settings.height,
         model: fs.model || script.settings.model,
-        strength: fs.strength || script.settings.strength
+        strength: fs.strength || script.settings.strength,
+        steps: fs.steps || script.settings.steps
       )
 
       start_time = Time.instant

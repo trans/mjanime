@@ -6,8 +6,6 @@ module Minanime
   class RunwareClient
     include Generator
 
-    BASE_URL = URI.parse("https://api.runware.ai")
-
     def initialize(@api_key : String)
     end
 
@@ -18,19 +16,24 @@ module Minanime
     def generate(request : GenerationRequest) : GenerationResult
       task_uuid = UUID.random.to_s
 
-      image_bytes = File.read(request.seed_image_path).to_slice
-      base64 = Base64.strict_encode(image_bytes)
-      seed_data_uri = "data:image/png;base64,#{base64}"
+      seed_image_value = if request.seed_is_uuid
+                           request.seed_image
+                         else
+                           image_bytes = File.read(request.seed_image).to_slice
+                           base64 = Base64.strict_encode(image_bytes)
+                           "data:image/png;base64,#{base64}"
+                         end
 
       body = [{
         taskType:       "imageInference",
         taskUUID:       task_uuid,
         model:          request.model,
         positivePrompt: request.prompt,
-        seedImage:      seed_data_uri,
+        seedImage:      seed_image_value,
         strength:       request.strength,
         width:          request.width,
         height:         request.height,
+        steps:          request.steps,
       }].to_json
 
       headers = HTTP::Headers{
@@ -53,6 +56,8 @@ module Minanime
       task_result = data.find { |r| r["taskUUID"].as_s == task_uuid }
       raise "No result for task #{task_uuid}" unless task_result
 
+      image_uuid = task_result["imageUUID"]?.try(&.as_s)
+
       image_url = task_result["imageURL"].as_s
       image_response = HTTP::Client.get(image_url)
 
@@ -62,7 +67,8 @@ module Minanime
 
       GenerationResult.new(
         image_data: image_response.body.to_slice,
-        response_id: task_uuid
+        response_id: task_uuid,
+        image_uuid: image_uuid
       )
     end
   end

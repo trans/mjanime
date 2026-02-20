@@ -33,16 +33,16 @@
       <p class="empty">Upload a reference image to start rendering.</p>
     <% end %>
 
-    <div id="render-status">
-      <% if job %>
+    <% if job %>
+      <div id="render-status"
         <% j = job.not_nil! %>
-        <div class="render-progress"
-          <% if j.status == Minanime::RenderJob::Status::Running %>
-            hx-get="/cuts/<%= slug %>/render/<%= j.id %>/status"
-            hx-trigger="every 2s"
-            hx-swap="outerHTML"
-          <% end %>
-        >
+        <% if j.status == Minanime::RenderJob::Status::Running %>
+          hx-get="/cuts/<%= slug %>/render/<%= j.id %>/status"
+          hx-trigger="every 2s"
+          hx-swap="outerHTML"
+        <% end %>
+      >
+        <div class="render-progress">
           <div class="progress-bar">
             <div class="progress-fill" style="width: <%= j.progress_percent %>%"></div>
           </div>
@@ -56,8 +56,10 @@
             <% end %>
           </span>
         </div>
-      <% end %>
-    </div>
+      </div>
+    <% else %>
+      <div id="render-status"></div>
+    <% end %>
   </div>
 
   <div class="frames-section">

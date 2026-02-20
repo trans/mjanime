@@ -5,9 +5,10 @@ module Minanime
     property width : Int32 = 1024
     property height : Int32 = 1024
     property model : String = "runware:106@1"
-    property strength : Float64 = 0.85
+    property strength : Float64 = 0.95
+    property steps : Int32 = 25
 
-    def initialize(@width = 1024, @height = 1024, @model = "runware:106@1", @strength = 0.85)
+    def initialize(@width = 1024, @height = 1024, @model = "runware:106@1", @strength = 0.95, @steps = 25)
     end
   end
 
@@ -19,6 +20,7 @@ module Minanime
     property model : String?
     property width : Int32?
     property height : Int32?
+    property steps : Int32?
   end
 
   class Scene
