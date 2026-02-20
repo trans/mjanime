@@ -1,0 +1,40 @@
+version: 1
+title: "Character Waves Hello"
+description: "An anime girl raises her hand and waves hello"
+
+settings:
+  width: 1024
+  height: 1024
+  model: "runware:106@1"
+  strength: 0.85
+
+scenes:
+  - name: "raise_hand"
+    frames:
+      - prompt: "The character's right hand lifts slightly away from her side"
+      - prompt: "The character's right hand rises to waist height, elbow bending"
+      - prompt: "The character's right hand rises to chest height, arm bent at the elbow"
+      - prompt: "The character's right hand rises to shoulder height, palm facing forward"
+      - prompt: "The character's right hand rises above her head, fingers spread open"
+
+  - name: "wave"
+    frames:
+      - prompt: "The character's raised right hand tilts to the left"
+        strength: 0.82
+      - prompt: "The character's raised right hand tilts back to center"
+        strength: 0.82
+      - prompt: "The character's raised right hand tilts to the right"
+        strength: 0.82
+      - prompt: "The character's raised right hand tilts back to center"
+        strength: 0.82
+      - prompt: "The character's raised right hand tilts to the left"
+        strength: 0.82
+      - prompt: "The character's raised right hand tilts back to center"
+        strength: 0.82
+
+  - name: "lower_hand"
+    frames:
+      - prompt: "The character's right hand lowers to shoulder height"
+      - prompt: "The character's right hand lowers to chest height"
+      - prompt: "The character's right hand lowers to waist height"
+      - prompt: "The character's right hand returns to rest at her side"

@@ -1,0 +1,19 @@
+<div class="dashboard">
+  <div class="header-row">
+    <h1>Cuts</h1>
+    <a href="/cuts/new" class="btn">New Cut</a>
+  </div>
+
+  <% if cuts.empty? %>
+    <p class="empty">No cuts yet. Create one to get started.</p>
+  <% else %>
+    <div class="project-list">
+      <% cuts.each do |cut| %>
+        <a href="/cuts/<%= cut.slug %>" class="project-card">
+          <h2><%= cut.name %></h2>
+          <span class="project-slug"><%= cut.slug %></span>
+        </a>
+      <% end %>
+    </div>
+  <% end %>
+</div>

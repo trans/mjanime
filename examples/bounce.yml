@@ -1,0 +1,24 @@
+version: 1
+title: "Bouncing Ball"
+description: "A red ball bouncing on a flat surface"
+
+settings:
+  width: 1024
+  height: 1024
+  model: "runware:106@1"
+  strength: 0.85
+
+scenes:
+  - name: "bounce_up"
+    frames:
+      - prompt: "The red ball moves slightly upward, leaving the ground"
+        strength: 0.82
+      - prompt: "The red ball rises higher, now clearly airborne"
+      - prompt: "The red ball reaches the peak of its arc"
+      - prompt: "The red ball begins to descend"
+        strength: 0.88
+      - prompt: "The red ball drops lower, approaching the ground"
+      - prompt: "The red ball contacts the ground, slightly squished on impact"
+        strength: 0.90
+      - prompt: "The red ball compresses against the ground at maximum squish"
+      - prompt: "The red ball springs back upward from the ground"

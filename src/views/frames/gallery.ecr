@@ -1,0 +1,16 @@
+<% if frame_numbers.empty? %>
+  <p class="empty">No frames rendered yet.</p>
+<% else %>
+  <div class="frame-strip">
+    <% frame_numbers.each do |num| %>
+      <div class="frame-thumb"
+           hx-get="/cuts/<%= slug %>/frames/<%= num %>"
+           hx-target="#frame-detail"
+           hx-swap="innerHTML">
+        <img src="/cuts/<%= slug %>/frames/<%= num %>/image" alt="Frame <%= num %>">
+        <span class="frame-num"><%= num %></span>
+      </div>
+    <% end %>
+  </div>
+  <div id="frame-detail"></div>
+<% end %>

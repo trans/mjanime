@@ -1,0 +1,20 @@
+name: minanime
+version: 0.1.0
+
+authors:
+  - Thomas Sawyer <transfire@gmail.com>
+
+crystal: '>= 1.19.1'
+
+license: MIT
+
+targets:
+  minanime:
+    main: src/minanime.cr
+
+dependencies:
+  kemal:
+    github: kemalcr/kemal
+    version: ~> 1.5
+  sqlite3:
+    github: crystal-lang/crystal-sqlite3

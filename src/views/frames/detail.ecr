@@ -1,0 +1,20 @@
+<div class="frame-detail-view">
+  <img src="/cuts/<%= slug %>/frames/<%= number %>/image" alt="Frame <%= number %>" class="frame-full">
+  <% if metadata %>
+    <div class="frame-meta">
+      <h3>Frame <%= number %></h3>
+      <dl>
+        <dt>Scene</dt><dd><%= metadata.not_nil!.scene %></dd>
+        <dt>Prompt</dt><dd><%= metadata.not_nil!.prompt %></dd>
+        <dt>Model</dt><dd><%= metadata.not_nil!.model %></dd>
+        <dt>Strength</dt><dd><%= metadata.not_nil!.strength %></dd>
+        <dt>Seed</dt><dd><%= metadata.not_nil!.seed_image %></dd>
+        <dt>Generated</dt><dd><%= metadata.not_nil!.generated_at %></dd>
+        <dt>Time</dt><dd><%= metadata.not_nil!.generation_time_ms %>ms</dd>
+      </dl>
+      <form action="/cuts/<%= slug %>/frames/<%= number %>/regenerate" method="post">
+        <button type="submit" class="btn btn-small">Regenerate</button>
+      </form>
+    </div>
+  <% end %>
+</div>

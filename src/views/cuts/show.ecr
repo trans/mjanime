@@ -1,0 +1,71 @@
+<div class="project-page">
+  <h1><%= slug %></h1>
+
+  <div class="workspace">
+    <div class="panel reference-panel">
+      <h2>Reference Image</h2>
+      <% if has_reference %>
+        <img src="/cuts/<%= slug %>/reference" alt="Reference" class="reference-img">
+      <% else %>
+        <p class="empty">No reference image uploaded.</p>
+      <% end %>
+    </div>
+
+    <div class="panel script-panel">
+      <h2>Motion Script</h2>
+      <form hx-put="/cuts/<%= slug %>/script" hx-target="#script-status" hx-swap="innerHTML">
+        <textarea name="script_content" rows="20" class="script-editor"><%= script_content %></textarea>
+        <div class="script-actions">
+          <button type="submit" class="btn">Save Script</button>
+          <span id="script-status"></span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="render-section">
+    <h2>Render</h2>
+    <% if has_reference %>
+      <form action="/cuts/<%= slug %>/render" method="post">
+        <button type="submit" class="btn btn-primary">Start Render</button>
+      </form>
+    <% else %>
+      <p class="empty">Upload a reference image to start rendering.</p>
+    <% end %>
+
+    <div id="render-status">
+      <% if job %>
+        <% j = job.not_nil! %>
+        <div class="render-progress"
+          <% if j.status == Minanime::RenderJob::Status::Running %>
+            hx-get="/cuts/<%= slug %>/render/<%= j.id %>/status"
+            hx-trigger="every 2s"
+            hx-swap="outerHTML"
+          <% end %>
+        >
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: <%= j.progress_percent %>%"></div>
+          </div>
+          <span class="progress-text">
+            <% if j.status == Minanime::RenderJob::Status::Running %>
+              Rendering frame <%= j.current_frame %> / <%= j.total_frames %> (<%= j.progress_percent %>%)
+            <% elsif j.status == Minanime::RenderJob::Status::Done %>
+              Complete! (<%= j.total_frames %> frames)
+            <% elsif j.status == Minanime::RenderJob::Status::Error %>
+              Error: <%= j.error_message %>
+            <% end %>
+          </span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="frames-section">
+    <h2>Frames</h2>
+    <div id="frame-gallery"
+         hx-get="/cuts/<%= slug %>/frames"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+    </div>
+  </div>
+</div>

@@ -1,0 +1,12 @@
+<div class="form-page">
+  <h1>New Cut</h1>
+  <form action="/cuts" method="post" enctype="multipart/form-data">
+    <label for="name">Cut Name</label>
+    <input type="text" id="name" name="name" required placeholder="my-cut">
+
+    <label for="reference">Reference Image</label>
+    <input type="file" id="reference" name="reference" accept="image/*" required>
+
+    <button type="submit" class="btn">Create Cut</button>
+  </form>
+</div>
