@@ -2,6 +2,15 @@
 
 _Investigation date: 2026-07-05. Companion visual exhibit: [`inpainting-analysis-v1.html`](inpainting-analysis-v1.html) (self-contained, open in a browser). Live artifact: https://claude.ai/code/artifact/b66375f0-24a6-4ddf-a714-0b4c375b408c_
 
+> **⚠ Correction — read this first. The "solution" below is NOT solved.** The recipe
+> matches *style* and preserves *edges*, but it does **not** produce a structurally
+> seamless transition. In the "success" images the pier railing simply disappears across
+> the gap, the sea changes from a receding plane to a flat vertical band, and the deck
+> depth doesn't connect. **Structure was completely unaccounted for, and — more
+> importantly — the AI (me) declared success anyway, having graded itself only on style.**
+> See the [Addendum](#addendum--correction-the-mis-judgment) for the full record. This
+> document is preserved partly _because_ of that mis-judgment.
+
 ## The goal (two layers)
 
 1. **Near-term — scenery strips.** Take a line of simple scenery images, stylize them, and fill the gaps between them so the result is one long seamless horizontal background for a 2D platformer. (`minanime strip`)
@@ -57,6 +66,41 @@ Masked inpainting preserves everything outside the mask by construction (composi
 - **Horizon-registration** as an automatic pre-step (detect each tile's waterline; shift/scale to a shared height). Done by hand so far.
 - **Auto-sketch generation** for the strip case (aligned bands from detected horizon/deck + a carried light-wire), vs. accepting a hand-drawn sketch per region (the world-evolver case).
 - **Pipeline wiring**: replace the current Nano/FLUX bridge in `src/engine/strip_builder.cr` with the SDXL sketch-inpaint engine, exposed as a reusable "mask a region + sketch + edge-locked inpaint + composite back" primitive.
+
+## Addendum — Correction: the mis-judgment
+
+Added after the user pointed out what the original write-up (and the AI that wrote it) missed.
+
+**The technical fact.** The recipe achieves *style match* and *edge-lock*, but not *structural
+continuity* — which is the actual definition of "seamless." Concretely, in `rich_sketch072.png`
+(labelled a "success"):
+
+- **The pier railing is not continued.** Both shops carry a rope-and-post railing along the
+  water's edge; the generated gap has none. A fence with a missing middle.
+- **The sea is not one surface.** Mirror-calm reflection (left) → a flat band of cartoon
+  wavelets (middle) → sparkle (right). The middle reads as a vertical wall of water, not a
+  receding plane; the ocean's perspective does not continue.
+- **The deck plane / front edge doesn't connect in depth**, and a gray corner remains.
+- Elsewhere in the session, structures cut at a boundary (e.g. a tent) were left uncompleted.
+
+The root cause is that the controlling sketch was **generic** — flat sky/sea/deck bands + a
+light wire. It never encoded the *specific* structures that cross each seam (extend this
+railing, complete this tent, continue this water plane at this depth). So the model rendered a
+plausible generic stretch, not a continuation. A real solution must continue the crossing
+structures — which is much harder than filling empty space, and remains **unsolved**.
+
+**The meta fact (why this is preserved).** The AI evaluated the result on the single dimension
+it had spent the most effort on — style — and let "renders as pretty, in-style scenery" stand in
+for "seamless." It did not trace one structural line across the boundary, though the broken
+railing was in plain view. Its stated confidence ("this is the recipe", "seamless") was
+inherited from what it was optimizing, not measured against the actual requirement. This is a
+repeatable LLM failure mode worth naming: **fixate on the salient/effortful axis, then grade
+yourself on that axis** — a self-assessment that is narrow and self-confirming. The correct check
+would have been to enumerate the requirements (edge-lock, style, *structural continuity*,
+perspective) and verify each independently, rather than judge from overall visual plausibility.
+
+**Status:** style + edge-lock — demonstrated. Structural/perspective continuity across the seam —
+**open, and the harder half of the problem.**
 
 ## Evidence & artifacts
 
