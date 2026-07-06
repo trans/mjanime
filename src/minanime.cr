@@ -1,41 +1,4 @@
-require "kemal"
-require "json"
-require "yaml"
-require "uuid"
-require "base64"
-require "http/client"
-require "db"
-require "sqlite3"
-
-require "./config"
-require "./models/motion_script"
-require "./models/frame"
-require "./models/render_job"
-require "./api/generator"
-require "./api/runware_client"
-require "./api/openai_client"
-require "./store/database"
-require "./store/frame_store"
-require "./store/cut_store"
-require "./engine/frame_chain"
-require "./engine/renderer"
-require "./web/routes"
-
-module Minanime
-  VERSION = "0.1.0"
-
-  module App
-    @@renderer : Renderer? = nil
-
-    def self.renderer : Renderer
-      @@renderer ||= begin
-        generator = RunwareClient.new(Config.runware_api_key)
-        store = FrameStore.new
-        Renderer.new(generator, store)
-      end
-    end
-  end
-end
+require "./lib"
 
 case ARGV[0]?
 when "init"
@@ -51,11 +14,38 @@ when "serve", nil
   Minanime::Routes.register
 
   Kemal.config.port = Minanime::Config.port
-  Kemal.config.serve_static = false
+  Kemal.config.serve_static = {"dir_listing" => false}
   Kemal.run
+when "strip"
+  # minanime strip <dir> [out.png]
+  # <dir> holds ordered source PNGs plus a strip.yml config.
+  dir = ARGV[1]?
+  unless dir
+    STDERR.puts "Usage: minanime strip <dir> [out.png]"
+    exit 1
+  end
+
+  Minanime::Config.load!
+  if Minanime::Config.runware_api_key.empty?
+    STDERR.puts "RUNWARE_API_KEY not set."
+    exit 1
+  end
+
+  script_path = File.join(dir, "strip.yml")
+  unless File.exists?(script_path)
+    STDERR.puts "No strip.yml in #{dir}. See examples/strip.yml for the format."
+    exit 1
+  end
+
+  script = Minanime::StripScript.from_yaml(File.read(script_path))
+  out_path = ARGV[2]? || File.join(dir, "strip.png")
+
+  client = Minanime::RunwareClient.new(Minanime::Config.runware_api_key)
+  builder = Minanime::StripBuilder.new(client)
+  builder.build(dir, script, out_path) { |msg| STDERR.puts "[strip] #{msg}" }
 when "version", "--version", "-v"
   puts "minanime #{Minanime::VERSION}"
 else
-  STDERR.puts "Usage: minanime [init|serve|version]"
+  STDERR.puts "Usage: minanime [init|serve|strip|version]"
   exit 1
 end

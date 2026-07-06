@@ -6,9 +6,26 @@
       <h2>Reference Image</h2>
       <% if has_reference %>
         <img src="/cuts/<%= slug %>/reference" alt="Reference" class="reference-img">
+        <div class="pose-actions">
+          <button class="btn" onclick="extractPose()">Extract Pose</button>
+          <span id="pose-status"></span>
+        </div>
       <% else %>
         <p class="empty">No reference image uploaded.</p>
       <% end %>
+    </div>
+
+    <div class="panel pose-panel" id="pose-panel" style="display:none">
+      <h2>Pose Editor</h2>
+      <div class="pose-editor-wrap">
+        <canvas id="pose-canvas" width="512" height="512"></canvas>
+      </div>
+      <div class="pose-editor-actions">
+        <button class="btn" onclick="savePose()">Save Pose</button>
+        <button class="btn" onclick="revertPose()">Revert</button>
+        <button class="btn" onclick="resetPose()">Reset Default</button>
+        <span id="pose-save-status"></span>
+      </div>
     </div>
 
     <div class="panel script-panel">
@@ -26,8 +43,8 @@
   <div class="render-section">
     <h2>Render</h2>
     <% if has_reference %>
-      <form action="/cuts/<%= slug %>/render" method="post">
-        <button type="submit" class="btn btn-primary">Start Render</button>
+      <form id="render-form" action="/cuts/<%= slug %>/render" method="post">
+        <button type="button" class="btn btn-primary" onclick="saveAndRender()">Start Render</button>
       </form>
     <% else %>
       <p class="empty">Upload a reference image to start rendering.</p>
@@ -38,7 +55,7 @@
         <% j = job.not_nil! %>
         <% if j.status == Minanime::RenderJob::Status::Running %>
           hx-get="/cuts/<%= slug %>/render/<%= j.id %>/status"
-          hx-trigger="every 2s"
+          hx-trigger="every 5s"
           hx-swap="outerHTML"
         <% end %>
       >
@@ -71,3 +88,6 @@
     </div>
   </div>
 </div>
+
+<script>var SLUG = '<%= slug %>';</script>
+<script src="/js/pose-editor.js"></script>

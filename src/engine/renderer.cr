@@ -18,7 +18,11 @@ module Minanime
       spawn do
         begin
           cut_path = CutStore.cut_path(cut_slug)
+          STDERR.puts "[render] Starting job #{job_id} for #{cut_slug} (#{script.total_frames} frames)"
+          @store.clear_frames(cut_path, cut_id)
+          STDERR.puts "[render] Cleared old frames"
           @chain.render(cut_path, cut_id, script) do |current, total|
+            STDERR.puts "[render] Frame #{current}/#{total} complete"
             Database.db.exec(
               "UPDATE render_jobs SET current_frame = ? WHERE id = ?",
               current, job_id
@@ -28,7 +32,9 @@ module Minanime
             "UPDATE render_jobs SET status = 'done' WHERE id = ?",
             job_id
           )
+          STDERR.puts "[render] Job #{job_id} done"
         rescue ex
+          STDERR.puts "[render] Job #{job_id} error: #{ex.message}"
           Database.db.exec(
             "UPDATE render_jobs SET status = 'error', error_message = ? WHERE id = ?",
             ex.message, job_id

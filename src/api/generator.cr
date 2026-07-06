@@ -17,9 +17,13 @@ module Minanime
     getter model : String
     getter strength : Float64
     getter steps : Int32
+    getter cfg_scale : Float64
+    getter controlnet : Array(ControlNetParam)?
+    getter negative_prompt : String
 
-    def initialize(@prompt, @seed_image, @seed_is_uuid = false, @width = 1024, @height = 1024,
-                   @model = "runware:106@1", @strength = 0.95, @steps = 25)
+    def initialize(@prompt, @seed_image, @seed_is_uuid = false, @width = 720, @height = 512,
+                   @model = "civitai:4384@128713", @strength = 0.6, @steps = 30, @cfg_scale = 3.5,
+                   @controlnet = nil, @negative_prompt = "")
     end
   end
 

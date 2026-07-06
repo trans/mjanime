@@ -53,5 +53,15 @@ module Minanime
         as: Int32
       )
     end
+
+    def clear_frames(cut_path : String, cut_id : Int64)
+      Database.db.exec("DELETE FROM frames WHERE cut_id = ?", cut_id)
+      frames_dir = File.join(cut_path, "frames")
+      if Dir.exists?(frames_dir)
+        Dir.each_child(frames_dir) do |child|
+          File.delete(File.join(frames_dir, child)) if child.ends_with?(".png")
+        end
+      end
+    end
   end
 end

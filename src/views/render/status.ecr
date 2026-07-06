@@ -3,7 +3,7 @@
   <div id="render-status"
     <% if j.status == Minanime::RenderJob::Status::Running %>
       hx-get="/cuts/<%= j.cut_slug %>/render/<%= j.id %>/status"
-      hx-trigger="every 2s"
+      hx-trigger="every 5s"
       hx-swap="outerHTML"
     <% end %>
   >

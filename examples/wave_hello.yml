@@ -3,10 +3,11 @@ title: "Character Waves Hello"
 description: "An anime girl raises her hand and waves hello"
 
 settings:
-  width: 1024
-  height: 1024
-  model: "runware:106@1"
-  strength: 0.85
+  width: 720
+  height: 512
+  model: "runware:400@2"
+  strength: 0.35
+  steps: 4
 
 scenes:
   - name: "raise_hand"
@@ -20,17 +21,17 @@ scenes:
   - name: "wave"
     frames:
       - prompt: "The character's raised right hand tilts to the left"
-        strength: 0.82
+        strength: 0.30
       - prompt: "The character's raised right hand tilts back to center"
-        strength: 0.82
+        strength: 0.30
       - prompt: "The character's raised right hand tilts to the right"
-        strength: 0.82
+        strength: 0.30
       - prompt: "The character's raised right hand tilts back to center"
-        strength: 0.82
+        strength: 0.30
       - prompt: "The character's raised right hand tilts to the left"
-        strength: 0.82
+        strength: 0.30
       - prompt: "The character's raised right hand tilts back to center"
-        strength: 0.82
+        strength: 0.30
 
   - name: "lower_hand"
     frames:

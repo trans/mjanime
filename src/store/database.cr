@@ -14,6 +14,13 @@ module Minanime
       db_path = File.join(Config.data_dir, "minanime.db")
       @@db = DB.open("sqlite3://#{db_path}?journal_mode=wal&synchronous=normal&foreign_keys=on")
       migrate!
+      cleanup_stale_jobs!
+    end
+
+    private def self.cleanup_stale_jobs!
+      db.exec(
+        "UPDATE render_jobs SET status = 'error', error_message = 'Server restarted' WHERE status IN ('pending', 'running')"
+      )
     end
 
     private def self.migrate!

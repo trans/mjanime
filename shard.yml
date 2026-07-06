@@ -18,3 +18,5 @@ dependencies:
     version: ~> 1.5
   sqlite3:
     github: crystal-lang/crystal-sqlite3
+  stumpy_png:
+    github: stumpycr/stumpy_png

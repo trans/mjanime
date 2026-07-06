@@ -1,2 +1,2 @@
 require "spec"
-require "../src/minanime"
+require "../src/lib"

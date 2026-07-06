@@ -10,6 +10,11 @@ build: deps
     mkdir -p bin
     crystal build src/minanime.cr -o bin/minanime
 
+# Build the binary, do not update shards
+compile:
+    mkdir -p bin
+    crystal build src/minanime.cr -o bin/minanime
+
 # Build with optimizations
 release: deps
     mkdir -p bin

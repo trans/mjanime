@@ -1,0 +1,41 @@
+version: 1
+title: "Bard Strumming (Pose)"
+description: "A tavern bard strumming a lute, using ControlNet pose control"
+
+settings:
+  width: 512
+  height: 512
+  model: "civitai:4384@128713"
+  strength: 0.6
+  steps: 30
+  controlnet_model: "civitai:38784@44811"
+  controlnet_weight: 0.7
+
+scenes:
+  - name: "strum_down"
+    total_frames: 4
+    keyframes:
+      - frame: 1
+        prompt: "a medieval bard playing a lute in a dimly lit tavern, fantasy art"
+        joints:
+          right_wrist: [0.38, 0.52]
+          right_elbow: [0.35, 0.42]
+      - frame: 4
+        prompt: "a medieval bard playing a lute in a dimly lit tavern, fantasy art"
+        joints:
+          right_wrist: [0.38, 0.58]
+          right_elbow: [0.35, 0.48]
+
+  - name: "strum_up"
+    total_frames: 4
+    keyframes:
+      - frame: 1
+        prompt: "a medieval bard playing a lute in a dimly lit tavern, fantasy art"
+        joints:
+          right_wrist: [0.38, 0.58]
+          right_elbow: [0.35, 0.48]
+      - frame: 4
+        prompt: "a medieval bard playing a lute in a dimly lit tavern, fantasy art"
+        joints:
+          right_wrist: [0.38, 0.52]
+          right_elbow: [0.35, 0.42]

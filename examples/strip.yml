@@ -1,0 +1,27 @@
+# Scenery strip config. Drop this as `strip.yml` into a folder of ordered
+# source PNGs (01.png, 02.png, ...) and run:  minanime strip <folder>
+title: "Fantasy hills panorama"
+
+# Applied to every source tile (img2img restyle).
+style_prompt: "lush fantasy landscape, painterly, vibrant, storybook game background, side-scrolling platformer scenery"
+negative_prompt: "characters, people, text, watermark, ui"
+tile_model: "civitai:4384@128713"   # any SD1.5/SDXL checkpoint on Runware
+tile_strength: 0.55                  # lower = keep source composition, higher = more restyle
+tile_steps: 30
+tile_cfg_scale: 3.5
+
+# height: 512        # omit to infer from your source images
+# tile_width: 768    # omit to keep each source's aspect ratio
+
+# Invented terrain between neighbouring tiles.
+bridge_prompt: "seamless fantasy landscape continuation, rolling hills, winding path, matching colors and lighting"
+bridge_model: "runware:102@1"        # FLUX Fill — purpose-built for inpaint/outpaint
+gap_width: 512                       # width of invented terrain between two tiles
+context_width: 192                   # px of each neighbour's edge used as context
+feather: 48
+bridge_steps: 30
+
+# sources:            # optional explicit order; defaults to sorted *.png
+#   - 01.png
+#   - 02.png
+#   - 03.png

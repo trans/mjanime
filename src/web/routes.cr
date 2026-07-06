@@ -66,7 +66,21 @@ module Minanime
       post "/cuts/:slug/render" do |env|
         slug = env.params.url["slug"]
         script_path = File.join(CutStore.cut_path(slug), "script.yml")
-        script = MotionScript.from_yaml(File.read(script_path))
+        script_content = File.read(script_path)
+        script = MotionScript.from_yaml(script_content)
+
+        STDERR.puts "[render] Script loaded: #{script.title} (#{script.total_frames} frames, strength=#{script.settings.strength})"
+        script.scenes.each do |scene|
+          if frames = scene.frames
+            frames.each_with_index do |f, i|
+              STDERR.puts "[render]   Frame #{i + 1}: #{f.prompt}"
+            end
+          elsif keyframes = scene.keyframes
+            keyframes.each do |kf|
+              STDERR.puts "[render]   Keyframe #{kf.frame}: #{kf.prompt || "(interpolated)"}"
+            end
+          end
+        end
 
         job_id = App.renderer.start_render(slug, script)
         env.redirect "/cuts/#{slug}/render/#{job_id}"
@@ -139,6 +153,96 @@ module Minanime
           env.response.status_code = 404
           "Reference image not found"
         end
+      end
+
+      # -- Extract pose from reference image --
+      post "/cuts/:slug/extract-pose" do |env|
+        slug = env.params.url["slug"]
+        cut_path = CutStore.cut_path(slug)
+        reference_path = File.join(cut_path, "reference.png")
+
+        env.response.content_type = "application/json"
+
+        unless File.exists?(reference_path)
+          env.response.status_code = 400
+          next {error: "No reference image"}.to_json
+        end
+
+        begin
+          client = RunwareClient.new(Config.runware_api_key)
+          ref_uuid = client.upload_image(reference_path)
+          guide_uuid, guide_url = client.preprocess_pose(ref_uuid, 512, 512)
+
+          # Download and save the skeleton image
+          pose_response = HTTP::Client.get(guide_url)
+          if pose_response.status_code == 200
+            File.write(File.join(cut_path, "base_pose.png"), pose_response.body)
+          end
+
+          # Save the guide UUID for later use
+          File.write(File.join(cut_path, "pose_guide_uuid.txt"), guide_uuid)
+
+          {status: "ok", guide_uuid: guide_uuid, guide_url: guide_url}.to_json
+        rescue ex
+          STDERR.puts "[pose] Extract error: #{ex.message}"
+          env.response.status_code = 500
+          {error: ex.message}.to_json
+        end
+      end
+
+      # -- Serve base pose skeleton image --
+      get "/cuts/:slug/pose/skeleton" do |env|
+        slug = env.params.url["slug"]
+        path = File.join(CutStore.cut_path(slug), "base_pose.png")
+
+        if File.exists?(path)
+          env.response.content_type = "image/png"
+          File.read(path)
+        else
+          env.response.status_code = 404
+          "No pose extracted yet"
+        end
+      end
+
+      # -- Save pose JSON --
+      put "/cuts/:slug/pose" do |env|
+        slug = env.params.url["slug"]
+        cut_path = CutStore.cut_path(slug)
+        pose_json = env.request.body.try(&.gets_to_end) || ""
+
+        begin
+          Pose.from_json(pose_json)
+          File.write(File.join(cut_path, "base_pose.json"), pose_json)
+          env.response.content_type = "application/json"
+          {status: "ok"}.to_json
+        rescue ex
+          env.response.status_code = 422
+          {error: ex.message}.to_json
+        end
+      end
+
+      # -- Get pose JSON --
+      get "/cuts/:slug/pose" do |env|
+        slug = env.params.url["slug"]
+        path = File.join(CutStore.cut_path(slug), "base_pose.json")
+
+        if File.exists?(path)
+          env.response.content_type = "application/json"
+          File.read(path)
+        else
+          env.response.status_code = 404
+          {error: "No pose data"}.to_json
+        end
+      end
+
+      # -- Render a pose skeleton preview from JSON --
+      post "/cuts/:slug/pose/preview" do |env|
+        slug = env.params.url["slug"]
+        pose_json = env.request.body.try(&.gets_to_end) || ""
+        pose = Pose.from_json(pose_json)
+        png_bytes = PoseRenderer.render(pose, 512, 512)
+        env.response.content_type = "image/png"
+        String.new(png_bytes)
       end
 
       # -- Regenerate single frame --
