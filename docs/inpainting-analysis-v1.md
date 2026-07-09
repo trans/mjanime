@@ -102,6 +102,40 @@ perspective) and verify each independently, rather than judge from overall visua
 **Status:** style + edge-lock — demonstrated. Structural/perspective continuity across the seam —
 **open, and the harder half of the problem.**
 
+## Addendum 2 — Two machines, different degrees of freedom (the key synthesis)
+
+The whole investigation kept conflating two problems. They are not the same problem and must not
+share a tool:
+
+| | **Generate from scratch** (the strip) | **Patch / evolve existing** (world tile) |
+|---|---|---|
+| Surrounding pixels | free to redraw | **fixed** — must return byte-identical |
+| Position of the pieces | free to move / scale / align | **fixed** — must slot back in place |
+| Aligning mismatched neighbours | just move them | can't — the interior must absorb it |
+| Right tool | full-control compose (Nano panorama) | edge-locked inpaint (mask) |
+| Sides | faithfully redrawn (accepted) | pixel-exact (required) |
+
+Consequences:
+
+- **Moving/scaling to align is legal ONLY in generate-from-scratch.** In patch/evolve the neighbours
+  are nailed in place, so alignment-by-repositioning is off the table.
+- **The horizon-mismatch pain was a strip-only artifact.** It came from stitching two *independently
+  generated* images with different horizons. A real evolver works *inside one already-coherent
+  image*, so the region's edges are already mutually consistent — there is nothing to align. The
+  evolver never has that problem.
+- Therefore the two goals stop competing:
+  - **Strip (from scratch):** feed the original tiles as references; the model self-aligns (it may
+    shift a side up/down) and composes one coherent panorama — continuous railing, deck, and water.
+    Validated: `data/strips/mine/experiment/interior_nb1.png`. Sides come back faithfully redrawn,
+    not pixel-exact — accepted for this mode.
+  - **Evolver (patch existing):** edge-locked inpaint, no alignment needed. Open problem: continue
+    the *specific* structures crossing the fixed seam (railing, a cut object) — needs a
+    **structure-aware** sketch, not a generic one.
+
+Emerging open sub-problem for **multi-tile** strips (>2 shops): pairwise panoramas each redraw the
+shared middle shop *independently*, so adjacent panoramas won't match on the shared shop for
+stitching. Unsolved; do not hard-code a stitching strategy until it's cracked.
+
 ## Evidence & artifacts
 
 - Visual exhibit: [`inpainting-analysis-v1.html`](inpainting-analysis-v1.html)

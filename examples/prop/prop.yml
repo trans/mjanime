@@ -1,0 +1,16 @@
+# Prop-machine config. Put this as prop.yml beside a template.png (a rough flat-colour
+# sketch: subject silhouette + feature colour patches). Run:  minanime prop <dir>
+#   -> writes render.png (raw AI output) and prop.png (transparent cut-out)
+#
+# The template is a ROUGH reference for subject + size/placement, not a strict boundary.
+# The prop is keyed out of the render, so match `background` below to the bg you name in
+# the prompt. Default black keys bright subjects cleanly; for a dark/black subject render
+# on a contrasting bg (white [255,255,255] or chroma green [0,255,0]) and set it here.
+prompt: >-
+  A colourful wooden circus barrel with metal hoops, painted red and gold, clean cartoon
+  game-prop style, centred, on a solid pure black background, nothing else in frame.
+background: [0, 0, 0]
+key_low: 4
+key_high: 28
+edge_blur: 0
+model: "google:4@1"

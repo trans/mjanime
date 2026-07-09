@@ -1,0 +1,9 @@
+# Stage-1 bed config. Put this as bed.yml beside a template.png (a flat-colour sketch:
+# silhouette + door/window colour patches). Run:  minanime bed <dir>   -> writes bed.png
+prompt: >-
+  A realistic detailed circus tent with clear structural form - visible fabric panels, seams,
+  tent poles, a defined doorway opening, and round windows - honouring this exact silhouette.
+  The dark-red patch is the tent's doorway, the teal patches are round windows. Plain undecorated
+  white and cream canvas, no patterns or stripes, plain neutral background. Soft even studio lighting.
+strength: 0.7
+model: "civitai:4384@128713"
