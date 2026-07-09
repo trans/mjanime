@@ -1,6 +1,6 @@
 module Minanime
   module Config
-    CONFIG_DIR  = ".config/minianime"
+    CONFIG_DIR  = ".config/minanime"
     CONFIG_FILE = "config.yml"
 
     class_property data_dir : String = "./data"
@@ -31,7 +31,7 @@ module Minanime
       unless File.exists?(config_path)
         config = ProjectConfig.new
         File.write(config_path, config.to_yaml)
-        puts "Initialized minianime project in #{Dir.current}"
+        puts "Initialized minanime project in #{Dir.current}"
         puts "  Created #{config_path}"
       else
         puts "Already initialized (#{config_path} exists)"

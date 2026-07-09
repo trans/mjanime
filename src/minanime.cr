@@ -5,7 +5,7 @@ when "init"
   Minanime::Config.init!
 when "serve", nil
   unless Minanime::Config.initialized?
-    STDERR.puts "Not a minianime project. Run `minanime init` first."
+    STDERR.puts "Not a minanime project. Run `minanime init` first."
     exit 1
   end
 
