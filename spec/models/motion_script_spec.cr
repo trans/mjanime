@@ -30,11 +30,12 @@ describe Minanime::MotionScript do
     script.settings.steps.should eq(20)
     script.scenes.size.should eq(1)
     script.scenes[0].name.should eq("test_scene")
-    script.scenes[0].frames.size.should eq(2)
-    script.scenes[0].frames[0].prompt.should eq("Move hand up slightly")
-    script.scenes[0].frames[0].strength.should be_nil
-    script.scenes[0].frames[1].strength.should eq(0.8)
-    script.scenes[0].frames[1].steps.should eq(30)
+    frames = script.scenes[0].frames.should_not be_nil
+    frames.size.should eq(2)
+    frames[0].prompt.should eq("Move hand up slightly")
+    frames[0].strength.should be_nil
+    frames[1].strength.should eq(0.8)
+    frames[1].steps.should eq(30)
     script.total_frames.should eq(2)
   end
 
@@ -49,11 +50,11 @@ describe Minanime::MotionScript do
     YAML
 
     script = Minanime::MotionScript.from_yaml(yaml)
-    script.settings.width.should eq(1024)
-    script.settings.height.should eq(1024)
-    script.settings.strength.should eq(0.95)
-    script.settings.steps.should eq(25)
-    script.settings.model.should eq("runware:106@1")
+    script.settings.width.should eq(512)
+    script.settings.height.should eq(512)
+    script.settings.strength.should eq(0.6)
+    script.settings.steps.should eq(30)
+    script.settings.model.should eq("civitai:4384@128713")
   end
 
   it "counts frames across multiple scenes" do
