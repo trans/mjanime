@@ -54,14 +54,40 @@ tolerate the fact that the AI drifts.
 
 - **"An alternative for when the thing I'm making is black."** This is the real payoff of
   distance-keying. If the subject is black/dark, a black background can't be distinguished from it —
-  so render on a **contrasting** background instead (`background: [255, 255, 255]` white, or a chroma
-  `[0, 255, 0]` green) and name that colour in the prompt. The keyer measures distance from whatever
-  colour you set, so a black subject on white keys just as cleanly as a bright subject on black.
+  so render on a **contrasting** background instead and name that colour in the prompt. The keyer
+  measures distance from whatever colour you set. But not every contrasting colour is equal: see
+  **Choosing a background** below — for a dark subject, chroma-green beats white.
 
 - **"Adding a slight blur to the edges — how feasible?"** Very. It's `edge_blur`, a separable box blur
   applied to the alpha channel alone (RGB untouched), so it only softens the cut-out silhouette, never
   the art. Cheap and deterministic. Comparison on the barrel (over bright green to expose fringe):
   `blur0` crisp → `blur2`/`blur4` progressively feathered, with no dark halo at any setting.
+
+## Choosing a background
+
+The background must sit far, in colour space, from **every** part of the subject — not just its
+silhouette edge, but any interior feature too. The failure mode is the reverse of keying: a subject
+feature that lands *near* the background colour gets keyed transparent, punching a hole.
+
+| Subject | Use | Why |
+|---------|-----|-----|
+| Bright / saturated (barrel, plant, clown) | **black** `[0,0,0]` (default) | Nothing bright is near black; keys clean. |
+| Dark / black (cauldron, cat, bat) | **chroma-green** `[0,255,0]` | Black is maximally far from green, and subjects rarely contain green. |
+
+**Validated finding (cauldron, 2026-07-08):** the same black cauldron was rendered on white and on
+green (`data/props-test/cauldron-{white,green}/`).
+
+- **Green:** body, legs, orange potion, and even the wispy steam all keyed opaque and clean — no
+  fringe, no holes.
+- **White:** the body keyed fine, but the render's near-white steam/glow sat too close to the white
+  background and got keyed away — the steam vanished and a pale halo was left around the rim. **White
+  only works if the subject has no light highlights.**
+
+So for a dark subject, prefer **green over white**. Same command either way; only `background` and the
+prompt's named colour change.
+
+Not yet tested: **green spill** onto genuinely *soft* edges (fur, a bat's wing membrane) — the cauldron
+had hard cartoon edges. If a fuzzy dark subject picks up a green rim, that's the case to revisit.
 
 ## Important caveat: template ≠ silhouette
 
