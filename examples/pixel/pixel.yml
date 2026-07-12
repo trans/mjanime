@@ -1,0 +1,10 @@
+# Pixel-art restyle. Put this as pixel.yml beside an image.png. Run: minanime pixelize <dir>
+#   -> writes redraw.png (raw AI) + pixel.png (final)
+style: 16bit            # 8bit | 16bit  (selects the prompt template / era)
+model: "google:4@3"     # Nano Banana 2; use google:4@2 (Pro) for lighting/camera-heavy scenes
+width: 1024
+height: 1024
+snap: false             # true = pixel-perfect pass (needs ImageMagick); false = raw AI redraw
+grid: 128               # snap only: true pixel resolution (8bit~64, 16bit~128)
+colors: 32              # snap only: palette size (8bit~16, 16bit~32, up to ~256)
+background: transparent  # transparent | keep | "#RRGGBB"

@@ -18,7 +18,7 @@ module Minanime
     property key_high : Int32 = 28
     # Soften the alpha edge by this many px (box blur on the alpha channel only). 0 = off.
     property edge_blur : Int32 = 0
-    property model : String = "google:4@1"   # Nano Banana (Gemini Flash Image)
+    property model : String = "google:4@3"   # Nano Banana 2 (google:4@1 is deprecated/weak)
     property width : Int32 = 1024
     property height : Int32 = 1024
   end

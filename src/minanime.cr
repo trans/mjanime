@@ -99,9 +99,39 @@ when "prop"
   Minanime::CanvasUtil.write_png_file(result.render, render_path)
   Minanime::CanvasUtil.write_png_file(result.prop, prop_path)
   STDERR.puts "[prop] wrote #{render_path} and #{prop_path}"
+when "pixelize"
+  # minanime pixelize <dir> — <dir> holds image.png + pixel.yml, writes redraw.png + pixel.png.
+  # AI pixel-art restyle (8-bit/16-bit) via Nano Banana 2, optional transparency + snap.
+  dir = ARGV[1]?
+  unless dir
+    STDERR.puts "Usage: minanime pixelize <dir>"
+    exit 1
+  end
+  Minanime::Config.load!
+  if Minanime::Config.runware_api_key.empty?
+    STDERR.puts "RUNWARE_API_KEY not set."
+    exit 1
+  end
+  image = File.join(dir, "image.png")
+  spec_path = File.join(dir, "pixel.yml")
+  unless File.exists?(image) && File.exists?(spec_path)
+    STDERR.puts "Need #{image} and #{spec_path}. See examples/pixel/ for the format."
+    exit 1
+  end
+  spec = Minanime::PixelSpec.from_yaml(File.read(spec_path))
+  client = Minanime::RunwareClient.new(Minanime::Config.runware_api_key)
+  STDERR.puts "[pixelize] #{image} -> pixel.png (style=#{spec.style} model=#{spec.model} " \
+    "snap=#{spec.snap} bg=#{spec.background})"
+  redraw = Minanime::Pixelize.redraw(client, File.read(image).to_slice, spec)
+  redraw_path = File.join(dir, "redraw.png")
+  File.write(redraw_path, redraw)
+  final = Minanime::Pixelize.finish(redraw, spec)
+  pixel_path = File.join(dir, "pixel.png")
+  Minanime::CanvasUtil.write_png_file(final, pixel_path)
+  STDERR.puts "[pixelize] wrote #{redraw_path} and #{pixel_path}"
 when "version", "--version", "-v"
   puts "minanime #{Minanime::VERSION}"
 else
-  STDERR.puts "Usage: minanime [init|serve|strip|bed|prop|version]"
+  STDERR.puts "Usage: minanime [init|serve|strip|bed|prop|pixelize|version]"
   exit 1
 end
