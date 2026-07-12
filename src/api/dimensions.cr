@@ -1,4 +1,4 @@
-module Minanime
+module MJ
   # FLUX.1 models only support these specific dimension pairs
   FLUX1_DIMENSIONS = [
     {1568, 672},

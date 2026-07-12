@@ -1,6 +1,6 @@
 require "../spec_helper"
 
-describe Minanime::MotionScript do
+describe MJ::MotionScript do
   it "parses a YAML script" do
     yaml = <<-YAML
       version: 1
@@ -20,7 +20,7 @@ describe Minanime::MotionScript do
               steps: 30
     YAML
 
-    script = Minanime::MotionScript.from_yaml(yaml)
+    script = MJ::MotionScript.from_yaml(yaml)
     script.title.should eq("Test")
     script.version.should eq(1)
     script.settings.width.should eq(512)
@@ -49,7 +49,7 @@ describe Minanime::MotionScript do
             - prompt: "test"
     YAML
 
-    script = Minanime::MotionScript.from_yaml(yaml)
+    script = MJ::MotionScript.from_yaml(yaml)
     script.settings.width.should eq(512)
     script.settings.height.should eq(512)
     script.settings.strength.should eq(0.6)
@@ -71,7 +71,7 @@ describe Minanime::MotionScript do
             - prompt: "three"
     YAML
 
-    script = Minanime::MotionScript.from_yaml(yaml)
+    script = MJ::MotionScript.from_yaml(yaml)
     script.total_frames.should eq(3)
   end
 end

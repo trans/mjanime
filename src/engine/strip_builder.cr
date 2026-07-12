@@ -1,4 +1,4 @@
-module Minanime
+module MJ
   # Builds one long seamless scenery image from a folder of ordered source PNGs.
   #
   #   1. Stylize each source (img2img) to a common height.

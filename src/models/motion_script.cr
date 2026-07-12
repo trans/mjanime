@@ -1,4 +1,4 @@
-module Minanime
+module MJ
   class ScriptSettings
     include YAML::Serializable
 

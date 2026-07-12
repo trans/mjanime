@@ -2,7 +2,7 @@ require "http/client"
 require "base64"
 require "uuid"
 
-module Minanime
+module MJ
   class RunwareClient
     include Generator
 
@@ -128,7 +128,7 @@ module Minanime
                      uuid
                    end
 
-      width, height = Minanime.snap_dimensions(request.width, request.height, request.model)
+      width, height = MJ.snap_dimensions(request.width, request.height, request.model)
 
       STDERR.puts "[runware] Generate: model=#{request.model} seed=#{image_uuid} strength=#{request.strength} #{width}x#{height} steps=#{request.steps}"
       STDERR.puts "[runware] Prompt: #{request.prompt}"

@@ -1,6 +1,6 @@
 require "stumpy_png"
 
-module Minanime
+module MJ
   module PoseRenderer
     JOINT_RADIUS = 4
     LIMB_WIDTH   = 4

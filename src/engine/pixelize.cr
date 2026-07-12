@@ -1,6 +1,6 @@
 require "stumpy_png"
 
-module Minanime
+module MJ
   # Pixel-art restyle via Nano Banana 2 (google:4@3), with optional transparency keying
   # and an optional deterministic pixel-perfect "snap" pass.
   #

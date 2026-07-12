@@ -1,4 +1,4 @@
-module Minanime
+module MJ
   # Config for a transparent-background prop. Lives as `prop.yml` beside a `template.png`
   # (a rough flat-colour sketch: subject silhouette + feature colour patches). The template
   # is a *rough reference* for subject + size/placement, NOT a strict boundary — the model

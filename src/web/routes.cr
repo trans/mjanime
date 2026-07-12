@@ -1,6 +1,6 @@
 require "kemal"
 
-module Minanime
+module MJ
   module Routes
     def self.register
       # -- Dashboard --

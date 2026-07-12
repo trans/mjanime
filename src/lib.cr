@@ -34,7 +34,7 @@ require "./engine/prop"
 require "./engine/pixelize"
 require "./web/routes"
 
-module Minanime
+module MJ
   VERSION = "0.2.0"
 
   module App

@@ -1,4 +1,4 @@
-module Minanime
+module MJ
   struct ControlNetParam
     getter model : String
     getter guide_image : String  # UUID or data URI

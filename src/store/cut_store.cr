@@ -1,4 +1,4 @@
-module Minanime
+module MJ
   module CutStore
     record Cut, id : Int64, slug : String, name : String, created_at : String
 

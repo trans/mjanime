@@ -1,7 +1,7 @@
 require "db"
 require "sqlite3"
 
-module Minanime
+module MJ
   module Database
     @@db : DB::Database? = nil
 
@@ -11,7 +11,7 @@ module Minanime
 
     def self.setup!
       Dir.mkdir_p(Config.data_dir)
-      db_path = File.join(Config.data_dir, "minanime.db")
+      db_path = File.join(Config.data_dir, "mj.db")
       @@db = DB.open("sqlite3://#{db_path}?journal_mode=wal&synchronous=normal&foreign_keys=on")
       migrate!
       cleanup_stale_jobs!

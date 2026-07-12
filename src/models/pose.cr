@@ -1,6 +1,6 @@
 require "json"
 
-module Minanime
+module MJ
   struct Keypoint
     include JSON::Serializable
 

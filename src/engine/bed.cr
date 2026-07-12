@@ -1,4 +1,4 @@
-module Minanime
+module MJ
   # Stage 1 of template-guided generation: a rudimentary flat-colour template -> a plain,
   # structurally-faithful "bed" (the master). img2img off the template; strength is the
   # plain<->rich-structure knob. No ControlNet (optional future addition per the decision

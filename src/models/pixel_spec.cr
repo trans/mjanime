@@ -1,6 +1,6 @@
-module Minanime
+module MJ
   # Config for a pixel-art restyle. Lives as `pixel.yml` beside an `image.png`.
-  # Run:  minanime pixelize <dir>   -> writes redraw.png (raw AI) + pixel.png (final).
+  # Run:  mj pixelize <dir>   -> writes redraw.png (raw AI) + pixel.png (final).
   #
   # The look ("8-bit" vs "16-bit") is driven by `style`, which selects a prompt template —
   # Nano Banana 2 (google:4@3) infers pixel density and palette from the era name. `width`/

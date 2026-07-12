@@ -53,7 +53,7 @@
     <% if job %>
       <div id="render-status"
         <% j = job.not_nil! %>
-        <% if j.status == Minanime::RenderJob::Status::Running %>
+        <% if j.status == MJ::RenderJob::Status::Running %>
           hx-get="/cuts/<%= slug %>/render/<%= j.id %>/status"
           hx-trigger="every 5s"
           hx-swap="outerHTML"
@@ -64,11 +64,11 @@
             <div class="progress-fill" style="width: <%= j.progress_percent %>%"></div>
           </div>
           <span class="progress-text">
-            <% if j.status == Minanime::RenderJob::Status::Running %>
+            <% if j.status == MJ::RenderJob::Status::Running %>
               Rendering frame <%= j.current_frame %> / <%= j.total_frames %> (<%= j.progress_percent %>%)
-            <% elsif j.status == Minanime::RenderJob::Status::Done %>
+            <% elsif j.status == MJ::RenderJob::Status::Done %>
               Complete! (<%= j.total_frames %> frames)
-            <% elsif j.status == Minanime::RenderJob::Status::Error %>
+            <% elsif j.status == MJ::RenderJob::Status::Error %>
               Error: <%= j.error_message %>
             <% end %>
           </span>

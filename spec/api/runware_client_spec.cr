@@ -1,6 +1,6 @@
 require "../spec_helper"
 
-describe Minanime::RunwareClient do
+describe MJ::RunwareClient do
   # This spec makes a real API call.
   # Run with: RUNWARE_API_KEY=your_key crystal spec spec/api/runware_client_spec.cr
   #
@@ -20,8 +20,8 @@ describe Minanime::RunwareClient do
     pending! "No test image found (set TEST_IMAGE=/path/to/image.png)" unless ref_path
     pending! "Test image not found: #{ref_path}" unless File.exists?(ref_path.not_nil!)
 
-    client = Minanime::RunwareClient.new(api_key)
-    request = Minanime::GenerationRequest.new(
+    client = MJ::RunwareClient.new(api_key)
+    request = MJ::GenerationRequest.new(
       prompt: "A slight smile appears on the face",
       seed_image: ref_path.not_nil!,
       width: 1024,

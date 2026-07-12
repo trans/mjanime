@@ -2,31 +2,31 @@ require "./lib"
 
 case ARGV[0]?
 when "init"
-  Minanime::Config.init!
+  MJ::Config.init!
 when "serve", nil
-  unless Minanime::Config.initialized?
-    STDERR.puts "Not a minanime project. Run `minanime init` first."
+  unless MJ::Config.initialized?
+    STDERR.puts "Not a mj project. Run `mj init` first."
     exit 1
   end
 
-  Minanime::Config.load!
-  Minanime::Database.setup!
-  Minanime::Routes.register
+  MJ::Config.load!
+  MJ::Database.setup!
+  MJ::Routes.register
 
-  Kemal.config.port = Minanime::Config.port
+  Kemal.config.port = MJ::Config.port
   Kemal.config.serve_static = {"dir_listing" => false}
   Kemal.run
 when "strip"
-  # minanime strip <dir> [out.png]
+  # mj strip <dir> [out.png]
   # <dir> holds ordered source PNGs plus a strip.yml config.
   dir = ARGV[1]?
   unless dir
-    STDERR.puts "Usage: minanime strip <dir> [out.png]"
+    STDERR.puts "Usage: mj strip <dir> [out.png]"
     exit 1
   end
 
-  Minanime::Config.load!
-  if Minanime::Config.runware_api_key.empty?
+  MJ::Config.load!
+  if MJ::Config.runware_api_key.empty?
     STDERR.puts "RUNWARE_API_KEY not set."
     exit 1
   end
@@ -37,22 +37,22 @@ when "strip"
     exit 1
   end
 
-  script = Minanime::StripScript.from_yaml(File.read(script_path))
+  script = MJ::StripScript.from_yaml(File.read(script_path))
   out_path = ARGV[2]? || File.join(dir, "strip.png")
 
-  client = Minanime::RunwareClient.new(Minanime::Config.runware_api_key)
-  builder = Minanime::StripBuilder.new(client)
+  client = MJ::RunwareClient.new(MJ::Config.runware_api_key)
+  builder = MJ::StripBuilder.new(client)
   builder.build(dir, script, out_path) { |msg| STDERR.puts "[strip] #{msg}" }
 when "bed"
-  # minanime bed <dir> [strength] — <dir> holds template.png + bed.yml, writes bed.png.
+  # mj bed <dir> [strength] — <dir> holds template.png + bed.yml, writes bed.png.
   # Stage 1 of template-guided generation: rudimentary sketch -> plain structural master.
   dir = ARGV[1]?
   unless dir
-    STDERR.puts "Usage: minanime bed <dir> [strength]"
+    STDERR.puts "Usage: mj bed <dir> [strength]"
     exit 1
   end
-  Minanime::Config.load!
-  if Minanime::Config.runware_api_key.empty?
+  MJ::Config.load!
+  if MJ::Config.runware_api_key.empty?
     STDERR.puts "RUNWARE_API_KEY not set."
     exit 1
   end
@@ -62,24 +62,24 @@ when "bed"
     STDERR.puts "Need #{template} and #{spec_path}. See examples/bed/ for the format."
     exit 1
   end
-  spec = Minanime::BedSpec.from_yaml(File.read(spec_path))
+  spec = MJ::BedSpec.from_yaml(File.read(spec_path))
   spec.strength = ARGV[2].to_f if ARGV[2]?   # optional strength override for quick sweeps
-  client = Minanime::RunwareClient.new(Minanime::Config.runware_api_key)
+  client = MJ::RunwareClient.new(MJ::Config.runware_api_key)
   STDERR.puts "[bed] #{template} -> bed.png (model=#{spec.model} strength=#{spec.strength})"
-  result = Minanime::Bed.generate(client, template, spec)
+  result = MJ::Bed.generate(client, template, spec)
   bed_path = File.join(dir, "bed.png")
   File.write(bed_path, result.image_data)
   STDERR.puts "[bed] wrote #{bed_path}"
 when "prop"
-  # minanime prop <dir> — <dir> holds template.png + prop.yml, writes render.png + prop.png.
+  # mj prop <dir> — <dir> holds template.png + prop.yml, writes render.png + prop.png.
   # The prop machine: rough template -> Nano render on a solid bg -> keyed transparent prop.
   dir = ARGV[1]?
   unless dir
-    STDERR.puts "Usage: minanime prop <dir>"
+    STDERR.puts "Usage: mj prop <dir>"
     exit 1
   end
-  Minanime::Config.load!
-  if Minanime::Config.runware_api_key.empty?
+  MJ::Config.load!
+  if MJ::Config.runware_api_key.empty?
     STDERR.puts "RUNWARE_API_KEY not set."
     exit 1
   end
@@ -89,26 +89,26 @@ when "prop"
     STDERR.puts "Need #{template} and #{spec_path}. See examples/prop/ for the format."
     exit 1
   end
-  spec = Minanime::PropSpec.from_yaml(File.read(spec_path))
-  client = Minanime::RunwareClient.new(Minanime::Config.runware_api_key)
+  spec = MJ::PropSpec.from_yaml(File.read(spec_path))
+  client = MJ::RunwareClient.new(MJ::Config.runware_api_key)
   STDERR.puts "[prop] #{template} -> prop.png (model=#{spec.model} bg=#{spec.background} " \
     "key=#{spec.key_low}..#{spec.key_high} blur=#{spec.edge_blur})"
-  result = Minanime::Prop.generate(client, template, spec)
+  result = MJ::Prop.generate(client, template, spec)
   render_path = File.join(dir, "render.png")
   prop_path = File.join(dir, "prop.png")
-  Minanime::CanvasUtil.write_png_file(result.render, render_path)
-  Minanime::CanvasUtil.write_png_file(result.prop, prop_path)
+  MJ::CanvasUtil.write_png_file(result.render, render_path)
+  MJ::CanvasUtil.write_png_file(result.prop, prop_path)
   STDERR.puts "[prop] wrote #{render_path} and #{prop_path}"
 when "pixelize"
-  # minanime pixelize <dir> — <dir> holds image.png + pixel.yml, writes redraw.png + pixel.png.
+  # mj pixelize <dir> — <dir> holds image.png + pixel.yml, writes redraw.png + pixel.png.
   # AI pixel-art restyle (8-bit/16-bit) via Nano Banana 2, optional transparency + snap.
   dir = ARGV[1]?
   unless dir
-    STDERR.puts "Usage: minanime pixelize <dir>"
+    STDERR.puts "Usage: mj pixelize <dir>"
     exit 1
   end
-  Minanime::Config.load!
-  if Minanime::Config.runware_api_key.empty?
+  MJ::Config.load!
+  if MJ::Config.runware_api_key.empty?
     STDERR.puts "RUNWARE_API_KEY not set."
     exit 1
   end
@@ -118,20 +118,20 @@ when "pixelize"
     STDERR.puts "Need #{image} and #{spec_path}. See examples/pixel/ for the format."
     exit 1
   end
-  spec = Minanime::PixelSpec.from_yaml(File.read(spec_path))
-  client = Minanime::RunwareClient.new(Minanime::Config.runware_api_key)
+  spec = MJ::PixelSpec.from_yaml(File.read(spec_path))
+  client = MJ::RunwareClient.new(MJ::Config.runware_api_key)
   STDERR.puts "[pixelize] #{image} -> pixel.png (style=#{spec.style} model=#{spec.model} " \
     "snap=#{spec.snap} bg=#{spec.background})"
-  redraw = Minanime::Pixelize.redraw(client, File.read(image).to_slice, spec)
+  redraw = MJ::Pixelize.redraw(client, File.read(image).to_slice, spec)
   redraw_path = File.join(dir, "redraw.png")
   File.write(redraw_path, redraw)
-  final = Minanime::Pixelize.finish(redraw, spec)
+  final = MJ::Pixelize.finish(redraw, spec)
   pixel_path = File.join(dir, "pixel.png")
-  Minanime::CanvasUtil.write_png_file(final, pixel_path)
+  MJ::CanvasUtil.write_png_file(final, pixel_path)
   STDERR.puts "[pixelize] wrote #{redraw_path} and #{pixel_path}"
 when "version", "--version", "-v"
-  puts "minanime #{Minanime::VERSION}"
+  puts "mj #{MJ::VERSION}"
 else
-  STDERR.puts "Usage: minanime [init|serve|strip|bed|prop|pixelize|version]"
+  STDERR.puts "Usage: mj [init|serve|strip|bed|prop|pixelize|version]"
   exit 1
 end

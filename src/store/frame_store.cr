@@ -1,4 +1,4 @@
-module Minanime
+module MJ
   class FrameStore
     def save_frame(cut_path : String, cut_id : Int64, frame_number : Int32,
                    image_data : Bytes, metadata : FrameMetadata) : String

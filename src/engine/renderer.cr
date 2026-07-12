@@ -1,4 +1,4 @@
-module Minanime
+module MJ
   class Renderer
     def initialize(@generator : Generator, @store : FrameStore)
       @chain = FrameChain.new(@generator, @store)

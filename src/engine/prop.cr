@@ -1,6 +1,6 @@
 require "stumpy_png"
 
-module Minanime
+module MJ
   # The "prop machine": a rough flat-colour template -> a 2D game prop with a
   # transparent background.
   #

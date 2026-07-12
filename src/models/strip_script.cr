@@ -1,4 +1,4 @@
-module Minanime
+module MJ
   # Config for a scenery-strip build. Lives as `strip.yml` inside a folder
   # of ordered source PNGs. The pipeline stylizes each source, then invents
   # transition terrain between neighbours to produce one long seamless image.

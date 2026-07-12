@@ -1,6 +1,6 @@
 require "stumpy_png"
 
-module Minanime
+module MJ
   # Pure-Crystal image compositing helpers built on stumpy.
   # Used by the scenery-strip pipeline to crop tile edges, build inpaint
   # masks, and stitch tiles + generated bridges into one long image.

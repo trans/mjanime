@@ -1,4 +1,4 @@
-name: minanime
+name: mj
 version: 0.2.0
 
 authors:
@@ -9,8 +9,8 @@ crystal: '>= 1.19.1'
 license: MIT
 
 targets:
-  minanime:
-    main: src/minanime.cr
+  mj:
+    main: src/mj.cr
 
 dependencies:
   kemal:

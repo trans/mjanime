@@ -1,4 +1,4 @@
-module Minanime
+module MJ
   struct GenerationResult
     getter image_data : Bytes
     getter response_id : String?

@@ -8,25 +8,25 @@ deps:
 # Build the binary
 build: deps
     mkdir -p bin
-    crystal build src/minanime.cr -o bin/minanime
+    crystal build src/mj.cr -o bin/mj
 
 # Build the binary, do not update shards
 compile:
     mkdir -p bin
-    crystal build src/minanime.cr -o bin/minanime
+    crystal build src/mj.cr -o bin/mj
 
 # Build with optimizations
 release: deps
     mkdir -p bin
-    crystal build src/minanime.cr -o bin/minanime --release
+    crystal build src/mj.cr -o bin/mj --release
 
 # Run in development mode
 run: deps
-    crystal run src/minanime.cr
+    crystal run src/mj.cr
 
 # Type-check without generating code
 check:
-    crystal build src/minanime.cr --no-codegen
+    crystal build src/mj.cr --no-codegen
 
 # Run specs
 test:
