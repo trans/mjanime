@@ -39,6 +39,21 @@ module MJ
       }
     }>)
 
+    DECORATE_SCHEMA = JSON.parse(%<{
+      "type":"object",
+      "required":["prompt"],
+      "properties":{
+        "prompt":{"type":"string","description":"the style / theme / details to apply"},
+        "input_path":{"type":"string","description":"the master image path (or image_base64)"},
+        "image_base64":{"type":"string"},
+        "style_path":{"type":"string","description":"optional style-reference image path (or style_base64)"},
+        "style_base64":{"type":"string"},
+        "keep_structure":{"type":"boolean","description":"preserve the master's silhouette/layout (default true)"},
+        "model":{"type":"string"},"width":{"type":"integer"},"height":{"type":"integer"},
+        "output_path":{"type":"string"}
+      }
+    }>)
+
     BED_SCHEMA = JSON.parse(%<{
       "type":"object",
       "required":["prompt"],
@@ -101,6 +116,8 @@ module MJ
         input_schema: PROP_SCHEMA) { |data| handle_prop(rw, data) }
       ts.tool("bed", "Generate a plain, structurally-faithful 'bed' master from a template.",
         input_schema: BED_SCHEMA) { |data| handle_bed(rw, data) }
+      ts.tool("decorate", "Stage 2: redraw a master image decorated in a given style/theme.",
+        input_schema: DECORATE_SCHEMA) { |data| handle_decorate(rw, data) }
       ts.start
       client
     end
@@ -168,6 +185,24 @@ module MJ
       ensure
         tmp.delete
       end
+    end
+
+    def self.handle_decorate(rw : RunwareClient, data : JSON::Any) : JSON::Any
+      prompt = data.str?("prompt") || raise "decorate requires 'prompt'"
+      src = source_bytes(data)
+      spec = DecorateSpec.from_yaml({"prompt" => prompt}.to_yaml)
+      spec.keep_structure = data.bool("keep_structure", spec.keep_structure)
+      spec.model = data.str("model", spec.model)
+      spec.width = data.int("width", spec.width)
+      spec.height = data.int("height", spec.height)
+      style = nil.as(Bytes?)
+      if sp = data.str?("style_path")
+        raise "style file not found: #{sp}" unless File.exists?(sp)
+        style = File.read(sp).to_slice
+      elsif sb = data.str?("style_base64")
+        style = Base64.decode(sb)
+      end
+      emit(Decorate.generate(rw, src, spec, style), data)
     end
 
     # --- io helpers ---

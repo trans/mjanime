@@ -132,12 +132,40 @@ when "pixelize"
   pixel_path = File.join(dir, "pixel.png")
   MJ::CanvasUtil.write_png_file(final, pixel_path)
   STDERR.puts "[pixelize] wrote #{redraw_path} and #{pixel_path}"
+when "decorate"
+  # mj decorate <dir> — <dir> holds image.png (the master) + decorate.yml, optional style.png.
+  # Stage 2: redraw the master decorated in a style/theme. Writes decorated.png.
+  dir = ARGV[1]?
+  unless dir
+    STDERR.puts "Usage: mj decorate <dir>"
+    exit 1
+  end
+  MJ::Config.load!
+  if MJ::Config.runware_api_key.empty?
+    STDERR.puts "RUNWARE_API_KEY not set."
+    exit 1
+  end
+  image = File.join(dir, "image.png")
+  spec_path = File.join(dir, "decorate.yml")
+  unless File.exists?(image) && File.exists?(spec_path)
+    STDERR.puts "Need #{image} and #{spec_path}. See examples/decorate/ for the format."
+    exit 1
+  end
+  spec = MJ::DecorateSpec.from_yaml(File.read(spec_path))
+  style_path = File.join(dir, "style.png")
+  style = File.exists?(style_path) ? File.read(style_path).to_slice : nil
+  client = MJ::RunwareClient.new(MJ::Config.runware_api_key)
+  STDERR.puts "[decorate] #{image}#{style ? " + style.png" : ""} -> decorated.png (model=#{spec.model})"
+  bytes = MJ::Decorate.generate(client, File.read(image).to_slice, spec, style)
+  out_path = File.join(dir, "decorated.png")
+  File.write(out_path, bytes)
+  STDERR.puts "[decorate] wrote #{out_path}"
 when "bus"
-  # mj bus — join the Arcana bus and serve the image tools (pixelize/prop/bed).
+  # mj bus — join the Arcana bus and serve the image tools (pixelize/prop/bed/decorate).
   MJ::BusService.run
 when "version", "--version", "-v"
   puts "mj #{MJ::VERSION}"
 else
-  STDERR.puts "Usage: mj [init|serve|strip|bed|prop|pixelize|bus|version]"
+  STDERR.puts "Usage: mj [init|serve|strip|bed|prop|pixelize|decorate|bus|version]"
   exit 1
 end

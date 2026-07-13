@@ -1,0 +1,8 @@
+# Stage-2 decorate. Put this as decorate.yml beside an image.png (a plain "bed" master, or
+# any image to restyle). Optional style.png as a second style reference. Run: mj decorate <dir>
+#   -> writes decorated.png
+prompt: >-
+  festive winter circus theme: candy-cane trim, snow-dusted roof, warm golden string lights,
+  holly and ribbon, cheerful storybook colours
+keep_structure: true
+model: "google:4@3"
