@@ -52,14 +52,40 @@ module MJ
       }
     }>)
 
+    # Standalone (`mj bus`): build, register, and block on the receive loop.
     def self.run
       Config.load!
       raise "RUNWARE_API_KEY not set" if Config.runware_api_key.empty?
-      rw = RunwareClient.new(Config.runware_api_key)
-      url = bus_url
+      client = setup(RunwareClient.new(Config.runware_api_key))
+      STDERR.puts "[bus] mj listening on #{bus_url} — tools: pixelize, prop, bed"
+      client.connect # blocks on the WebSocket receive loop
+    end
 
+    # Non-blocking (for `mj serve`): join the bus in a background fiber.
+    # Degrades gracefully — a missing key or unreachable daemon logs and
+    # leaves the web server running.
+    def self.start_background
+      Config.load!
+      if Config.runware_api_key.empty?
+        STDERR.puts "[bus] RUNWARE_API_KEY not set — bus tools disabled."
+        return
+      end
+      client = setup(RunwareClient.new(Config.runware_api_key))
+      spawn do
+        begin
+          STDERR.puts "[bus] mj joining #{bus_url} — tools: pixelize, prop, bed"
+          client.connect
+        rescue ex
+          STDERR.puts "[bus] disabled (#{ex.message})"
+        end
+      end
+    end
+
+    # Build the client + toolset and register the tools. Returns the client
+    # (ts is kept alive by the on_message closure ts.start installs on it).
+    private def self.setup(rw : RunwareClient) : Arcana::Client
       client = Arcana::Client.new(
-        url: url,
+        url: bus_url,
         address: "mj",
         name: "mj",
         description: "Media-jockey image studio — pixel-art restyle, transparent props, structural beds.",
@@ -69,17 +95,14 @@ module MJ
       )
       ts = Arcana::Toolset.new(client: client, name: "mj",
         description: "Media-jockey image studio.")
-
       ts.tool("pixelize", "AI pixel-art restyle (8-bit/16-bit) of a reference image.",
         input_schema: PIXELIZE_SCHEMA) { |data| handle_pixelize(rw, data) }
       ts.tool("prop", "Generate a transparent 2D game prop from a rough flat-colour template.",
         input_schema: PROP_SCHEMA) { |data| handle_prop(rw, data) }
       ts.tool("bed", "Generate a plain, structurally-faithful 'bed' master from a template.",
         input_schema: BED_SCHEMA) { |data| handle_bed(rw, data) }
-
       ts.start
-      STDERR.puts "[bus] mj listening on #{url} — tools: pixelize, prop, bed"
-      client.connect # blocks on the WebSocket receive loop
+      client
     end
 
     def self.bus_url : String

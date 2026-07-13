@@ -13,6 +13,9 @@ when "serve", nil
   MJ::Database.setup!
   MJ::Routes.register
 
+  # Join the Arcana bus alongside the web server (opt out with MJ_BUS=0).
+  MJ::BusService.start_background unless ENV["MJ_BUS"]? == "0"
+
   Kemal.config.port = MJ::Config.port
   Kemal.config.serve_static = {"dir_listing" => false}
   Kemal.run
