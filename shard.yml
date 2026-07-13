@@ -20,3 +20,6 @@ dependencies:
     github: crystal-lang/crystal-sqlite3
   stumpy_png:
     github: stumpycr/stumpy_png
+  arcana-core:
+    github: trans/arcana-core
+    version: ~> 0.9

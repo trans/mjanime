@@ -33,6 +33,7 @@ require "./engine/bed"
 require "./engine/prop"
 require "./engine/pixelize"
 require "./web/routes"
+require "./bus_service"
 
 module MJ
   VERSION = "0.2.0"

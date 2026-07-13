@@ -129,9 +129,12 @@ when "pixelize"
   pixel_path = File.join(dir, "pixel.png")
   MJ::CanvasUtil.write_png_file(final, pixel_path)
   STDERR.puts "[pixelize] wrote #{redraw_path} and #{pixel_path}"
+when "bus"
+  # mj bus — join the Arcana bus and serve the image tools (pixelize/prop/bed).
+  MJ::BusService.run
 when "version", "--version", "-v"
   puts "mj #{MJ::VERSION}"
 else
-  STDERR.puts "Usage: mj [init|serve|strip|bed|prop|pixelize|version]"
+  STDERR.puts "Usage: mj [init|serve|strip|bed|prop|pixelize|bus|version]"
   exit 1
 end
