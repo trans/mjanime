@@ -1,9 +1,9 @@
 module MJ
-  # Config for a Stage-1 "bed" generation. Lives as `bed.yml` beside a `template.png`
-  # (a rudimentary flat-colour sketch: silhouette + door/window colour patches). The bed
+  # Config for a Stage-1 "base" generation. Lives as `base.yml` beside a `template.png`
+  # (a rudimentary flat-colour sketch: silhouette + door/window colour patches). The base
   # is a plain, undecorated, structurally-faithful render used as the master reference for
   # later decorated variations.
-  class BedSpec
+  class BaseSpec
     include YAML::Serializable
 
     property prompt : String

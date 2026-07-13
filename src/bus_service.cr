@@ -54,7 +54,7 @@ module MJ
       }
     }>)
 
-    BED_SCHEMA = JSON.parse(%<{
+    BASE_SCHEMA = JSON.parse(%<{
       "type":"object",
       "required":["prompt"],
       "properties":{
@@ -72,7 +72,7 @@ module MJ
       Config.load!
       raise "RUNWARE_API_KEY not set" if Config.runware_api_key.empty?
       client = setup(RunwareClient.new(Config.runware_api_key))
-      STDERR.puts "[bus] mj listening on #{bus_url} — tools: pixelize, prop, bed"
+      STDERR.puts "[bus] mj listening on #{bus_url} — tools: pixelize, prop, base"
       client.connect # blocks on the WebSocket receive loop
     end
 
@@ -88,7 +88,7 @@ module MJ
       client = setup(RunwareClient.new(Config.runware_api_key))
       spawn do
         begin
-          STDERR.puts "[bus] mj joining #{bus_url} — tools: pixelize, prop, bed"
+          STDERR.puts "[bus] mj joining #{bus_url} — tools: pixelize, prop, base"
           client.connect
         rescue ex
           STDERR.puts "[bus] disabled (#{ex.message})"
@@ -103,7 +103,7 @@ module MJ
         url: bus_url,
         address: "mj",
         name: "mj",
-        description: "Media-jockey image studio — pixel-art restyle, transparent props, structural beds.",
+        description: "Media-jockey image studio — pixel-art restyle, transparent props, structural bases.",
         kind: Arcana::Directory::Kind::Service,
         capability: "image",
         tags: ["image", "pixel-art", "game-assets"],
@@ -114,8 +114,8 @@ module MJ
         input_schema: PIXELIZE_SCHEMA) { |data| handle_pixelize(rw, data) }
       ts.tool("prop", "Generate a transparent 2D game prop from a rough flat-colour template.",
         input_schema: PROP_SCHEMA) { |data| handle_prop(rw, data) }
-      ts.tool("bed", "Generate a plain, structurally-faithful 'bed' master from a template.",
-        input_schema: BED_SCHEMA) { |data| handle_bed(rw, data) }
+      ts.tool("base", "Generate a plain, structurally-faithful 'base' master from a template.",
+        input_schema: BASE_SCHEMA) { |data| handle_base(rw, data) }
       ts.tool("decorate", "Stage 2: redraw a master image decorated in a given style/theme.",
         input_schema: DECORATE_SCHEMA) { |data| handle_decorate(rw, data) }
       ts.start
@@ -168,19 +168,19 @@ module MJ
       emit(CanvasUtil.to_png_bytes(result.prop), data)
     end
 
-    def self.handle_bed(rw : RunwareClient, data : JSON::Any) : JSON::Any
-      prompt = data.str?("prompt") || raise "bed requires 'prompt'"
+    def self.handle_base(rw : RunwareClient, data : JSON::Any) : JSON::Any
+      prompt = data.str?("prompt") || raise "base requires 'prompt'"
       src = source_bytes(data)
-      spec = BedSpec.from_yaml({"prompt" => prompt}.to_yaml)
+      spec = BaseSpec.from_yaml({"prompt" => prompt}.to_yaml)
       spec.model = data.str("model", spec.model)
       spec.strength = data.float("strength", spec.strength)
       spec.steps = data.int("steps", spec.steps)
       spec.cfg_scale = data.float("cfg_scale", spec.cfg_scale)
       spec.negative_prompt = data.str("negative_prompt", spec.negative_prompt)
-      tmp = File.tempfile("mj-bed", ".png")
+      tmp = File.tempfile("mj-base", ".png")
       begin
         File.write(tmp.path, src)
-        res = Bed.generate(rw, tmp.path, spec)
+        res = Base.generate(rw, tmp.path, spec)
         emit(res.image_data, data)
       ensure
         tmp.delete

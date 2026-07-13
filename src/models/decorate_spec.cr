@@ -1,6 +1,6 @@
 module MJ
   # Config for a Stage-2 "decorate" generation. Lives as `decorate.yml` beside an
-  # `image.png` (the plain "bed" master from Stage 1, or any image to restyle).
+  # `image.png` (the plain "base" master from Stage 1, or any image to restyle).
   # Run:  mj decorate <dir>   -> writes decorated.png
   #
   # Takes the master as a reference and redraws it decorated in the given style/theme

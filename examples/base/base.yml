@@ -1,5 +1,5 @@
-# Stage-1 bed config. Put this as bed.yml beside a template.png (a flat-colour sketch:
-# silhouette + door/window colour patches). Run:  minanime bed <dir>   -> writes bed.png
+# Stage-1 base config. Put this as base.yml beside a template.png (a flat-colour sketch:
+# silhouette + door/window colour patches). Run:  mj base <dir>   -> writes base.png
 prompt: >-
   A realistic detailed circus tent with clear structural form - visible fabric panels, seams,
   tent poles, a defined doorway opening, and round windows - honouring this exact silhouette.

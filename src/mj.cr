@@ -46,12 +46,12 @@ when "strip"
   client = MJ::RunwareClient.new(MJ::Config.runware_api_key)
   builder = MJ::StripBuilder.new(client)
   builder.build(dir, script, out_path) { |msg| STDERR.puts "[strip] #{msg}" }
-when "bed"
-  # mj bed <dir> [strength] — <dir> holds template.png + bed.yml, writes bed.png.
+when "base"
+  # mj base <dir> [strength] — <dir> holds template.png + base.yml, writes base.png.
   # Stage 1 of template-guided generation: rudimentary sketch -> plain structural master.
   dir = ARGV[1]?
   unless dir
-    STDERR.puts "Usage: mj bed <dir> [strength]"
+    STDERR.puts "Usage: mj base <dir> [strength]"
     exit 1
   end
   MJ::Config.load!
@@ -60,19 +60,19 @@ when "bed"
     exit 1
   end
   template = File.join(dir, "template.png")
-  spec_path = File.join(dir, "bed.yml")
+  spec_path = File.join(dir, "base.yml")
   unless File.exists?(template) && File.exists?(spec_path)
-    STDERR.puts "Need #{template} and #{spec_path}. See examples/bed/ for the format."
+    STDERR.puts "Need #{template} and #{spec_path}. See examples/base/ for the format."
     exit 1
   end
-  spec = MJ::BedSpec.from_yaml(File.read(spec_path))
+  spec = MJ::BaseSpec.from_yaml(File.read(spec_path))
   spec.strength = ARGV[2].to_f if ARGV[2]?   # optional strength override for quick sweeps
   client = MJ::RunwareClient.new(MJ::Config.runware_api_key)
-  STDERR.puts "[bed] #{template} -> bed.png (model=#{spec.model} strength=#{spec.strength})"
-  result = MJ::Bed.generate(client, template, spec)
-  bed_path = File.join(dir, "bed.png")
-  File.write(bed_path, result.image_data)
-  STDERR.puts "[bed] wrote #{bed_path}"
+  STDERR.puts "[base] #{template} -> base.png (model=#{spec.model} strength=#{spec.strength})"
+  result = MJ::Base.generate(client, template, spec)
+  base_path = File.join(dir, "base.png")
+  File.write(base_path, result.image_data)
+  STDERR.puts "[base] wrote #{base_path}"
 when "prop"
   # mj prop <dir> — <dir> holds template.png + prop.yml, writes render.png + prop.png.
   # The prop machine: rough template -> Nano render on a solid bg -> keyed transparent prop.
@@ -161,11 +161,11 @@ when "decorate"
   File.write(out_path, bytes)
   STDERR.puts "[decorate] wrote #{out_path}"
 when "bus"
-  # mj bus — join the Arcana bus and serve the image tools (pixelize/prop/bed/decorate).
+  # mj bus — join the Arcana bus and serve the image tools (pixelize/prop/base/decorate).
   MJ::BusService.run
 when "version", "--version", "-v"
   puts "mj #{MJ::VERSION}"
 else
-  STDERR.puts "Usage: mj [init|serve|strip|bed|prop|pixelize|decorate|bus|version]"
+  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|bus|version]"
   exit 1
 end

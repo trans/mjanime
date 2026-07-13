@@ -1,5 +1,5 @@
 module MJ
-  # Stage 2 of template-guided generation: a plain "bed" master -> a decorated variation.
+  # Stage 2 of template-guided generation: a plain "base" master -> a decorated variation.
   # The master is passed as a reference image and Nano Banana 2 redraws it in the requested
   # style/theme. An optional style-reference image steers the look (the two-reference recipe:
   # subject + style). This is the seam that turns one master into many themed venues.

@@ -1,4 +1,4 @@
-# Stage-2 decorate. Put this as decorate.yml beside an image.png (a plain "bed" master, or
+# Stage-2 decorate. Put this as decorate.yml beside an image.png (a plain "base" master, or
 # any image to restyle). Optional style.png as a second style reference. Run: mj decorate <dir>
 #   -> writes decorated.png
 prompt: >-
