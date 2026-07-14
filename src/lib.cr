@@ -34,6 +34,7 @@ require "./engine/base"
 require "./engine/prop"
 require "./engine/pixelize"
 require "./engine/decorate"
+require "./engine/sfx"
 require "./web/routes"
 require "./bus_service"
 

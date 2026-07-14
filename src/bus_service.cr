@@ -39,6 +39,15 @@ module MJ
       }
     }>)
 
+    SFX_SCHEMA = JSON.parse(%<{
+      "type":"object",
+      "properties":{
+        "input_path":{"type":"string","description":"reference sound path (wav/mp3/...) — or use audio_base64"},
+        "audio_base64":{"type":"string","description":"base64 of a wav/mp3 reference sound"},
+        "preview_path":{"type":"string","description":"optional: render an approximation wav here"}
+      }
+    }>)
+
     DECORATE_SCHEMA = JSON.parse(%<{
       "type":"object",
       "required":["prompt"],
@@ -118,6 +127,8 @@ module MJ
         input_schema: BASE_SCHEMA) { |data| handle_base(rw, data) }
       ts.tool("decorate", "Stage 2: redraw a master image decorated in a given style/theme.",
         input_schema: DECORATE_SCHEMA) { |data| handle_decorate(rw, data) }
+      ts.tool("sfx", "Fit a procedural Web Audio SFX recipe (JSON) from a reference sound.",
+        input_schema: SFX_SCHEMA) { |data| handle_sfx(data) }
       ts.start
       client
     end
@@ -203,6 +214,31 @@ module MJ
         style = Base64.decode(sb)
       end
       emit(Decorate.generate(rw, src, spec, style), data)
+    end
+
+    def self.handle_sfx(data : JSON::Any) : JSON::Any
+      tmp = nil.as(String?)
+      wav = if p = data.str?("input_path")
+              raise "audio file not found: #{p}" unless File.exists?(p)
+              p
+            elsif b64 = data.str?("audio_base64")
+              tmp = File.tempname("mj_sfx_in", ".wav")
+              File.write(tmp.not_nil!, Base64.decode(b64))
+              tmp.not_nil!
+            else
+              raise "sfx requires input_path or audio_base64"
+            end
+      begin
+        preview = data.str?("preview_path")
+        recipe = Sfx.fit(wav, preview)
+        result = {"recipe" => recipe} of String => JSON::Any
+        result["preview_path"] = JSON::Any.new(preview) if preview
+        JSON::Any.new(result)
+      ensure
+        if t = tmp
+          File.delete(t) if File.exists?(t)
+        end
+      end
     end
 
     # --- io helpers ---

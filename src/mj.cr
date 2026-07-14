@@ -160,12 +160,25 @@ when "decorate"
   out_path = File.join(dir, "decorated.png")
   File.write(out_path, bytes)
   STDERR.puts "[decorate] wrote #{out_path}"
+when "sfx"
+  # mj sfx <input.wav|mp3> [out.sfx.json] [preview.wav]
+  # Fit a procedural Web Audio SFX recipe from a reference sound (no API needed).
+  input = ARGV[1]?
+  unless input
+    STDERR.puts "Usage: mj sfx <input.wav|mp3> [out.sfx.json] [preview.wav]"
+    exit 1
+  end
+  preview = ARGV[3]?
+  recipe = MJ::Sfx.fit(input, preview)
+  out_path = ARGV[2]? || input.sub(/\.[^.]+$/, "") + ".sfx.json"
+  File.write(out_path, recipe.to_pretty_json)
+  STDERR.puts "[sfx] #{input} -> #{out_path}#{preview ? " (+ #{preview})" : ""}"
 when "bus"
-  # mj bus — join the Arcana bus and serve the image tools (pixelize/prop/base/decorate).
+  # mj bus — join the Arcana bus and serve the tools (pixelize/prop/base/decorate/sfx).
   MJ::BusService.run
 when "version", "--version", "-v"
   puts "mj #{MJ::VERSION}"
 else
-  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|bus|version]"
+  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|sfx|bus|version]"
   exit 1
 end
