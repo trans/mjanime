@@ -22,4 +22,4 @@ dependencies:
     github: stumpycr/stumpy_png
   arcana-core:
     github: trans/arcana-core
-    version: ~> 0.9
+    version: ~> 0.10
