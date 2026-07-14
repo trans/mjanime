@@ -16,3 +16,7 @@
 ## pixelize
 - Prompt exception for text/signage: keep it as straight pixelation, not redrawn letters
   (redrawn lettering reads poorly, esp. at 8-bit). — added 2026-07-14.
+- **Tweak / validate the text-exception** — the first pass leans text blockier but isn't a clean win
+  (Nano regenerates the whole image each run, so it's not an isolated A/B). Revisit: test on hard cases
+  (small/dense text, tiny 8-bit lettering, busy multi-word signs), and consider stronger wording if
+  needed. Nano Banana 2 already renders sign text fairly well, so the win shows most on hard cases.
