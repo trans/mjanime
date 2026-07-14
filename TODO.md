@@ -1,0 +1,18 @@
+# mj — TODO
+
+## sfx (audio) refinements
+- **Filtered-random wobble** envelope instead of summed sine LFOs — the sines read slightly regular;
+  a low-passed random envelope (like the first hand-tuned synth) is more organic.
+- **Fit the peaking Q** from the resonant peak's bandwidth instead of the fixed `1.5`.
+- **Pitch-sweep detection** for the tonal (osc) branch — fit rising/falling freq from the spectrogram.
+  Needs a tonal reference to test (coin / laser / jump).
+
+## image loose ends (explored, never wrapped as tools)
+- **`panorama`** tool — wide establishing shots. Easy now: Nano Banana 2 (`google:4@3`) has native
+  ultra-wide aspect presets (21:9 `1548×672`, etc.), retiring the old FLUX-dims workaround.
+- **`zoom` / `enter`** tool — generative point-and-click scene generator (two-ref recipe:
+  subject-crop + wide-scene → a new destination scene). See memory `generative-zoom-pointclick`.
+
+## pixelize
+- Prompt exception for text/signage: keep it as straight pixelation, not redrawn letters
+  (redrawn lettering reads poorly, esp. at 8-bit). — added 2026-07-14.

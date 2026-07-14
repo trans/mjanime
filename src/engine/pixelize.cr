@@ -26,6 +26,12 @@ module MJ
 
     def self.build_prompt(spec : PixelSpec) : String
       prompt = style_prompt(spec.style)
+      # Text is the exception to "redraw": redrawn letters read poorly at pixel resolution,
+      # so keep any lettering/signage as a straight pixelation of the original instead.
+      prompt += " Exception for text: for any regions containing text, letters, words, numbers " \
+        "or signage, do NOT redraw the lettering as shapes — instead keep it as a straight, crisp " \
+        "pixelated (downscaled) version of the original text, since redrawn letters read poorly at " \
+        "pixel resolution. This applies only to the text regions, not the rest of the image."
       case spec.background
       when "transparent"
         prompt += " Place the artwork on a solid flat magenta (#FF00FF) background, nothing else."
