@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>mj — Mouth Charter</title>
+<style>
+  :root{ color-scheme:dark; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:#0d0a14; color:#e7dcf5; font:14px/1.5 "Trebuchet MS",system-ui,sans-serif; }
+  #wrap{ max-width:900px; margin:0 auto; padding:16px; }
+  h1{ font-size:18px; color:#d9b04a; margin:0 0 4px; }
+  .hint{ color:#9a86c0; font-size:12px; margin-bottom:10px; }
+  #srcrow{ display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
+  #srcrow input[type=text]{ flex:1; min-width:200px; background:#1a1226; color:#e7dcf5; border:1px solid #3a2b52; border-radius:6px; padding:6px 9px; }
+  #srcrow input[type=number]{ width:5em; background:#1a1226; color:#e7dcf5; border:1px solid #3a2b52; border-radius:6px; padding:6px 9px; }
+  video{ width:100%; max-height:52vh; background:#000; border:1px solid #3a2b52; border-radius:8px; }
+  #time{ font:700 22px "Courier New",monospace; color:#ffe9a8; margin:8px 0; }
+  #time small{ color:#9a86c0; font-size:13px; font-weight:400; }
+  .btns{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+  button{ font:600 13px/1 "Trebuchet MS"; color:#f4ecff; cursor:pointer; border:1px solid #6a4a8a;
+    border-radius:7px; padding:8px 11px; background:#2a1c3e; }
+  button:hover{ background:#3a2854; }
+  button.mark{ border-color:#d9b04a; }
+  .k{ color:#8ce05a; font-size:11px; }
+  #spark{ font:14px/1 "Courier New",monospace; letter-spacing:1px; color:#8ce05a; background:#120d1c;
+    padding:8px; border-radius:6px; overflow-x:auto; white-space:nowrap; margin:6px 0; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; margin-top:6px; }
+  td,th{ text-align:left; padding:3px 8px; border-bottom:1px solid #241a34; }
+  td.del{ color:#e5163f; cursor:pointer; width:20px; }
+  td.seek{ color:#8ce05a; cursor:pointer; }
+  textarea{ width:100%; height:90px; background:#120d1c; color:#cfe; border:1px solid #3a2b52;
+    border-radius:6px; font:12px "Courier New",monospace; margin-top:6px; }
+  .row{ display:flex; gap:16px; align-items:flex-start; }
+  .col{ flex:1; min-width:0; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>Mouth Charter</h1>
+  <div class="hint">Step through and press <b>0–9</b> for how open the mouth is in <b>each frame</b>
+    (0 = closed, 9 = wide). It auto-advances one frame after each press, so just tap through the clip.
+    Any frames you skip get filled in by interpolation. Keys: <b>Space</b> play/pause ·
+    <b>← →</b> step 1 frame · <b>Shift+← →</b> ±6 frames · <b>Z</b> undo. Then <b>Export</b>
+    → feeds <code>tools/align.py --src-openness</code>.</div>
+  <div id="srcrow">
+    <input id="src" type="text" placeholder="video URL/path (served same-origin)…">
+    <button onclick="loadUrl()">Load URL</button>
+    <label>or <input id="file" type="file" accept="video/*"></label>
+    <label>fps <input id="fps" type="number" min="1" max="120" step="0.001" value="24" onchange="setFps()"></label>
+  </div>
+  <video id="v" preload="auto"></video>
+  <div id="time">0.000 s <small id="fr">frame 0 / 0</small></div>
+  <div class="btns">
+    <button onclick="step(-1)">◀ frame <span class="k">←</span></button>
+    <button onclick="step(1)">frame ▶ <span class="k">→</span></button>
+    <button onclick="jump(-0.25)">−0.25s</button>
+    <button onclick="jump(0.25)">+0.25s</button>
+    <button onclick="play()">play/pause <span class="k">Spc</span></button>
+  </div>
+  <div class="btns" style="align-items:center;">
+    <span class="k">press <b style="color:#8ce05a; font-size:14px;">0–9</b> = how open this frame (0 closed → 9 wide)</span>
+    <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="adv" checked> auto-advance a frame</label>
+    <label style="display:flex; align-items:center; gap:6px; padding:0 6px;">slider
+      <input id="lvl" type="range" min="0" max="1" step="0.05" value="0.6" oninput="lvlShow()" style="width:100px;">
+      <b id="lvlv" style="color:#ffe9a8; width:2.6em;">0.60</b>
+      <button class="mark" onclick="mark(+document.getElementById('lvl').value)">Mark <span class="k">Enter</span></button>
+    </label>
+    <button onclick="undo()">↶ undo <span class="k">Z</span></button>
+    <button onclick="expo()">⤓ Export</button>
+  </div>
+  <div id="spark">—</div>
+  <div class="row">
+    <div class="col">
+      <table id="tbl"><thead><tr><th>t (s)</th><th>state</th><th></th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="col">
+      <div class="hint">Export (openness, one value per source frame — feed to align.py --src-openness):</div>
+      <textarea id="out" readonly placeholder="press Export"></textarea>
+      <button onclick="download()">Download openness.csv</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+let FPS = 24;                                     // configurable (set from the fps input)
+const v = document.getElementById("v");
+let marks = [];                                   // [{t, val}] keyframes, val 0..1
+let clipName = "clip";
+const $ = id => document.getElementById(id);
+
+function setFps(){ const f = +$("fps").value; if(f > 0){ FPS = f; render(); } }
+function loadUrl(){ const u = $("src").value.trim(); if(!u) return;
+  clipName = u.split("/").pop().replace(/\.\w+$/,"") || "clip"; v.src = u; marks = []; render(); }
+$("file").addEventListener("change", e => {
+  const f = e.target.files[0]; if(!f) return;
+  clipName = f.name.replace(/\.\w+$/,"") || "clip"; v.src = URL.createObjectURL(f); marks = []; render();
+});
+
+let cur = 0;                                          // authoritative current frame index
+function fmt(t){ return t.toFixed(3); }
+function nF(){ return Math.max(1, Math.round((v.duration||5)*FPS)); }
+function seek(){ v.currentTime = Math.max(0, Math.min((v.duration||0)-1e-3, cur/FPS)); }
+v.addEventListener("loadedmetadata", ()=>{ cur=0; render(); });
+function tick(){ if(!v.paused) cur = Math.round(v.currentTime * FPS);   // follow during playback
+  $("time").firstChild.nodeValue = fmt(cur/FPS) + " s ";
+  $("fr").textContent = "frame " + cur + " / " + nF();
+  requestAnimationFrame(tick); }
+requestAnimationFrame(tick);
+
+function pause(){ v.pause(); }
+function step(n){ pause(); cur = Math.max(0, Math.min(nF()-1, cur+n)); seek(); }
+function jump(dt){ pause(); cur = Math.max(0, Math.min(nF()-1, cur+Math.round(dt*FPS))); seek(); }
+function play(){ v.paused ? v.play() : v.pause(); }
+
+function mark(val){
+  const t = +(cur/FPS).toFixed(3);
+  marks = marks.filter(m => Math.abs(m.t - t) > 1/FPS/2);   // replace a mark on the same frame
+  marks.push({t, val}); marks.sort((a,b)=>a.t-b.t); render();
+}
+function undo(){ marks.pop(); render(); }
+function delAt(i){ marks.splice(i,1); render(); }
+
+const NAME = v => v>=0.9?"Wide":v>=0.4?"Open":"Closed";
+function render(){
+  const tb = $("tbl").querySelector("tbody"); tb.innerHTML="";
+  marks.forEach((m,i)=>{ const tr=document.createElement("tr");
+    tr.innerHTML = `<td class="seek">${fmt(m.t)}</td><td>${NAME(m.val)} (${m.val})</td><td class="del">✕</td>`;
+    tr.children[0].onclick=()=>{ pause(); cur=Math.round(m.t*FPS); seek(); };
+    tr.children[2].onclick=()=>delAt(i); tb.appendChild(tr); });
+  $("spark").textContent = marks.length ? sparkline() : "—";
+}
+// interpolate marks across the whole clip -> per-frame openness
+function perFrame(){
+  const N = Math.max(1, Math.round((v.duration||0)*FPS));
+  if(!marks.length) return new Array(N).fill(0);
+  const out=[];
+  for(let f=0; f<N; f++){ const t=f/FPS;
+    if(t<=marks[0].t){ out.push(marks[0].val); continue; }
+    if(t>=marks[marks.length-1].t){ out.push(marks[marks.length-1].val); continue; }
+    let a=marks[0]; for(const m of marks){ if(m.t<=t) a=m; else { const b=m;
+      out.push(a.val + (b.val-a.val)*(t-a.t)/(b.t-a.t)); break; } }
+  }
+  return out;
+}
+function sparkline(){ const b="▁▂▃▄▅▆▇█", pf=perFrame(), n=Math.min(80,pf.length), s=[];
+  for(let i=0;i<n;i++){ const val=pf[Math.floor(i*pf.length/n)]; s.push(b[Math.min(7,Math.floor(val*7.99))]); }
+  return s.join(""); }
+function expo(){ $("out").value = perFrame().map(x=>x.toFixed(3)).join("\n"); }
+function download(){ expo(); const blob=new Blob([$("out").value],{type:"text/csv"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download = clipName + ".openness.csv"; a.click(); }
+
+function lvlShow(){ $("lvlv").textContent = (+$("lvl").value).toFixed(2); }
+addEventListener("keydown", e=>{
+  if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA") return;
+  const k=e.key.toLowerCase();
+  if(e.key===" "){ e.preventDefault(); play(); }
+  else if(e.key==="ArrowLeft") step(e.shiftKey?-6:-1);
+  else if(e.key==="ArrowRight") step(e.shiftKey?6:1);
+  else if(e.key==="Enter"){ mark(+$("lvl").value); if($("adv").checked) step(1); }
+  else if(/^[0-9]$/.test(e.key)){ mark(+e.key/9); if($("adv").checked) step(1); }  // per-frame: tap through
+  else if(k==="z") undo();
+});
+</script>
+</body>
+</html>

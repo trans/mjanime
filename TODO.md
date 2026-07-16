@@ -24,3 +24,12 @@
   (Nano regenerates the whole image each run, so it's not an isolated A/B). Revisit: test on hard cases
   (small/dense text, tiny 8-bit lettering, busy multi-word signs), and consider stronger wording if
   needed. Nano Banana 2 already renders sign text fairly well, so the win shows most on hard cases.
+
+## lip-sync / mouth (ported from siliconcircus 2026-07-16)
+- Ported `public/mouth-charter.html` (manual per-frame openness capture) + `tools/align.py` (Viterbi
+  retiming: openness curve + audio RMS → forward/reverse/hold path, hub-hops between clips).
+- **AI mouth-openness scorer (the mj value-add).** Auto-produce `openness.csv`: human picks the max-open
+  anchor frame; AI rates each (sub-sampled) frame's open % vs that anchor → consistent scale, no sort,
+  works on stylized/non-human faces where CV landmarks fail. Same CSV contract → drops into align.py.
+  Optionally also emit a viseme label per frame (open_pct + viseme in one call). Validate on
+  `archive/cattacula-yappy.mp4`. Then wire as `mj mouth` (CLI + bus) + an "AI auto-fill" button in the charter.
