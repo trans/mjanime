@@ -1,0 +1,30 @@
+{
+  "name": "dunk-2to3",
+  "duration": 0.74,
+  "gain": 0.9,
+  "source": {
+    "type": "noise"
+  },
+  "filters": [
+    {
+      "type": "highpass",
+      "freq": 142,
+      "q": 0.7
+    },
+    {
+      "type": "lowpass",
+      "freq": 4777,
+      "q": 0.7
+    },
+    {
+      "type": "peaking",
+      "freq": 144,
+      "q": 1.5,
+      "gain": 12.0
+    }
+  ],
+  "env": {
+    "attack": 0.008,
+    "release": 0.7
+  }
+}
