@@ -1,12 +1,10 @@
 # mj — TODO
 
 ## sfx (audio) refinements
-- **Transient / percussive mode (HIGH VALUE).** The envelope model only fits sustained textures
-  (attack/hold/release + wobble) — works for the rumble, FAILS on a percussive hit (water dunk: sharp
-  impact + decay came out as a slow fade + wobble humps). Detect sharp-onset + monotonic-decay sounds
-  and fit a near-zero attack + exponential decay envelope, and SUPPRESS wobble. Also: the 20ms RMS
-  envelope smears the transient — use a faster/peak envelope so the onset isn't mis-read as a long attack.
-  Validated the gap on `data/dunk-2to3.wav` 2026-07-15 (spectrum fit great, envelope wrong).
+- [x] **Transient / percussive mode** — DONE 2026-07-15. Detect front-loaded sounds via envelope
+  temporal centroid → sharp attack + decay + no wobble; tighten body to actual energy so a silent
+  lead-in can't inflate the attack. Water dunk now auto-fits a proper hit; rumble stays sustained.
+  (Still crude: uses a `**1.5` power decay, not a true exponential; ignores secondary splashes.)
 - **Filtered-random wobble** envelope instead of summed sine LFOs — the sines read slightly regular;
   a low-passed random envelope (like the first hand-tuned synth) is more organic.
 - **Fit the peaking Q** from the resonant peak's bandwidth instead of the fixed `1.5`.
