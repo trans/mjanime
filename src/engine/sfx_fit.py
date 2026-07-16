@@ -78,6 +78,9 @@ def autofit(path):
             runs.append((i, j)); i = j
         else: i += 1
     b0, b1 = max(runs, key=lambda r: r[1] - r[0]) if runs else (0, len(x))
+    seg = env[b0:b1]; idx = np.where(seg > thr)[0]   # tighten to actual energy (drop any bridged silence)
+    if len(idx):
+        b0, b1 = b0 + int(idx[0]), b0 + int(idx[-1]) + 1
     body = x[b0:b1]; benv = env[b0:b1]; dur = len(body) / sr
 
     F = np.abs(np.fft.rfft(body * np.hanning(len(body)))); fr = np.fft.rfftfreq(len(body), 1 / sr); P = F ** 2
@@ -93,25 +96,35 @@ def autofit(path):
     pk_gain = float(np.clip(10 * np.log10(np.max(Pb) / np.median(Pb)), 0, 12))
 
     pk = float(benv.max())
-    a_idx = np.where(benv >= 0.7 * pk)[0]; attack = round(float(a_idx[0] / sr) if len(a_idx) else 0.05, 2)
-    l_idx = np.where(benv >= 0.5 * pk)[0]; last = int(l_idx[-1]) if len(l_idx) else len(benv) - 1
-    release = round(max(0.05, (len(benv) - last) / sr), 2)
-    attack = min(attack, 0.8 * dur); release = min(release, 0.8 * dur)
-
-    e = benv - np.mean(benv); Ef = np.abs(np.fft.rfft(e * np.hanning(len(e)))); ef = np.fft.rfftfreq(len(e), 1 / sr)
-    m = (ef >= 1) & (ef <= 12); efm = ef[m]; order = np.argsort(Ef[m])[::-1]
-    rates = sorted(round(float(efm[k]), 1) for k in order[:3]) if len(efm) else [4.0]
-    depth = float(np.clip(np.std(benv) / (np.mean(benv) + 1e-9) * 0.4, 0.05, 0.4))
+    # percussive = energy is front-loaded (sharp onset + decay), vs a sustained/building texture
+    tcent = float(np.sum(np.arange(len(benv)) * benv) / (np.sum(benv) + 1e-9)) / max(len(benv), 1)
+    percussive = tcent < 0.42
+    if percussive:
+        # sharp hit + decay, no wobble; decay ramps down over most of the clip
+        attack = 0.008
+        release = round(min(0.95 * dur, dur - attack - 0.01), 2)
+        wobble = None
+    else:
+        a_idx = np.where(benv >= 0.7 * pk)[0]; attack = round(float(a_idx[0] / sr) if len(a_idx) else 0.05, 2)
+        l_idx = np.where(benv >= 0.5 * pk)[0]; last = int(l_idx[-1]) if len(l_idx) else len(benv) - 1
+        release = round(max(0.05, (len(benv) - last) / sr), 2)
+        attack = min(attack, 0.8 * dur); release = min(release, 0.8 * dur)
+        e = benv - np.mean(benv); Ef = np.abs(np.fft.rfft(e * np.hanning(len(e)))); ef = np.fft.rfftfreq(len(e), 1 / sr)
+        m = (ef >= 1) & (ef <= 12); efm = ef[m]; order = np.argsort(Ef[m])[::-1]
+        rates = sorted(round(float(efm[k]), 1) for k in order[:3]) if len(efm) else [4.0]
+        depth = float(np.clip(np.std(benv) / (np.mean(benv) + 1e-9) * 0.4, 0.05, 0.4))
+        wobble = {"rates": rates, "depth": round(depth, 2), "base": round(1 - depth, 2)}
 
     src = {"type": "noise"} if flat > 0.15 else {"type": "osc", "wave": "sine", "freq": round(peak)}
     filters = [{"type": "highpass", "freq": round(lo), "q": 0.7}]
     filters += [{"type": "lowpass", "freq": round(hi), "q": 0.7}] * stages
     if src["type"] == "noise" and pk_gain > 2:
         filters.append({"type": "peaking", "freq": round(peak), "q": 1.5, "gain": round(pk_gain, 1)})
-    return {"name": os.path.splitext(os.path.basename(path))[0], "duration": round(dur, 2), "gain": 0.9,
-            "source": src, "filters": filters,
-            "wobble": {"rates": rates, "depth": round(depth, 2), "base": round(1 - depth, 2)},
-            "env": {"attack": attack, "release": release}}
+    recipe = {"name": os.path.splitext(os.path.basename(path))[0], "duration": round(dur, 2), "gain": 0.9,
+              "source": src, "filters": filters, "env": {"attack": attack, "release": release}}
+    if wobble:
+        recipe["wobble"] = wobble
+    return recipe
 
 
 def main():
