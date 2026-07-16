@@ -6,15 +6,15 @@ module MJ
     class_property data_dir : String = "./data"
     class_property runware_api_key : String = ""
     class_property openai_api_key : String = ""
-    class_property port : Int32 = 4444
+    class_property port : Int32 = 21683 # `cyclops-port mj` (crc32-stable, avoids collisions)
 
     class ProjectConfig
       include YAML::Serializable
 
       property data_dir : String = "./data"
-      property port : Int32 = 4444
+      property port : Int32 = 21683 # `cyclops-port mj`
 
-      def initialize(@data_dir = "./data", @port = 4444)
+      def initialize(@data_dir = "./data", @port = 21683)
       end
     end
 
@@ -48,7 +48,7 @@ module MJ
       # Env vars override config file
       @@runware_api_key = ENV["RUNWARE_API_KEY"]? || ""
       @@openai_api_key = ENV["OPENAI_API_KEY"]? || ""
-      @@data_dir = ENV["MINANIME_DATA_DIR"]? || @@data_dir
+      @@data_dir = ENV["MJ_DATA_DIR"]? || @@data_dir
       @@port = ENV["PORT"]?.try(&.to_i) || @@port
 
       if @@runware_api_key.empty?
