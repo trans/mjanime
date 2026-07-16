@@ -9,6 +9,11 @@ module MJ
         render "src/views/index.ecr", "src/views/layout.ecr"
       end
 
+      # -- SFX recipe audition --
+      get "/sfx" do |env|
+        render "src/views/sfx.ecr", "src/views/layout.ecr"
+      end
+
       # -- New cut form --
       get "/cuts/new" do |env|
         render "src/views/cuts/new.ecr", "src/views/layout.ecr"
