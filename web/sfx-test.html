@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mj — SFX recipe audition</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font: 15px/1.5 system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem;
+         background: #14161c; color: #e6e8ee; }
+  h1 { font-size: 1.3rem; } h2 { font-size: 1rem; color: #9aa3b2; margin-top: 1.8rem; }
+  button { font: inherit; padding: .5rem 1rem; margin: .25rem .5rem .25rem 0; border: 0; border-radius: 8px;
+           background: #3a6df0; color: #fff; cursor: pointer; }
+  button.ghost { background: #2a2e38; }
+  button:active { transform: translateY(1px); }
+  textarea { width: 100%; height: 220px; font: 13px/1.45 ui-monospace, monospace; background: #0e1015;
+             color: #cdd3df; border: 1px solid #2a2e38; border-radius: 8px; padding: .75rem; box-sizing: border-box; }
+  .hint { color: #7b8494; font-size: 13px; }
+  code { background: #0e1015; padding: .1rem .3rem; border-radius: 4px; }
+</style>
+</head>
+<body>
+<h1>mj — SFX recipe audition 🔊</h1>
+<p class="hint">Plays <code>.sfx.json</code> recipes (from <code>mj sfx</code>) live with the Web Audio API.
+Click a preset, or paste a recipe below and hit <b>Play recipe</b>. Edit numbers and replay to tune by ear.</p>
+
+<h2>Presets</h2>
+<div id="presets"></div>
+
+<h2>Paste / edit a recipe</h2>
+<textarea id="recipe" spellcheck="false"></textarea>
+<div>
+  <button id="play">▶ Play recipe</button>
+  <button id="stop" class="ghost">■ Stop</button>
+</div>
+
+<script>
+// --- playSfx: the generic Web Audio player (same as web/sfx-player.js) ---
+function playSfx(ctx, r, startTime) {
+  const t = startTime ?? ctx.currentTime, fs = ctx.sampleRate, dur = r.duration ?? 1;
+  let src;
+  const s = r.source || { type: "noise" };
+  if (s.type === "noise") {
+    const buf = ctx.createBuffer(1, Math.max(1, Math.floor(fs * Math.max(2, dur))), fs);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+  } else {
+    src = ctx.createOscillator(); src.type = s.wave || "sine";
+    src.frequency.setValueAtTime(s.freq ?? 440, t);
+    if (s.freqEnd != null) src.frequency.linearRampToValueAtTime(s.freqEnd, t + dur);
+  }
+  let node = src;
+  for (const f of r.filters || []) {
+    const bq = ctx.createBiquadFilter(); bq.type = f.type; bq.frequency.value = f.freq;
+    if (f.q != null) bq.Q.value = f.q; if (f.gain != null) bq.gain.value = f.gain;
+    node.connect(bq); node = bq;
+  }
+  const wob = ctx.createGain(), lfos = [];
+  if (r.wobble && (r.wobble.rates || []).length) {
+    wob.gain.value = r.wobble.base ?? 0.7;
+    const amt = ctx.createGain(); amt.gain.value = r.wobble.depth ?? 0.2;
+    for (const rate of r.wobble.rates) { const l = ctx.createOscillator(); l.frequency.value = rate; l.connect(amt); lfos.push(l); }
+    amt.connect(wob.gain);
+  } else wob.gain.value = 1;
+  node.connect(wob);
+  const env = ctx.createGain(), g = r.gain ?? 0.9, a = r.env?.attack ?? 0.01, rel = r.env?.release ?? 0.05;
+  env.gain.setValueAtTime(0.0001, t);
+  env.gain.linearRampToValueAtTime(g, t + a);
+  env.gain.setValueAtTime(g, t + Math.max(a, dur - rel));
+  env.gain.linearRampToValueAtTime(0.0001, t + dur);
+  wob.connect(env); env.connect(ctx.destination);
+  const stopAt = t + dur + 0.05, all = [src, ...lfos];
+  all.forEach(n => n.start(t)); all.forEach(n => n.stop(stopAt));
+  return { stop(w) { try { all.forEach(n => n.stop(w ?? ctx.currentTime)); } catch (_) {} } };
+}
+
+// --- presets (the shipped examples) ---
+const PRESETS = {
+  "rumble (sustained)": {
+    name: "bowling-rumble", duration: 2.04, gain: 0.9, source: { type: "noise" },
+    filters: [
+      { type: "highpass", freq: 112, q: 0.7 }, { type: "lowpass", freq: 427, q: 0.7 },
+      { type: "lowpass", freq: 427, q: 0.7 }, { type: "peaking", freq: 136, q: 1.5, gain: 12.0 }
+    ],
+    wobble: { rates: [1.5, 2.0, 3.9], depth: 0.14, base: 0.86 }, env: { attack: 0.23, release: 0.05 }
+  },
+  "dunk (percussive)": {
+    name: "dunk", duration: 0.74, gain: 0.9, source: { type: "noise" },
+    filters: [
+      { type: "highpass", freq: 142, q: 0.7 }, { type: "lowpass", freq: 4777, q: 0.7 },
+      { type: "peaking", freq: 144, q: 1.5, gain: 12.0 }
+    ], env: { attack: 0.008, release: 0.7 }
+  },
+  "coin (tonal)": {
+    name: "coin", duration: 0.3, gain: 0.5,
+    source: { type: "osc", wave: "square", freq: 880, freqEnd: 1320 },
+    filters: [{ type: "lowpass", freq: 4000 }], env: { attack: 0.005, release: 0.12 }
+  }
+};
+
+let ctx = null, playing = null;
+const ac = () => (ctx ||= new (window.AudioContext || window.webkitAudioContext)());
+function play(recipe) { ac().resume(); playing = playSfx(ctx, recipe); }
+
+const box = document.getElementById("recipe");
+const presetsEl = document.getElementById("presets");
+for (const [label, recipe] of Object.entries(PRESETS)) {
+  const b = document.createElement("button");
+  b.textContent = "▶ " + label;
+  b.onclick = () => { box.value = JSON.stringify(recipe, null, 2); play(recipe); };
+  presetsEl.appendChild(b);
+}
+box.value = JSON.stringify(PRESETS["dunk (percussive)"], null, 2);
+document.getElementById("play").onclick = () => {
+  try { play(JSON.parse(box.value)); } catch (e) { alert("Bad recipe JSON: " + e.message); }
+};
+document.getElementById("stop").onclick = () => playing && playing.stop();
+</script>
+</body>
+</html>
