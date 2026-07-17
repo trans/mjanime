@@ -1,6 +1,15 @@
 # mj — TODO
 
 ## sfx (audio) refinements
+- **Composite sounds need layers.** The recipe is single-source (one noise OR one osc), so it can't
+  represent a sound that is several things at once. The bowling "bloop" is attack-transient + tonal bloop
+  (descending ~400->140Hz) + fast-fading noise residual — needs a `layers:[...]` extension (recipe = stack
+  of voices summed; playSfx just builds N graphs and sums). Proven by hand: data/dunk-layered2.sfx.json.
+  Verdict: a reasonable first approximation for complex/stochastic sounds (water is inherently hard);
+  captures overall tone, misses nuance. Good enough as a starting point.
+- **Transient contaminates the spectral fit.** A sharp broadband onset click makes the fitter read the
+  whole sound as noisy + pushes the lowpass edge too high (bright splash) even when the sustained body is
+  low/tonal. Fix: detect the onset transient and fit source/band on the sustained TAIL, not the click.
 - [x] **Transient / percussive mode** — DONE 2026-07-15. Detect front-loaded sounds via envelope
   temporal centroid → sharp attack + decay + no wobble; tighten body to actual energy so a silent
   lead-in can't inflate the attack. Water dunk now auto-fits a proper hit; rumble stays sustained.
