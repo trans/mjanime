@@ -127,7 +127,8 @@ module MJ
         input_schema: BASE_SCHEMA) { |data| handle_base(rw, data) }
       ts.tool("decorate", "Stage 2: redraw a master image decorated in a given style/theme.",
         input_schema: DECORATE_SCHEMA) { |data| handle_decorate(rw, data) }
-      ts.tool("sfx", "Fit a procedural Web Audio SFX recipe (JSON) from a reference sound.",
+      ts.tool("sfx", "[EXPERIMENTAL] Fit a procedural Web Audio SFX recipe (JSON) from a reference sound. " \
+              "Good on clean sustained/percussive sounds; a rough first pass on complex composites (e.g. water).",
         input_schema: SFX_SCHEMA) { |data| handle_sfx(data) }
       ts.start
       client
