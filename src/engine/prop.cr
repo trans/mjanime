@@ -38,9 +38,12 @@ module MJ
     def self.key_out(render : StumpyPNG::Canvas, spec : PropSpec) : StumpyPNG::Canvas
       w = render.width
       h = render.height
-      bg_r = spec.background[0]
-      bg_g = spec.background[1]
-      bg_b = spec.background[2]
+      # Key the ACTUAL rendered background (sampled from the corners), not the nominal one —
+      # the model rarely paints the exact colour requested. Falls back to spec.background.
+      bg = spec.auto_background ? sample_bg(render) : spec.background
+      bg_r = bg[0]
+      bg_g = bg[1]
+      bg_b = bg[2]
       lo = spec.key_low.to_f
       hi = spec.key_high.to_f
       span = (hi - lo).abs < 1e-6 ? 1.0 : (hi - lo)
@@ -70,6 +73,29 @@ module MJ
         end
       end
       out
+    end
+
+    # Average the background colour from the four corners of the render (each a small square).
+    private def self.sample_bg(render : StumpyPNG::Canvas) : Array(Int32)
+      w = render.width
+      h = render.height
+      s = Math.max(2, Math.min(w, h) // 40)
+      rs = 0_i64
+      gs = 0_i64
+      bs = 0_i64
+      n = 0_i64
+      [{0, 0}, {w - s, 0}, {0, h - s}, {w - s, h - s}].each do |cx, cy|
+        (0...s).each do |dy|
+          (0...s).each do |dx|
+            px = render[cx + dx, cy + dy]
+            rs += (px.r // 257)
+            gs += (px.g // 257)
+            bs += (px.b // 257)
+            n += 1
+          end
+        end
+      end
+      [(rs // n).to_i, (gs // n).to_i, (bs // n).to_i]
     end
 
     # Separable box blur on a Float64 grid (used on the alpha channel only).
