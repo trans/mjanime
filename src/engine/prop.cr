@@ -68,11 +68,29 @@ module MJ
       (0...h).each do |y|
         (0...w).each do |x|
           px = render[x, y]
-          a = (alpha[y][x] * 65535.0).clamp(0.0, 65535.0).to_u16
-          out[x, y] = StumpyPNG::RGBA.new(px.r, px.g, px.b, a)
+          af = alpha[y][x]
+          a = (af * 65535.0).clamp(0.0, 65535.0).to_u16
+          if spec.despill && af > 0.02 && af < 0.999
+            # Colour unmatting: the render is the foreground composited over the
+            # known bg, C = a*F + (1-a)*B, so recover F = (C - (1-a)*B) / a. This
+            # strips the bg tint out of every anti-aliased edge pixel — the fix for
+            # chroma fringe on thin detail (rigging, leaves) where half the pixel
+            # is background.
+            r = unmatte((px.r // 257).to_i, bg_r, af)
+            g = unmatte((px.g // 257).to_i, bg_g, af)
+            b = unmatte((px.b // 257).to_i, bg_b, af)
+            out[x, y] = StumpyPNG::RGBA.new((r * 257).to_u16, (g * 257).to_u16, (b * 257).to_u16, a)
+          else
+            out[x, y] = StumpyPNG::RGBA.new(px.r, px.g, px.b, a)
+          end
         end
       end
       out
+    end
+
+    # Recover one foreground channel from a pixel composited over the bg colour.
+    private def self.unmatte(c : Int32, bg : Int32, a : Float64) : Int32
+      ((c - (1.0 - a) * bg) / a).clamp(0.0, 255.0).to_i
     end
 
     # Average the background colour from the four corners of the render (each a small square).

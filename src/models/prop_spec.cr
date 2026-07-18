@@ -22,6 +22,10 @@ module MJ
     property key_high : Int32 = 28
     # Soften the alpha edge by this many px (box blur on the alpha channel only). 0 = off.
     property edge_blur : Int32 = 0
+    # Colour-unmatte edge pixels: recover the true foreground F = (C-(1-a)*B)/a so the
+    # background tint is stripped out of anti-aliased edges. Kills chroma fringe on thin
+    # detail (rigging, leaves). Default true; only touches partially-transparent pixels.
+    property despill : Bool = true
     property model : String = "google:4@3"   # Nano Banana 2 (google:4@1 is deprecated/weak)
     property width : Int32 = 1024
     property height : Int32 = 1024
