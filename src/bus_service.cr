@@ -28,14 +28,20 @@ module MJ
     PROP_SCHEMA = JSON.parse(%<{
       "type":"object",
       "required":["prompt"],
+      "description":"Rough flat-colour template, then AI paints the subject on a solid background, then that background is keyed out, giving a transparent PNG prop. The template is a ROUGH size/placement guide, not a cutter; the prop is cut from the render. Name the chosen background colour in your prompt (e.g. 'on a solid flat magenta background').",
       "properties":{
-        "prompt":{"type":"string"},
-        "input_path":{"type":"string","description":"template image path (or template_base64)"},
-        "template_base64":{"type":"string"},
-        "background":{"type":"array","items":{"type":"integer"},"description":"[r,g,b] bg to key out (default [0,0,0])"},
-        "key_low":{"type":"integer"},"key_high":{"type":"integer"},"edge_blur":{"type":"integer"},
-        "model":{"type":"string"},"width":{"type":"integer"},"height":{"type":"integer"},
-        "output_path":{"type":"string"}
+        "prompt":{"type":"string","description":"What to draw. Include the background colour and 'game prop / centred / nothing else'."},
+        "input_path":{"type":"string","description":"rough template image path (or template_base64). Optional but strongly recommended for size/placement."},
+        "template_base64":{"type":"string","description":"template PNG as base64 (alternative to input_path)"},
+        "background":{"type":"array","items":{"type":"integer"},"description":"[r,g,b] background to render on and key out. Default [0,0,0] (black) suits BRIGHT subjects. Use a chroma colour far from the subject for DARK subjects: magenta [255,0,255] or green [0,255,0]. Whatever you pick, say it in the prompt."},
+        "key_low":{"type":"integer","description":"per-channel distance-from-bg (0-255) below which a pixel is fully transparent. Default 4."},
+        "key_high":{"type":"integer","description":"distance above which a pixel is fully opaque; smooth ramp between. Default 28. RAISE it (100-160) for SEE-THROUGH subjects (rigging, foliage, fences) so background peeking through the gaps keys out; lower keeps faint thin detail."},
+        "edge_blur":{"type":"integer","description":"px of box blur on the alpha edge only. Default 0; 1 softens a hard cut."},
+        "despill":{"type":"boolean","description":"colour-unmatte edge pixels (recover true foreground F=(C-(1-a)B)/a) to strip bg tint / chroma fringe from anti-aliased edges. Default true; leave on unless you want raw edge colours."},
+        "model":{"type":"string","description":"Runware model id. Default google:4@3 (Nano Banana 2). Do NOT use google:4@1 (deprecated/weak)."},
+        "width":{"type":"integer","description":"output px, default 1024"},
+        "height":{"type":"integer","description":"output px, default 1024"},
+        "output_path":{"type":"string","description":"write the transparent PNG here; omit to get image_base64 back"}
       }
     }>)
 
@@ -81,7 +87,7 @@ module MJ
       Config.load!
       raise "RUNWARE_API_KEY not set" if Config.runware_api_key.empty?
       client = setup(RunwareClient.new(Config.runware_api_key))
-      STDERR.puts "[bus] mj listening on #{bus_url} — tools: pixelize, prop, base"
+      STDERR.puts "[bus] mj listening on #{bus_url} — tools: pixelize, prop, base, decorate, sfx"
       client.connect # blocks on the WebSocket receive loop
     end
 
@@ -97,7 +103,7 @@ module MJ
       client = setup(RunwareClient.new(Config.runware_api_key))
       spawn do
         begin
-          STDERR.puts "[bus] mj joining #{bus_url} — tools: pixelize, prop, base"
+          STDERR.puts "[bus] mj joining #{bus_url} — tools: pixelize, prop, base, decorate, sfx"
           client.connect
         rescue ex
           STDERR.puts "[bus] disabled (#{ex.message})"
@@ -174,6 +180,7 @@ module MJ
       spec.key_low = data.int("key_low", spec.key_low)
       spec.key_high = data.int("key_high", spec.key_high)
       spec.edge_blur = data.int("edge_blur", spec.edge_blur)
+      spec.despill = data.bool("despill", spec.despill)
       spec.width = data.int("width", spec.width)
       spec.height = data.int("height", spec.height)
       result = Prop.generate(rw, src, spec)
