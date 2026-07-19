@@ -57,28 +57,35 @@ module MJ
     DECORATE_SCHEMA = JSON.parse(%<{
       "type":"object",
       "required":["prompt"],
+      "description":"Stage 2 of the base/decorate flow: take a plain 'base' master (or any image) and redraw it decorated in a given style/theme (Nano Banana 2, via reference-image edit). Optionally pass a style-reference image to steer the look.",
       "properties":{
-        "prompt":{"type":"string","description":"the style / theme / details to apply"},
-        "input_path":{"type":"string","description":"the master image path (or image_base64)"},
-        "image_base64":{"type":"string"},
-        "style_path":{"type":"string","description":"optional style-reference image path (or style_base64)"},
-        "style_base64":{"type":"string"},
-        "keep_structure":{"type":"boolean","description":"preserve the master's silhouette/layout (default true)"},
-        "model":{"type":"string"},"width":{"type":"integer"},"height":{"type":"integer"},
-        "output_path":{"type":"string"}
+        "prompt":{"type":"string","description":"the style / theme / details to apply (e.g. 'weathered Victorian circus tent, red and gold stripes, brass trim')."},
+        "input_path":{"type":"string","description":"the master image path (or image_base64) — the thing to redraw."},
+        "image_base64":{"type":"string","description":"master image as base64 (alternative to input_path)."},
+        "style_path":{"type":"string","description":"optional style-reference image path (or style_base64), passed as a second reference to steer the look."},
+        "style_base64":{"type":"string","description":"style-reference image as base64 (alternative to style_path)."},
+        "keep_structure":{"type":"boolean","description":"preserve the master's silhouette/layout. Default true; prepends a form-preserving lead so the decoration honours the master instead of wandering. Set false to let the model reinterpret shape."},
+        "model":{"type":"string","description":"Runware model id. Default google:4@3 (Nano Banana 2)."},
+        "width":{"type":"integer","description":"output px, default 1024"},
+        "height":{"type":"integer","description":"output px, default 1024"},
+        "output_path":{"type":"string","description":"write the decorated PNG here; omit to get image_base64 back"}
       }
     }>)
 
     BASE_SCHEMA = JSON.parse(%<{
       "type":"object",
       "required":["prompt"],
+      "description":"Stage 1 of the base/decorate flow: a rudimentary flat-colour template rendered into a plain, undecorated, structurally-faithful 'base' master (SD1.5 img2img). The master is the reference for later 'decorate' variations. Map the template's colour patches to features in the prompt (e.g. 'the dark-red patch is the doorway').",
       "properties":{
-        "prompt":{"type":"string"},
-        "input_path":{"type":"string","description":"template image path (or template_base64)"},
-        "template_base64":{"type":"string"},
-        "strength":{"type":"number"},"steps":{"type":"integer"},"cfg_scale":{"type":"number"},
-        "negative_prompt":{"type":"string"},"model":{"type":"string"},
-        "output_path":{"type":"string"}
+        "prompt":{"type":"string","description":"what the structure is, plus a legend mapping template colour patches to features."},
+        "input_path":{"type":"string","description":"rough flat-colour template image path (or template_base64)."},
+        "template_base64":{"type":"string","description":"template PNG as base64 (alternative to input_path)."},
+        "strength":{"type":"number","description":"img2img denoise 0-1: the plain-vs-rich structure knob. Default 0.7 (rich but undecorated). Lower hews closer to the flat template; higher invents more."},
+        "steps":{"type":"integer","description":"diffusion steps, default 30."},
+        "cfg_scale":{"type":"number","description":"prompt adherence, default 4.5."},
+        "negative_prompt":{"type":"string","description":"what to suppress. A default already excludes decoration, trim, scenery, people and text so the base stays plain; override to replace it."},
+        "model":{"type":"string","description":"Runware model id. Default civitai:4384@128713 (SD1.5; FLUX img2img underperforms on flat masks)."},
+        "output_path":{"type":"string","description":"write the base PNG here; omit to get image_base64 back"}
       }
     }>)
 
