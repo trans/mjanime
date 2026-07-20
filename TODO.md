@@ -42,3 +42,14 @@
   works on stylized/non-human faces where CV landmarks fail. Same CSV contract → drops into align.py.
   Optionally also emit a viseme label per frame (open_pct + viseme in one call). Validate on
   `archive/cattacula-yappy.mp4`. Then wire as `mj mouth` (CLI + bus) + an "AI auto-fill" button in the charter.
+
+## cell animation / compositing
+- **UV region editor** — port the in-canvas region tool into mj's web UI. Define a box/ellipse/(polygon)
+  on an image by hand and read back normalized `{u,v,w/rx,h/ry}` numbers to paste into code — same UV
+  works at any canvas size, in editor and renderer alike. Design doc copied to `notes/uv-region-editor.md`
+  (from siliconcircus funhouse). Two immediate mj fits: (a) mark a **prop cutout box** / relight-mask
+  region, and (b) the **per-frame `(dx,dy)` alignment offset** that kills the frame-drift shimmer when we
+  swap whole AI-rendered frames — the same drift problem behind the mouth/lip-sync + connect-seamstress
+  work. Self-contained component: `<canvas>` + cover-fit transform + region list + pointer/wheel handlers
+  + live readout + JSON in/out. Endgame it points at: transparent cutout of just the moving part over a
+  static base (no mask, no offsets) — the editor is the good-enough-now way to find where the cutout sits.
