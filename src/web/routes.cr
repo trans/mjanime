@@ -14,6 +14,11 @@ module MJ
         render "src/views/sfx.ecr", "src/views/layout.ecr"
       end
 
+      # -- Sound Box: voice/SFX effect chain (robot/parrot/pirate) --
+      get "/soundbox" do |env|
+        render "src/views/soundbox.ecr", "src/views/layout.ecr"
+      end
+
       # -- New cut form --
       get "/cuts/new" do |env|
         render "src/views/cuts/new.ecr", "src/views/layout.ecr"

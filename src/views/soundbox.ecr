@@ -1,0 +1,148 @@
+<section class="sbx">
+  <h1>Sound Box 🎛️</h1>
+  <p class="muted">Drop in a TTS clip (or any wav/mp3) and shape it into a robot / parrot / pirate voice
+  with a live Web Audio effect chain. Tune by ear, then <b>export the processed WAV</b>.</p>
+
+  <div id="drop" class="drop">
+    <input type="file" id="file" accept="audio/*" />
+    <span class="hint">Choose or drop an audio file…</span>
+    <span id="loaded" class="loaded"></span>
+  </div>
+
+  <h2>Presets</h2>
+  <div id="presets" class="row"></div>
+
+  <h2>Effect chain</h2>
+  <div class="grid" id="controls"></div>
+
+  <div class="row actions">
+    <button id="play">▶ Play</button>
+    <button id="stop" class="ghost">■ Stop</button>
+    <button id="loop" class="ghost">↻ Loop: off</button>
+    <button id="export" class="accent">⬇ Export WAV</button>
+    <button id="reset" class="ghost">Reset</button>
+  </div>
+  <p class="muted small">Pitch raises tone <i>and</i> formant (that's the parrot "smallness"); it also shortens the
+  clip. Ring-mod adds the metallic robot buzz; tremolo adds the squawk flutter.</p>
+</section>
+
+<style>
+  .sbx h2 { font-size: 1rem; color: #9aa3b2; margin-top: 1.6rem; }
+  .sbx .muted { color: #7b8494; } .sbx .small { font-size: .82rem; }
+  .sbx .row { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0; align-items: center; }
+  .sbx .actions { margin-top: 1rem; }
+  .sbx button { font: inherit; padding: .5rem 1rem; border: 0; border-radius: 8px;
+                background: #3a6df0; color: #fff; cursor: pointer; }
+  .sbx button.ghost { background: #2a2e38; } .sbx button.accent { background: #d9853a; }
+  .sbx button:active { transform: translateY(1px); }
+  .sbx .drop { display: flex; align-items: center; gap: .8rem; padding: 1rem; border: 1px dashed #2a2e38;
+               border-radius: 8px; background: #0e1015; margin: .8rem 0; }
+  .sbx .drop.over { border-color: #3a6df0; background: #12161f; }
+  .sbx .drop .hint { color: #7b8494; } .sbx .loaded { color: #6fcf7f; margin-left: auto; font-size: .9rem; }
+  .sbx .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: .5rem 1.4rem; }
+  .sbx .ctl { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .1rem .6rem; padding: .35rem 0; }
+  .sbx .ctl label { color: #cdd3df; font-size: .9rem; } .sbx .ctl .val { color: #9aa3b2; font: 13px ui-monospace, monospace; text-align: right; }
+  .sbx .ctl input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: #3a6df0; }
+  .sbx code { background: #0e1015; padding: .1rem .3rem; border-radius: 4px; }
+</style>
+
+<script src="/js/soundbox.js"></script>
+<script>
+  // [id, label, min, max, step, default, formatter]
+  const CONTROLS = [
+    ["pitch",     "Pitch / formant",  0.60, 2.00, 0.01, 1.28, v => v.toFixed(2) + "×"],
+    ["drive",     "Overdrive",        0.00, 1.00, 0.01, 0.30, v => Math.round(v*100) + "%"],
+    ["hp",        "Low cut (highpass)", 80, 2000, 10,   700,  v => v + " Hz"],
+    ["lp",        "High cut (lowpass)", 1200, 8000, 50, 4200, v => v + " Hz"],
+    ["ringFreq",  "Ring freq (robot)", 20,  600,  1,    90,   v => v + " Hz"],
+    ["ringMix",   "Ring amount",      0.00, 1.00, 0.01, 0.25, v => Math.round(v*100) + "%"],
+    ["tremRate",  "Tremolo rate",     0.0,  40.0, 0.5,  22.0, v => v.toFixed(1) + " Hz"],
+    ["tremDepth", "Tremolo depth",    0.00, 1.00, 0.01, 0.45, v => Math.round(v*100) + "%"],
+    ["gain",      "Output",           0.00, 2.00, 0.01, 1.00, v => v.toFixed(2) + "×"],
+  ];
+  const PRESETS = {
+    "🦜🤖 Robo-Parrot": { pitch:1.28, drive:0.30, hp:700, lp:4200, ringFreq:90, ringMix:0.25, tremRate:22, tremDepth:0.45, gain:1.0 },
+    "🤖 Full Robot":    { pitch:1.00, drive:0.30, hp:500, lp:3500, ringFreq:60, ringMix:0.55, tremRate:30, tremDepth:0.30, gain:1.0 },
+    "🏴‍☠️ Grizzled Pirate": { pitch:1.04, drive:0.42, hp:300, lp:5200, ringFreq:80, ringMix:0.00, tremRate:6, tremDepth:0.12, gain:1.05 },
+    "🐤 Tiny Bird":     { pitch:1.62, drive:0.15, hp:1200, lp:5200, ringFreq:120, ringMix:0.00, tremRate:26, tremDepth:0.55, gain:1.0 },
+    "🔊 Dry":           { pitch:1.00, drive:0.00, hp:80,  lp:8000, ringFreq:90, ringMix:0.00, tremRate:0, tremDepth:0.00, gain:1.0 },
+  };
+  const DEFAULTS = PRESETS["🦜🤖 Robo-Parrot"];
+
+  const fmt = Object.fromEntries(CONTROLS.map(c => [c[0], c[6]]));
+  const controlsEl = document.getElementById("controls");
+  for (const [id, label, min, max, step, def, f] of CONTROLS) {
+    const wrap = document.createElement("div"); wrap.className = "ctl";
+    wrap.innerHTML = `<label for="c_${id}">${label}</label><span class="val" id="v_${id}"></span>`;
+    const r = document.createElement("input");
+    r.type = "range"; r.id = "c_" + id; r.min = min; r.max = max; r.step = step; r.value = def;
+    r.oninput = () => { document.getElementById("v_" + id).textContent = f(parseFloat(r.value)); };
+    wrap.appendChild(r); controlsEl.appendChild(wrap);
+    r.oninput();
+  }
+  const readParams = () => Object.fromEntries(CONTROLS.map(c => [c[0], parseFloat(document.getElementById("c_" + c[0]).value)]));
+  function setParams(p) {
+    for (const [id, v] of Object.entries(p)) {
+      const el = document.getElementById("c_" + id);
+      if (el) { el.value = v; el.oninput(); }
+    }
+  }
+
+  const presetsEl = document.getElementById("presets");
+  for (const [label, p] of Object.entries(PRESETS)) {
+    const b = document.createElement("button"); b.className = "ghost"; b.textContent = label;
+    b.onclick = () => { setParams(p); if (buffer) play(); };
+    presetsEl.appendChild(b);
+  }
+
+  let ctx = null, buffer = null, current = null, looping = false;
+  const ensureCtx = () => (ctx ||= new (window.AudioContext || window.webkitAudioContext)());
+
+  const fileEl = document.getElementById("file");
+  const loadedEl = document.getElementById("loaded");
+  async function loadFile(file) {
+    if (!file) return;
+    try {
+      const bytes = await file.arrayBuffer();
+      buffer = await ensureCtx().decodeAudioData(bytes);
+      loadedEl.textContent = `✓ ${file.name} · ${buffer.duration.toFixed(2)}s`;
+    } catch (e) { loadedEl.textContent = "✗ couldn't decode: " + e.message; buffer = null; }
+  }
+  fileEl.onchange = () => loadFile(fileEl.files[0]);
+
+  const drop = document.getElementById("drop");
+  ["dragover","dragenter"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if (f) { fileEl.files = e.dataTransfer.files; loadFile(f); } });
+
+  function stop() { if (current) { try { current.src.stop(); current.oscs.forEach(o => o.stop()); } catch (_) {} current = null; } }
+  function play() {
+    if (!buffer) { loadedEl.textContent = "load an audio file first"; return; }
+    stop(); const c = ensureCtx(); c.resume();
+    const g = window.SoundBox.buildChain(c, buffer, readParams());
+    g.master.connect(c.destination);
+    g.oscs.forEach(o => o.start()); g.src.loop = looping; g.src.start();
+    current = g;
+    g.src.onended = () => { if (current === g && !looping) { try { g.oscs.forEach(o => o.stop()); } catch (_) {} current = null; } };
+  }
+
+  document.getElementById("play").onclick = play;
+  document.getElementById("stop").onclick = stop;
+  document.getElementById("reset").onclick = () => setParams(DEFAULTS);
+  document.getElementById("loop").onclick = (e) => {
+    looping = !looping; e.target.textContent = "↻ Loop: " + (looping ? "on" : "off");
+    e.target.classList.toggle("accent", looping);
+    if (current) { current.src.loop = looping; } else if (looping && buffer) play();
+  };
+  document.getElementById("export").onclick = async () => {
+    if (!buffer) { loadedEl.textContent = "load an audio file first"; return; }
+    const btn = document.getElementById("export"); const t = btn.textContent; btn.textContent = "rendering…"; btn.disabled = true;
+    try {
+      const rendered = await window.SoundBox.renderOffline(buffer, readParams());
+      const blob = window.SoundBox.encodeWAV(rendered);
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+      a.download = "soundbox.wav"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    } catch (e) { loadedEl.textContent = "export failed: " + e.message; }
+    finally { btn.textContent = t; btn.disabled = false; }
+  };
+</script>
