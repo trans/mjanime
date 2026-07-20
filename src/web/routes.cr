@@ -19,6 +19,31 @@ module MJ
         render "src/views/soundbox.ecr", "src/views/layout.ecr"
       end
 
+      # -- Sound Box: synthesize a voice via openai:tts on the Arcana bus --
+      post "/soundbox/tts" do |env|
+        text = (env.params.body["text"]?.to_s).strip
+        if text.empty?
+          env.response.status_code = 400
+          env.response.content_type = "application/json"
+          next({error: "text is required"}.to_json)
+        end
+        voice = env.params.body["voice"]?.to_s
+        instructions = env.params.body["instructions"]?.to_s
+        format = (env.params.body["format"]?.to_s.presence) || "wav"
+        speed = env.params.body["speed"]?.try(&.to_f?)
+
+        begin
+          bytes, ctype = BusService.tts(text, voice, instructions, format, speed)
+          env.response.content_type = ctype
+          String.new(bytes)
+        rescue ex
+          STDERR.puts "[soundbox/tts] #{ex.message}"
+          env.response.status_code = 502
+          env.response.content_type = "application/json"
+          {error: ex.message}.to_json
+        end
+      end
+
       # -- New cut form --
       get "/cuts/new" do |env|
         render "src/views/cuts/new.ecr", "src/views/layout.ecr"

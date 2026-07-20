@@ -1,8 +1,22 @@
 <section class="sbx">
   <h1>Sound Box 🎛️</h1>
-  <p class="muted">Drop in a TTS clip (or any wav/mp3) and shape it into a robot / parrot / pirate voice
-  with a live Web Audio effect chain. Tune by ear, then <b>export the processed WAV</b>.</p>
+  <p class="muted">Generate a voice with OpenAI TTS (over the Arcana bus), or drop in your own wav/mp3, then
+  shape it into a robot / parrot / pirate voice with a live Web Audio effect chain. Tune by ear, then
+  <b>export the processed WAV</b>.</p>
 
+  <h2>Generate a voice <span class="muted small">— OpenAI TTS via the bus</span></h2>
+  <div class="tts">
+    <textarea id="tts_text" spellcheck="false" placeholder="RAWK! Pieces of eight, matey! Braa-wk!"></textarea>
+    <input id="tts_instructions" type="text"
+           value="Speak as a raspy, gravelly pirate — exaggerated, loud, staccato and squawky, bird-like, clipped consonants, snarling the R's." />
+    <div class="row">
+      <label>Voice <select id="tts_voice"></select></label>
+      <label>Speed <input id="tts_speed" type="number" min="0.25" max="4" step="0.05" value="1.1" style="width:5rem"></label>
+      <button id="tts_gen" class="accent">🎙 Generate voice</button>
+    </div>
+  </div>
+
+  <h2>Or load a file</h2>
   <div id="drop" class="drop">
     <input type="file" id="file" accept="audio/*" />
     <span class="hint">Choose or drop an audio file…</span>
@@ -39,6 +53,14 @@
                border-radius: 8px; background: #0e1015; margin: .8rem 0; }
   .sbx .drop.over { border-color: #3a6df0; background: #12161f; }
   .sbx .drop .hint { color: #7b8494; } .sbx .loaded { color: #6fcf7f; margin-left: auto; font-size: .9rem; }
+  .sbx .tts { display: flex; flex-direction: column; gap: .5rem; margin: .6rem 0; }
+  .sbx .tts textarea { width: 100%; height: 80px; box-sizing: border-box; padding: .6rem;
+      font: 14px/1.4 inherit; background: #0e1015; color: #cdd3df; border: 1px solid #2a2e38; border-radius: 8px; }
+  .sbx .tts input[type=text] { width: 100%; box-sizing: border-box; padding: .5rem; font: 13px inherit;
+      background: #0e1015; color: #9aa3b2; border: 1px solid #2a2e38; border-radius: 8px; }
+  .sbx .tts label { color: #9aa3b2; font-size: .9rem; display: inline-flex; gap: .35rem; align-items: center; }
+  .sbx .tts select, .sbx .tts input[type=number] { font: inherit; padding: .35rem .5rem; background: #0e1015;
+      color: #cdd3df; border: 1px solid #2a2e38; border-radius: 6px; }
   .sbx .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: .5rem 1.4rem; }
   .sbx .ctl { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .1rem .6rem; padding: .35rem 0; }
   .sbx .ctl label { color: #cdd3df; font-size: .9rem; } .sbx .ctl .val { color: #9aa3b2; font: 13px ui-monospace, monospace; text-align: right; }
@@ -98,6 +120,11 @@
   let ctx = null, buffer = null, current = null, looping = false;
   const ensureCtx = () => (ctx ||= new (window.AudioContext || window.webkitAudioContext)());
 
+  // --- OpenAI TTS via the bus ---
+  const VOICES = ["ash", "onyx", "ballad", "alloy", "echo", "fable", "nova", "sage", "shimmer", "verse", "coral"];
+  const voiceSel = document.getElementById("tts_voice");
+  for (const v of VOICES) { const o = document.createElement("option"); o.value = o.textContent = v; voiceSel.appendChild(o); }
+
   const fileEl = document.getElementById("file");
   const loadedEl = document.getElementById("loaded");
   async function loadFile(file) {
@@ -125,6 +152,27 @@
     current = g;
     g.src.onended = () => { if (current === g && !looping) { try { g.oscs.forEach(o => o.stop()); } catch (_) {} current = null; } };
   }
+
+  document.getElementById("tts_gen").onclick = async (e) => {
+    const text = document.getElementById("tts_text").value.trim();
+    if (!text) { loadedEl.textContent = "enter some text first"; return; }
+    const btn = e.target, label = btn.textContent; btn.textContent = "generating…"; btn.disabled = true;
+    loadedEl.textContent = "";
+    try {
+      const body = new URLSearchParams({
+        text, voice: voiceSel.value, format: "wav",
+        speed: document.getElementById("tts_speed").value || "1.0",
+        instructions: document.getElementById("tts_instructions").value,
+      });
+      const res = await fetch("/soundbox/tts", { method: "POST", body });
+      if (!res.ok) { let m; try { m = (await res.json()).error; } catch (_) { m = res.statusText; } throw new Error(m); }
+      const bytes = await res.arrayBuffer();
+      buffer = await ensureCtx().decodeAudioData(bytes);
+      loadedEl.textContent = `✓ generated · ${buffer.duration.toFixed(2)}s`;
+      play();
+    } catch (err) { loadedEl.textContent = "TTS failed: " + err.message; }
+    finally { btn.textContent = label; btn.disabled = false; }
+  };
 
   document.getElementById("play").onclick = play;
   document.getElementById("stop").onclick = stop;

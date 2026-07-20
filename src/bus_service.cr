@@ -89,6 +89,49 @@ module MJ
       }
     }>)
 
+    # The live bus client, kept so web routes can make OUTBOUND calls to other
+    # services (e.g. openai:tts) over the same connection. Set by setup().
+    @@client : Arcana::Client? = nil
+
+    def self.client : Arcana::Client?
+      @@client
+    end
+
+    # Synthesize speech via the openai:tts service on the bus. Returns the raw
+    # audio bytes + content-type. Reuses the mj service client's connection;
+    # request() correlates the reply, and handle_incoming routes it to us before
+    # the tool dispatcher. Raises if the bus isn't connected or TTS errors/times out.
+    def self.tts(text : String, voice : String? = nil, instructions : String? = nil,
+                 format : String = "wav", speed : Float64? = nil) : {Bytes, String}
+      client = @@client
+      raise "bus not connected — run `mj serve` with a reachable Arcana daemon and RUNWARE_API_KEY set" unless client && client.connected?
+
+      payload = Hash(String, JSON::Any).new
+      payload["text"] = JSON::Any.new(text)
+      payload["inline"] = JSON::Any.new(true)
+      payload["format"] = JSON::Any.new(format)
+      payload["voice"] = JSON::Any.new(voice) if voice && !voice.empty?
+      payload["instructions"] = JSON::Any.new(instructions) if instructions && !instructions.empty?
+      payload["speed"] = JSON::Any.new(speed) if speed
+
+      env = Arcana::Envelope.new(from: "mj:image", to: "openai:tts",
+        payload: JSON::Any.new(payload))
+      reply = client.request(env, 60.seconds)
+      raise "tts request timed out (is openai:tts on #{bus_url}?)" unless reply
+
+      # The reply may be a Protocol result envelope ({_status:"result", data:{...}})
+      # or a bare payload — unwrap to the inner data either way.
+      raw = reply.payload
+      if Arcana::Protocol.error?(raw)
+        raise "tts error: #{Arcana::Protocol.message(raw) || raw.to_json}"
+      end
+      data = Arcana::Protocol.data(raw) || raw
+      b64 = data["audio_base64"]?.try(&.as_s?)
+      raise "tts returned no audio: #{raw.to_json}" unless b64
+      ctype = data["content_type"]?.try(&.as_s?) || "audio/#{format}"
+      {Base64.decode(b64), ctype}
+    end
+
     # Standalone (`mj bus`): build, register, and block on the receive loop.
     def self.run
       Config.load!
@@ -123,13 +166,13 @@ module MJ
     private def self.setup(rw : RunwareClient) : Arcana::Client
       client = Arcana::Client.new(
         url: bus_url,
-        address: "mj",
+        address: "mj:image", # 0.11: services are owner:capability; capability is no longer a field
         name: "mj",
         description: "Media-jockey image studio — pixel-art restyle, transparent props, structural bases.",
         kind: Arcana::Directory::Kind::Service,
-        capability: "image",
         tags: ["image", "pixel-art", "game-assets"],
       )
+      @@client = client
       ts = Arcana::Toolset.new(client: client, name: "mj",
         description: "Media-jockey image studio.")
       ts.tool("pixelize", "AI pixel-art restyle (8-bit/16-bit) of a reference image.",
