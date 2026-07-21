@@ -107,6 +107,7 @@ module MJ
       raise "bus not connected — run `mj serve` with a reachable Arcana daemon and RUNWARE_API_KEY set" unless client && client.connected?
 
       payload = Hash(String, JSON::Any).new
+      payload["tool"] = JSON::Any.new("tts") # openai Toolset dispatches on the `tool` field
       payload["text"] = JSON::Any.new(text)
       payload["inline"] = JSON::Any.new(true)
       payload["format"] = JSON::Any.new(format)
@@ -114,7 +115,8 @@ module MJ
       payload["instructions"] = JSON::Any.new(instructions) if instructions && !instructions.empty?
       payload["speed"] = JSON::Any.new(speed) if speed
 
-      env = Arcana::Envelope.new(from: "mj:image", to: "openai:tts",
+      # openai is a single-address Toolset (post-0.24); `openai:tts` is a dead pre-0.24 ghost.
+      env = Arcana::Envelope.new(from: "mj", to: "openai",
         payload: JSON::Any.new(payload))
       reply = client.request(env, 60.seconds)
       raise "tts request timed out (is openai:tts on #{bus_url}?)" unless reply
@@ -166,7 +168,7 @@ module MJ
     private def self.setup(rw : RunwareClient) : Arcana::Client
       client = Arcana::Client.new(
         url: bus_url,
-        address: "mj:image", # 0.11: services are owner:capability; capability is no longer a field
+        address: "mj", # a single-address Toolset (dispatches on payload["tool"]); NOT owner:capability
         name: "mj",
         description: "Media-jockey image studio — pixel-art restyle, transparent props, structural bases.",
         kind: Arcana::Directory::Kind::Service,
