@@ -38,6 +38,7 @@ module MJ
         "key_high":{"type":"integer","description":"distance above which a pixel is fully opaque; smooth ramp between. Default 28. RAISE it (100-160) for SEE-THROUGH subjects (rigging, foliage, fences) so background peeking through the gaps keys out; lower keeps faint thin detail."},
         "edge_blur":{"type":"integer","description":"px of box blur on the alpha edge only. Default 0; 1 softens a hard cut."},
         "despill":{"type":"boolean","description":"colour-unmatte edge pixels (recover true foreground F=(C-(1-a)B)/a) to strip bg tint / chroma fringe from anti-aliased edges. Default true; leave on unless you want raw edge colours."},
+        "defringe":{"type":"boolean","description":"final pass to subtract residual bg-chroma cast (magenta/green halo) left on very thin detail. Self-limiting (greys the tint, spares warm/neutral subject colour). Default true."},
         "model":{"type":"string","description":"Runware model id. Default google:4@3 (Nano Banana 2). Do NOT use google:4@1 (deprecated/weak)."},
         "width":{"type":"integer","description":"output px, default 1024"},
         "height":{"type":"integer","description":"output px, default 1024"},
@@ -233,6 +234,7 @@ module MJ
       spec.key_high = data.int("key_high", spec.key_high)
       spec.edge_blur = data.int("edge_blur", spec.edge_blur)
       spec.despill = data.bool("despill", spec.despill)
+      spec.defringe = data.bool("defringe", spec.defringe)
       spec.width = data.int("width", spec.width)
       spec.height = data.int("height", spec.height)
       result = Prop.generate(rw, src, spec)

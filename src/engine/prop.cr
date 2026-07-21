@@ -64,7 +64,7 @@ module MJ
 
       alpha = box_blur(alpha, w, h, spec.edge_blur) if spec.edge_blur > 0
 
-      out = StumpyPNG::Canvas.new(w, h)
+      dst = StumpyPNG::Canvas.new(w, h)
       (0...h).each do |y|
         (0...w).each do |x|
           px = render[x, y]
@@ -79,18 +79,56 @@ module MJ
             r = unmatte((px.r // 257).to_i, bg_r, af)
             g = unmatte((px.g // 257).to_i, bg_g, af)
             b = unmatte((px.b // 257).to_i, bg_b, af)
-            out[x, y] = StumpyPNG::RGBA.new((r * 257).to_u16, (g * 257).to_u16, (b * 257).to_u16, a)
+            dst[x, y] = StumpyPNG::RGBA.new((r * 257).to_u16, (g * 257).to_u16, (b * 257).to_u16, a)
           else
-            out[x, y] = StumpyPNG::RGBA.new(px.r, px.g, px.b, a)
+            dst[x, y] = StumpyPNG::RGBA.new(px.r, px.g, px.b, a)
           end
         end
       end
-      out
+      defringe!(dst, bg_r, bg_g, bg_b) if spec.defringe
+      dst
     end
 
     # Recover one foreground channel from a pixel composited over the bg colour.
     private def self.unmatte(c : Int32, bg : Int32, a : Float64) : Int32
       ((c - (1.0 - a) * bg) / a).clamp(0.0, 255.0).to_i
+    end
+
+    # Kill residual background-chroma cast (magenta/green fringe) left on thin
+    # detail after keying. The bg colour picks the chroma channels; we subtract
+    # only the SHARED excess those channels carry over the neutral ("clean")
+    # channel(s), so a magenta halo greys out while genuinely warm/neutral subject
+    # pixels (where the chroma channels aren't jointly elevated) are left alone.
+    # Self-limiting: does nothing to pixels that don't lean toward the bg hue.
+    private def self.defringe!(canvas : StumpyPNG::Canvas, bg_r : Int32, bg_g : Int32, bg_b : Int32) : Nil
+      bg = {bg_r, bg_g, bg_b}
+      mean = (bg_r + bg_g + bg_b) / 3.0
+      chroma = (0..2).select { |i| bg[i] > mean + 8 }
+      return if chroma.empty? || chroma.size == 3 # neutral/near-neutral bg: nothing to strip
+      clean = (0..2).to_a - chroma
+
+      (0...canvas.height).each do |y|
+        (0...canvas.width).each do |x|
+          px = canvas[x, y]
+          next if px.a == 0
+          c = [(px.r // 257).to_i, (px.g // 257).to_i, (px.b // 257).to_i]
+          ex = if chroma.size == 2
+                 # magenta/cyan/yellow: excess is how far BOTH chroma channels sit above the clean one
+                 base = c[clean[0]]
+                 chroma.min_of { |i| c[i] - base }
+               else
+                 # red/green/blue: excess of the lone chroma channel over the brighter clean one
+                 base = clean.max_of { |i| c[i] }
+                 c[chroma[0]] - base
+               end
+          next if ex <= 0
+          chroma.each { |i| c[i] -= ex }
+          canvas[x, y] = StumpyPNG::RGBA.new(
+            (c[0].clamp(0, 255) * 257).to_u16,
+            (c[1].clamp(0, 255) * 257).to_u16,
+            (c[2].clamp(0, 255) * 257).to_u16, px.a)
+        end
+      end
     end
 
     # Average the background colour from the four corners of the render (each a small square).

@@ -26,6 +26,10 @@ module MJ
     # background tint is stripped out of anti-aliased edges. Kills chroma fringe on thin
     # detail (rigging, leaves). Default true; only touches partially-transparent pixels.
     property despill : Bool = true
+    # Final defringe pass: subtract residual background-chroma cast (e.g. magenta/green
+    # halo) that survives keying on very thin detail. Self-limiting — greys out the chroma
+    # tint but leaves warm/neutral subject colour alone. Default true.
+    property defringe : Bool = true
     property model : String = "google:4@3"   # Nano Banana 2 (google:4@1 is deprecated/weak)
     property width : Int32 = 1024
     property height : Int32 = 1024
