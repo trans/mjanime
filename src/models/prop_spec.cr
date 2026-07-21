@@ -30,6 +30,11 @@ module MJ
     # halo) that survives keying on very thin detail. Self-limiting — greys out the chroma
     # tint but leaves warm/neutral subject colour alone. Default true.
     property defringe : Bool = true
+    # Restrict defringe to within this many px of a transparent pixel (the edge shell).
+    # 0 = whole image (fine by default — the excess test is self-limiting). Set a small
+    # band (1-3) only when the SUBJECT itself legitimately contains the key hue, so the
+    # interior is left untouched. Requires defringe: true.
+    property defringe_band : Int32 = 0
     property model : String = "google:4@3"   # Nano Banana 2 (google:4@1 is deprecated/weak)
     property width : Int32 = 1024
     property height : Int32 = 1024

@@ -85,7 +85,7 @@ module MJ
           end
         end
       end
-      defringe!(dst, bg_r, bg_g, bg_b) if spec.defringe
+      defringe!(dst, bg_r, bg_g, bg_b, spec.defringe_band) if spec.defringe
       dst
     end
 
@@ -100,17 +100,25 @@ module MJ
     # channel(s), so a magenta halo greys out while genuinely warm/neutral subject
     # pixels (where the chroma channels aren't jointly elevated) are left alone.
     # Self-limiting: does nothing to pixels that don't lean toward the bg hue.
-    private def self.defringe!(canvas : StumpyPNG::Canvas, bg_r : Int32, bg_g : Int32, bg_b : Int32) : Nil
+    private def self.defringe!(canvas : StumpyPNG::Canvas, bg_r : Int32, bg_g : Int32, bg_b : Int32, band : Int32) : Nil
       bg = {bg_r, bg_g, bg_b}
       mean = (bg_r + bg_g + bg_b) / 3.0
       chroma = (0..2).select { |i| bg[i] > mean + 8 }
       return if chroma.empty? || chroma.size == 3 # neutral/near-neutral bg: nothing to strip
       clean = (0..2).to_a - chroma
+      w = canvas.width
+      h = canvas.height
+      # Optionally restrict to the edge shell (transparent region dilated `band` px into
+      # the subject). Protects interior pixels that legitimately share the key hue. With
+      # band <= 0 we sweep the whole image — safe because the excess test below is
+      # self-limiting (fires only where a pixel actually leans toward the bg hue).
+      mask = band > 0 ? edge_band(canvas, w, h, band) : nil
 
-      (0...canvas.height).each do |y|
-        (0...canvas.width).each do |x|
+      (0...h).each do |y|
+        (0...w).each do |x|
           px = canvas[x, y]
           next if px.a == 0
+          next if mask && !mask[y][x]
           c = [(px.r // 257).to_i, (px.g // 257).to_i, (px.b // 257).to_i]
           ex = if chroma.size == 2
                  # magenta/cyan/yellow: excess is how far BOTH chroma channels sit above the clean one
@@ -129,6 +137,27 @@ module MJ
             (c[2].clamp(0, 255) * 257).to_u16, px.a)
         end
       end
+    end
+
+    # Boolean grid of pixels within `radius` px of a (mostly) transparent pixel — the
+    # edge shell where chroma fringe lives. 4-neighbour dilation of the transparent set.
+    private def self.edge_band(canvas : StumpyPNG::Canvas, w : Int32, h : Int32, radius : Int32) : Array(Array(Bool))
+      band = Array(Array(Bool)).new(h) { |y| Array(Bool).new(w) { |x| canvas[x, y].a < 32768_u16 } }
+      radius.times do
+        nb = Array(Array(Bool)).new(h) { Array(Bool).new(w, false) }
+        (0...h).each do |y|
+          (0...w).each do |x|
+            v = band[y][x]
+            v ||= band[y - 1][x] if y > 0
+            v ||= band[y + 1][x] if y < h - 1
+            v ||= band[y][x - 1] if x > 0
+            v ||= band[y][x + 1] if x < w - 1
+            nb[y][x] = v
+          end
+        end
+        band = nb
+      end
+      band
     end
 
     # Average the background colour from the four corners of the render (each a small square).
