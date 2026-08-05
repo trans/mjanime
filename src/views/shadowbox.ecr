@@ -1,19 +1,118 @@
-<section class="shadowbox">
-  <header class="sb-head">
-    <h1><%= MJ::Shadowbox.title %></h1>
-    <p class="sb-sub">Compose props &amp; backdrops into a parallax depth-box, then play it.
-      <span class="sb-tag">P1 · three r<span id="sb-rev">?</span> · <span id="sb-count">loading…</span> · move the mouse to drift</span></p>
-  </header>
-  <div id="sb-stage"></div>
-</section>
+<!-- Shadowbox editor (ported from sbedit.html, wired to mj's asset manifest).
+     All styles are scoped under #sbapp so mj's global button/h2/input rules don't collide. -->
+<div id="sbapp">
+
+  <div class="panel" id="left">
+    <h2>Images — click to add</h2>
+    <div class="tabs">
+      <button id="tAll" class="on">all</button>
+      <button id="tProp">cut-outs</button>
+      <button id="tFull">full</button>
+    </div>
+    <input type="text" id="search" placeholder="filter…" style="margin-bottom:7px">
+    <div class="grid" id="palette"></div>
+  </div>
+
+  <div id="stage">
+    <div id="pbadge">WALK-THROUGH — click to look · WASD move · R/F rise · ESC out</div>
+    <div id="hint">
+      drag — move in x/y · wheel — scale · shift+wheel — depth<br>
+      click again to cycle overlapping · DEL removes<br>
+      P — walk through the scene
+    </div>
+  </div>
+
+  <div class="panel" id="right">
+    <h2>Layers <span class="dim">— near to far</span></h2>
+    <ul id="layers"></ul>
+    <h2>Selected</h2>
+    <div id="sel"><span class="dim">nothing selected</span></div>
+    <h2>Scene</h2>
+    <div class="row"><label>floor</label><input type="range" id="floor" min="-8" max="2" step="0.05"><span class="val" id="floorV"></span></div>
+    <div class="row"><label>lens</label><input type="range" id="lens" min="30" max="100" step="1"><span class="val" id="lensV"></span></div>
+    <h2>Camera box <span class="dim">— how far you may roam</span></h2>
+    <div class="row"><label>± x</label><input type="range" id="cx" min="0" max="8" step="0.05"><span class="val" id="cxV"></span></div>
+    <div class="row"><label>± y</label><input type="range" id="cy" min="0" max="3" step="0.05"><span class="val" id="cyV"></span></div>
+    <div class="row"><label>± z</label><input type="range" id="cz" min="0" max="10" step="0.05"><span class="val" id="czV"></span></div>
+    <div class="row"><label>yaw °</label><input type="range" id="cyaw" min="0" max="80" step="1"><span class="val" id="cyawV"></span></div>
+    <div class="row"><label>pitch °</label><input type="range" id="cpit" min="0" max="45" step="1"><span class="val" id="cpitV"></span></div>
+  </div>
+
+  <div id="bar">
+    <input type="text" id="name" value="untitled" title="scene name">
+    <button id="preview">▶ Walk through (P)</button>
+    <button id="grid">Floor</button>
+    <button id="horiz">Horizon</button>
+    <button id="cbox">Box</button>
+    <span class="sp"></span>
+    <button id="load">Load JSON</button>
+    <button id="save">Export JSON</button>
+    <input type="file" id="file" accept=".json" style="display:none">
+  </div>
+</div>
 
 <style>
-  .shadowbox{display:flex;flex-direction:column;gap:10px}
-  .sb-head h1{margin:0;font-size:20px}
-  .sb-sub{margin:0;color:#888;font-size:13px}
-  .sb-tag{display:inline-block;margin-left:8px;font:12px ui-monospace,monospace;color:#6ad0ff;opacity:.8}
-  #sb-stage{width:100%;height:70vh;min-height:360px;background:#07060a;border:1px solid #222;border-radius:6px;overflow:hidden;cursor:crosshair}
-  #sb-stage canvas{display:block}
+  /* Editor breaks out of mj's centred <main>; JS sets top = nav height. */
+  #sbapp{position:fixed;left:0;right:0;bottom:0;top:56px;
+    --ink:#e8e4dc;--dim:#8b8578;--line:#2a2620;--panel:#141210;--hi:#f0b64a;
+    background:#0a0908;color:var(--ink);
+    font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+    display:grid;grid-template-columns:210px 1fr 232px;grid-template-rows:1fr 42px;
+    transition:grid-template-columns .18s ease, grid-template-rows .18s ease}
+  #sbapp *{box-sizing:border-box}
+  #sbapp.playing{grid-template-columns:0 1fr 0;grid-template-rows:1fr 0}
+  #sbapp.playing .panel,#sbapp.playing #bar{opacity:0;pointer-events:none;padding:0;overflow:hidden}
+  #sbapp .panel{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;padding:10px}
+  #sbapp #right{border-right:none;border-left:1px solid var(--line)}
+  #sbapp #stage{position:relative;background:#000;overflow:hidden}
+  #sbapp canvas{display:block}
+  #sbapp .dim{color:var(--dim);font-weight:400}
+  #sbapp h2{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+    margin:14px 0 7px;font-weight:600}
+  #sbapp h2:first-child{margin-top:0}
+  #sbapp #bar{grid-column:1/4;background:var(--panel);border-top:1px solid var(--line);
+    display:flex;align-items:center;gap:8px;padding:0 10px}
+  #sbapp button{background:#221e19;color:var(--ink);border:1px solid var(--line);border-radius:3px;
+    padding:5px 11px;font:inherit;font-size:12px;cursor:pointer}
+  #sbapp button:hover{border-color:var(--hi);color:var(--hi)}
+  #sbapp button.on{background:var(--hi);color:#140f06;border-color:var(--hi)}
+  #sbapp .tabs{display:flex;gap:4px;margin-bottom:7px}
+  #sbapp .tabs button{flex:1;padding:4px 0;font-size:11px}
+  #sbapp input[type=text]{background:#0e0c0a;color:var(--ink);border:1px solid var(--line);
+    border-radius:3px;padding:4px 6px;font:inherit;font-size:12px;width:100%}
+  #sbapp .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+  #sbapp .th{position:relative;aspect-ratio:1;background:
+    repeating-conic-gradient(#1c1917 0% 25%,#131110 0% 50%) 50%/9px 9px;
+    border:1px solid var(--line);border-radius:3px;cursor:pointer;overflow:hidden}
+  #sbapp .th:hover{border-color:var(--hi)}
+  #sbapp .th img{width:100%;height:100%;object-fit:contain}
+  #sbapp .th.full{border-color:#3a4a5a}
+  #sbapp .row{display:flex;align-items:center;gap:6px;margin:5px 0}
+  #sbapp .row label{flex:0 0 52px;color:var(--dim);font-size:11px}
+  #sbapp .row input[type=range]{flex:1;min-width:0;accent-color:var(--hi)}
+  #sbapp .row .val{flex:0 0 52px;text-align:right;font-size:11px;color:var(--hi)}
+  #sbapp #layers{margin:0;padding:0;list-style:none;max-height:26vh;overflow-y:auto}
+  #sbapp #layers li{display:flex;align-items:center;gap:6px;padding:3px 5px;border:1px solid transparent;
+    border-radius:3px;cursor:pointer;font-size:11px}
+  #sbapp #layers li img{width:22px;height:22px;object-fit:contain;flex:0 0 22px;
+    background:repeating-conic-gradient(#1c1917 0% 25%,#131110 0% 50%) 50%/6px 6px;border-radius:2px}
+  #sbapp #layers li .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #sbapp #layers li .zz{flex:0 0 auto;color:var(--dim);font-size:10px}
+  #sbapp #layers li .x{flex:0 0 auto;color:var(--dim);padding:0 3px;opacity:0}
+  #sbapp #layers li:hover .x{opacity:1}
+  #sbapp #layers li .x:hover{color:#ff7a6a}
+  #sbapp #layers li:hover{background:#1c1916}
+  #sbapp #layers li.sel{background:#2a2115;border-color:var(--hi);color:var(--hi)}
+  #sbapp #hint{position:absolute;left:10px;bottom:10px;color:var(--dim);font-size:11px;
+    pointer-events:none;opacity:.8;line-height:1.6;text-shadow:0 1px 3px #000}
+  #sbapp #pbadge{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:5;
+    font-size:11px;color:#0a0806;background:var(--hi);padding:3px 12px;border-radius:20px;
+    display:none;pointer-events:none;letter-spacing:.06em}
+  #sbapp.playing #pbadge{display:block}
+  #sbapp .sp{flex:1}
+  #sbapp #name{width:150px}
+  #sbapp .two{display:flex;gap:5px;margin-top:6px}
+  #sbapp .two button{flex:1}
 </style>
 
 <script type="module" src="/js/shadowbox.js"></script>
