@@ -76,14 +76,18 @@ when "base"
 when "prop"
   # mj prop <dir> — <dir> holds template.png + prop.yml, writes render.png + prop.png.
   # The prop machine: rough template -> Nano render on a solid bg -> keyed transparent prop.
-  dir = ARGV[1]?
-  unless dir
-    STDERR.puts "Usage: mj prop <dir> [--rekey]"
+  # <name> resolves inside the prop library root (Config.props_dir); a path with a
+  # separator is treated as an explicit one-off directory.
+  name_or_path = ARGV[1]?
+  unless name_or_path
+    STDERR.puts "Usage: mj prop <name|dir> [--rekey]   (props live in #{MJ::Config.default_props_dir})"
     exit 1
   end
+  MJ::Config.load! # resolves props_dir (and api keys)
   # --rekey: re-run only the keying step on the existing render.png (no API call).
-  # Use it to tune key_low/key_high/blur/despill/defringe against a render you like.
+  # Use it to tune key_low/key_high/blur/despill/defringe/bleed against a render you like.
   rekey = ARGV.includes?("--rekey")
+  dir = MJ::PropLibrary.resolve(name_or_path)
   spec_path = File.join(dir, "prop.yml")
   render_path = File.join(dir, "render.png")
   prop_path = File.join(dir, "prop.png")
@@ -103,11 +107,11 @@ when "prop"
     render = MJ::CanvasUtil.from_png_file(render_path)
     prop = MJ::Prop.key_out(render, spec)
     MJ::CanvasUtil.write_png_file(prop, prop_path)
+    MJ::PropLibrary.record(dir, spec)
     STDERR.puts "[prop] wrote #{prop_path}"
     exit 0
   end
 
-  MJ::Config.load!
   if MJ::Config.runware_api_key.empty?
     STDERR.puts "RUNWARE_API_KEY not set."
     exit 1
@@ -123,6 +127,7 @@ when "prop"
   result = MJ::Prop.generate(client, template, spec)
   MJ::CanvasUtil.write_png_file(result.render, render_path)
   MJ::CanvasUtil.write_png_file(result.prop, prop_path)
+  MJ::PropLibrary.record(dir, spec)
   STDERR.puts "[prop] wrote #{render_path} and #{prop_path}"
 when "pixelize"
   # mj pixelize <dir> — <dir> holds image.png + pixel.yml, writes redraw.png + pixel.png.

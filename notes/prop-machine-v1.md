@@ -47,6 +47,7 @@ tolerate the fact that the AI drifts.
 | `alpha_bleed` | `true`         | "Solidify": flood transparent pixels with nearest subject colour so downscalers can't resurrect the key colour (see 2026-08-05 note). |
 | `model`       | `google:4@3`   | Nano Banana 2 (`4@1` deprecated/weak, `4@2` = Pro). |
 | `width`/`height` | `1024`      | Render size. |
+| `tags`        | `[]`           | Free-form tags flowed into the library manifest (`index.json`) for tag-based lookup. |
 
 ## The three edge considerations (from the wiring request)
 
@@ -133,11 +134,32 @@ prop = Minanime::Prop.key_out(some_canvas, spec)
 ## CLI
 
 ```
-minanime prop <dir>
+mj prop <name>            # resolve <name> inside the prop library root
+mj prop <name> --rekey    # re-key only (no API call) — tune knobs against an existing render
+mj prop path/to/dir       # explicit one-off dir (anything with a '/' is treated as a path)
 ```
 
-`<dir>` holds `template.png` + `prop.yml`. Writes `render.png` (raw) and `prop.png` (transparent).
-See `examples/prop/` for a working template + config.
+Writes `render.png` (raw) and `prop.png` (transparent) into the prop's folder, and upserts a row
+into the library manifest (see below). See `examples/prop/` for a working template + config.
+
+## The prop library (storage, updated 2026-08-05)
+
+Props live in a **self-contained, relocatable tree outside the repo** — one folder per prop —
+so the library survives repo moves and maps cleanly onto a future TransFS/DataDungeon backend
+(switching backends = repoint the root + write an adapter, not a rewrite).
+
+- **Root** (`Config.props_dir`), precedence: `$MJ_PROPS_DIR` → `config.yml` `props_dir:` →
+  `$XDG_DATA_HOME/mj/props` → `~/.local/share/mj/props` (the default).
+- **Layout**: `<root>/<name>/{prop.yml, template.png, render.png, prop.png}`. `prop.yml` is the
+  recipe (source of truth); `template.png`/`render.png` are regenerable provenance; `prop.png` is
+  the deliverable. The `prop-` prefix from the old `data/prop-*` dirs is dropped — the folder name
+  *is* the prop name.
+- **Manifest**: `<root>/index.json`, auto-upserted on every build/rekey (`PropLibrary.record`).
+  One row per prop: `name, tags, model, width, height, source_sha` (sha256 of `prop.yml`, so it
+  changes when the recipe changes), `created` (preserved), `updated`. Rows sorted by name for
+  stable diffs. This is the tag/provenance seam a tag-based (tqag) TransFS will index on.
+- **Tags**: `PropSpec.tags` (a `tags: [..]` list in `prop.yml`) flow into the manifest — seed the
+  metadata now so migration is a copy + adapter.
 
 ## Evidence
 

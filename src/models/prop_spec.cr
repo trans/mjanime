@@ -44,5 +44,8 @@ module MJ
     property model : String = "google:4@3"   # Nano Banana 2 (google:4@1 is deprecated/weak)
     property width : Int32 = 1024
     property height : Int32 = 1024
+    # Free-form tags for the prop library manifest (index.json). Seeds the tag-based
+    # metadata a future TransFS/DataDungeon backend will index on. e.g. ["pirate", "metal"].
+    property tags : Array(String) = [] of String
   end
 end

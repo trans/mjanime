@@ -32,6 +32,7 @@ require "./engine/renderer"
 require "./engine/strip_builder"
 require "./engine/base"
 require "./engine/prop"
+require "./engine/prop_library"
 require "./engine/pixelize"
 require "./engine/decorate"
 require "./engine/sfx"
@@ -39,7 +40,7 @@ require "./web/routes"
 require "./bus_service"
 
 module MJ
-  VERSION = "0.3.0"
+  VERSION = "0.4.0"
 
   module App
     @@renderer : Renderer? = nil
