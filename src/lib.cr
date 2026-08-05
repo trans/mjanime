@@ -39,7 +39,7 @@ require "./web/routes"
 require "./bus_service"
 
 module MJ
-  VERSION = "0.2.0"
+  VERSION = "0.3.0"
 
   module App
     @@renderer : Renderer? = nil
