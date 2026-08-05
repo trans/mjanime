@@ -35,6 +35,12 @@ module MJ
     # band (1-3) only when the SUBJECT itself legitimately contains the key hue, so the
     # interior is left untouched. Requires defringe: true.
     property defringe_band : Int32 = 0
+    # Alpha bleed ("solidify"): keying zeros the bg's alpha but leaves its COLOUR in the
+    # RGB channels. Non-premultiplied downscalers (thumbnailers, GPU mipmaps) blend that
+    # hidden colour back in, so the key hue "reappears" as a fringe when the prop is shrunk.
+    # This floods transparent pixels with the nearest subject colour (alpha stays 0) so
+    # there's nothing left to resurrect. Default true; harmless in alpha-correct rendering.
+    property alpha_bleed : Bool = true
     property model : String = "google:4@3"   # Nano Banana 2 (google:4@1 is deprecated/weak)
     property width : Int32 = 1024
     property height : Int32 = 1024

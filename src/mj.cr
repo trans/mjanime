@@ -78,27 +78,49 @@ when "prop"
   # The prop machine: rough template -> Nano render on a solid bg -> keyed transparent prop.
   dir = ARGV[1]?
   unless dir
-    STDERR.puts "Usage: mj prop <dir>"
+    STDERR.puts "Usage: mj prop <dir> [--rekey]"
     exit 1
   end
+  # --rekey: re-run only the keying step on the existing render.png (no API call).
+  # Use it to tune key_low/key_high/blur/despill/defringe against a render you like.
+  rekey = ARGV.includes?("--rekey")
+  spec_path = File.join(dir, "prop.yml")
+  render_path = File.join(dir, "render.png")
+  prop_path = File.join(dir, "prop.png")
+  unless File.exists?(spec_path)
+    STDERR.puts "Need #{spec_path}. See examples/prop/ for the format."
+    exit 1
+  end
+  spec = MJ::PropSpec.from_yaml(File.read(spec_path))
+
+  if rekey
+    unless File.exists?(render_path)
+      STDERR.puts "--rekey needs an existing #{render_path} (run without --rekey first)."
+      exit 1
+    end
+    STDERR.puts "[prop] rekey #{render_path} -> prop.png (bg=#{spec.background} " \
+      "key=#{spec.key_low}..#{spec.key_high} blur=#{spec.edge_blur})"
+    render = MJ::CanvasUtil.from_png_file(render_path)
+    prop = MJ::Prop.key_out(render, spec)
+    MJ::CanvasUtil.write_png_file(prop, prop_path)
+    STDERR.puts "[prop] wrote #{prop_path}"
+    exit 0
+  end
+
   MJ::Config.load!
   if MJ::Config.runware_api_key.empty?
     STDERR.puts "RUNWARE_API_KEY not set."
     exit 1
   end
   template = File.join(dir, "template.png")
-  spec_path = File.join(dir, "prop.yml")
   unless File.exists?(template) && File.exists?(spec_path)
     STDERR.puts "Need #{template} and #{spec_path}. See examples/prop/ for the format."
     exit 1
   end
-  spec = MJ::PropSpec.from_yaml(File.read(spec_path))
   client = MJ::RunwareClient.new(MJ::Config.runware_api_key)
   STDERR.puts "[prop] #{template} -> prop.png (model=#{spec.model} bg=#{spec.background} " \
     "key=#{spec.key_low}..#{spec.key_high} blur=#{spec.edge_blur})"
   result = MJ::Prop.generate(client, template, spec)
-  render_path = File.join(dir, "render.png")
-  prop_path = File.join(dir, "prop.png")
   MJ::CanvasUtil.write_png_file(result.render, render_path)
   MJ::CanvasUtil.write_png_file(result.prop, prop_path)
   STDERR.puts "[prop] wrote #{render_path} and #{prop_path}"

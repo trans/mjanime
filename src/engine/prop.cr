@@ -86,7 +86,46 @@ module MJ
         end
       end
       defringe!(dst, bg_r, bg_g, bg_b, spec.defringe_band) if spec.defringe
+      bleed_alpha!(dst) if spec.alpha_bleed
       dst
+    end
+
+    # Alpha bleed ("solidify" / edge-colour extend): keying zeros the ALPHA of the
+    # background but leaves its COLOUR in the RGB channels. That hidden bg colour is
+    # invisible in an alpha-correct view, but any non-premultiplied downscale — OS
+    # thumbnailers, GPU mipmapping, naive resamplers — blends it back into the subject,
+    # so a magenta/green key "reappears" as a fringe when the prop is shrunk. We flood
+    # every fully-transparent pixel with its nearest SUBJECT colour (alpha kept at 0) via
+    # a multi-source BFS from the opaque pixels outward, so there is no key colour left
+    # under the transparency for any mip level to resurrect. O(pixels).
+    private def self.bleed_alpha!(canvas : StumpyPNG::Canvas) : Nil
+      w = canvas.width
+      h = canvas.height
+      filled = Array(Array(Bool)).new(h) { Array(Bool).new(w, false) }
+      q = Deque({Int32, Int32}).new
+      (0...h).each do |y|
+        (0...w).each do |x|
+          if canvas[x, y].a > 0 # a real subject pixel — a colour source
+            filled[y][x] = true
+            q << {x, y}
+          end
+        end
+      end
+      return if q.empty? # nothing opaque: leave as-is
+      while coord = q.shift?
+        x, y = coord
+        src = canvas[x, y]
+        {% for d in [{-1, 0}, {1, 0}, {0, -1}, {0, 1}] %}
+          nx = x + {{d[0]}}
+          ny = y + {{d[1]}}
+          if nx >= 0 && ny >= 0 && nx < w && ny < h && !filled[ny][nx]
+            filled[ny][nx] = true
+            # copy nearest subject RGB, keep the pixel transparent
+            canvas[nx, ny] = StumpyPNG::RGBA.new(src.r, src.g, src.b, 0_u16)
+            q << {nx, ny}
+          end
+        {% end %}
+      end
     end
 
     # Recover one foreground channel from a pixel composited over the bg colour.

@@ -38,10 +38,14 @@ tolerate the fact that the AI drifts.
 |---------------|----------------|--------------|
 | `prompt`      | —              | Subject description; **must name the background colour** you set below. |
 | `background`  | `[0, 0, 0]`    | RGB colour to render on and key out. Match it to the prompt. |
-| `key_low`     | `4`            | Distance below this → fully transparent (kills bg haze/compression noise). |
-| `key_high`    | `28`           | Distance above this → fully opaque. Lower keeps faint thin details (ropes, leaves); raise for a cleaner cut. |
+| `key_low`     | `4`            | Distance below this → fully transparent (kills bg haze/compression noise). Raise to ~26 to swallow the model's noisy-magenta speckle. |
+| `key_high`    | `28`           | Distance above this → fully opaque. Lower keeps faint thin details (ropes, leaves); raise for a cleaner cut or a see-through subject (spring ~110). |
 | `edge_blur`   | `0`            | Px radius of alpha-only box blur. `0` = crisp. |
-| `model`       | `google:4@1`   | Nano Banana. |
+| `despill`     | `true`         | Colour-unmatte partial-alpha edge pixels: recover F = (C−(1−a)·B)/a, stripping bg tint from anti-aliased edges. |
+| `defringe`    | `true`         | Subtract residual bg-chroma cast from the `alpha>0` body/edge. Self-limiting (only fires where a pixel leans toward the bg hue). |
+| `defringe_band` | `0`          | `0` = whole image; `N` = confine defringe to within N px of transparency (edge shell) — for subjects that legitimately contain the key hue. |
+| `alpha_bleed` | `true`         | "Solidify": flood transparent pixels with nearest subject colour so downscalers can't resurrect the key colour (see 2026-08-05 note). |
+| `model`       | `google:4@3`   | Nano Banana 2 (`4@1` deprecated/weak, `4@2` = Pro). |
 | `width`/`height` | `1024`      | Render size. |
 
 ## The three edge considerations (from the wiring request)
@@ -140,4 +144,31 @@ See `examples/prop/` for a working template + config.
 - `examples/prop/` — barrel end-to-end run (`template.png` → `render.png` → `prop.png`), keyed clean
   on black, verified over bright green with no fringe.
 - `data/props/{barrel,plant,clown}-{template,render,prop}.png` — the original three-prop validation.
-```
+
+## Fringe defence, layered (updated 2026-08-05)
+
+Chroma-key fringe is fought in four stacked passes; each cleans a different pixel population:
+
+1. **High `key_high` + `key_low` floor.** `key_high` keeps thin/see-through detail opaque (spring
+   coils ~110); `key_low` ~26 cuts the model's noisy-magenta bg speckle to fully transparent.
+2. **`despill` (unmatte).** For partial-alpha edge pixels, recover the true foreground
+   `F = (C − (1−a)·B) / a` — strips the bg tint baked into anti-aliased edges.
+3. **`defringe`.** On the `alpha>0` body/edge, subtract the *shared* chroma excess (magenta = R&B
+   jointly over G). Self-limiting: greys the tint, spares warm/neutral subject colour. `defringe_band`
+   optionally confines it to the edge shell for subjects that legitimately contain the key hue.
+4. **`alpha_bleed` ("solidify") — the downscale fix.** Keying only zeros the background's *alpha*;
+   its *colour* stays in the RGB of the transparent pixels. Invisible in an alpha-correct view, but a
+   **non-premultiplied downscale** (OS thumbnailers, GPU mipmaps, naive resamplers) blends that hidden
+   magenta back into the subject — so the key hue *reappears as a pink fringe only when the prop is
+   shrunk*, worst on reflective/metal props. Fix: flood every transparent pixel with its nearest
+   *subject* colour (alpha kept 0) via multi-source BFS from the opaque pixels outward
+   (`Prop.bleed_alpha!`). Distinct from defringe: defringe cleans `alpha>0`; bleed cleans the
+   `alpha==0` region that mipmapping resurrects. (Origin: Thomas noticed the spring went pink only in
+   the small thumbnail.)
+
+**`mj prop <dir> --rekey`** re-runs *only* the keying step on an existing `render.png` — no API call —
+for tuning any of the knobs above against a render you already like.
+
+- Evidence: `data/prop-spring/` (see-through steel coil) and `data/prop-gear/` (worn cast cog).
+  Both verified: zero magenta-leaning pixels at any threshold, and zero magenta in a 48px downscale
+  (the operation that used to bring the pink back).
