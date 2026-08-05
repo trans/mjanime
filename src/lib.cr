@@ -37,6 +37,7 @@ require "./engine/pixelize"
 require "./engine/decorate"
 require "./engine/sfx"
 require "./web/routes"
+require "./shadowbox"
 require "./bus_service"
 
 module MJ
