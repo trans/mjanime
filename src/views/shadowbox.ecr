@@ -40,13 +40,18 @@
 
   <div id="bar">
     <input type="text" id="name" value="untitled" title="scene name">
-    <button id="preview">▶ Walk through (P)</button>
+    <button id="dosave" title="save to the scene library">Save</button>
+    <select id="scenes" title="open a saved scene"><option value="">Open…</option></select>
+    <button id="dodelete" title="delete the current scene from the library">Delete</button>
+    <span id="status" class="stat"></span>
+    <span class="sp"></span>
+    <button id="preview">▶ Walk (P)</button>
     <button id="grid">Floor</button>
     <button id="horiz">Horizon</button>
     <button id="cbox">Box</button>
-    <span class="sp"></span>
-    <button id="load">Load JSON</button>
-    <button id="save">Export JSON</button>
+    <span class="gap"></span>
+    <button id="exportfile" title="download this scene as a .json file">⬇ File</button>
+    <button id="loadfile" title="import a .json file">⬆ File</button>
     <input type="file" id="file" accept=".json" style="display:none">
   </div>
 </div>
@@ -111,6 +116,13 @@
   #sbapp.playing #pbadge{display:block}
   #sbapp .sp{flex:1}
   #sbapp #name{width:150px}
+  #sbapp select{background:#0e0c0a;color:var(--ink);border:1px solid var(--line);border-radius:3px;
+    padding:4px 6px;font:inherit;font-size:12px;cursor:pointer;max-width:170px}
+  #sbapp select:hover{border-color:var(--hi)}
+  #sbapp .gap{width:10px}
+  #sbapp .stat{font-size:11px;color:var(--dim);min-width:90px}
+  #sbapp .stat.ok{color:#62d68a}
+  #sbapp .stat.err{color:#ff7a6a}
   #sbapp .two{display:flex;gap:5px;margin-top:6px}
   #sbapp .two button{flex:1}
 </style>

@@ -13,6 +13,10 @@ module MJ
     # palette entries; props supply cut:true). Same relocatable pattern as props_dir. Resolved in
     # load! to $MJ_BACKDROPS_DIR, else $XDG_DATA_HOME/mj/backdrops, else ~/.local/share/mj/backdrops.
     class_property backdrops_dir : String = ""
+    # Root of the scene library — shadowbox compositions saved as <name>.json. Same relocatable
+    # pattern as props/backdrops. Resolved in load! to $MJ_SCENES_DIR, else $XDG_DATA_HOME/mj/scenes,
+    # else ~/.local/share/mj/scenes.
+    class_property scenes_dir : String = ""
     class_property runware_api_key : String = ""
     class_property openai_api_key : String = ""
     class_property port : Int32 = 21683 # `cyclops-port mj` (crc32-stable, avoids collisions)
@@ -33,12 +37,17 @@ module MJ
       File.join(xdg_data_home, "mj", "backdrops")
     end
 
+    def self.default_scenes_dir : String
+      File.join(xdg_data_home, "mj", "scenes")
+    end
+
     class ProjectConfig
       include YAML::Serializable
 
       property data_dir : String = "./data"
       property props_dir : String? = nil     # nil = use the computed XDG default
       property backdrops_dir : String? = nil # nil = use the computed XDG default
+      property scenes_dir : String? = nil    # nil = use the computed XDG default
       property port : Int32 = 21683 # `cyclops-port mj`
 
       def initialize(@data_dir = "./data", @port = 21683)
@@ -68,12 +77,14 @@ module MJ
     def self.load!
       cfg_props_dir : String? = nil
       cfg_backdrops_dir : String? = nil
+      cfg_scenes_dir : String? = nil
       if File.exists?(config_path)
         project_config = ProjectConfig.from_yaml(File.read(config_path))
         @@data_dir = project_config.data_dir
         @@port = project_config.port
         cfg_props_dir = project_config.props_dir
         cfg_backdrops_dir = project_config.backdrops_dir
+        cfg_scenes_dir = project_config.scenes_dir
       end
 
       # Env vars override config file
@@ -86,6 +97,9 @@ module MJ
       # Backdrop root: $MJ_BACKDROPS_DIR > config file > XDG default.
       @@backdrops_dir = ENV["MJ_BACKDROPS_DIR"]? || cfg_backdrops_dir || default_backdrops_dir
       @@backdrops_dir = File.expand_path(@@backdrops_dir, home: true)
+      # Scene root: $MJ_SCENES_DIR > config file > XDG default.
+      @@scenes_dir = ENV["MJ_SCENES_DIR"]? || cfg_scenes_dir || default_scenes_dir
+      @@scenes_dir = File.expand_path(@@scenes_dir, home: true)
       @@port = ENV["PORT"]?.try(&.to_i) || @@port
 
       if @@runware_api_key.empty?

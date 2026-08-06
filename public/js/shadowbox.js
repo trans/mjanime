@@ -233,32 +233,71 @@ addEventListener("keydown", e => {
 addEventListener("keyup", e => keys.delete(e.key.toLowerCase()));
 const kk = k => keys.has(k) ? 1 : 0;
 
-// export · load  (browser download/upload for P2; mj scene library lands in P3)
-$("name").oninput = e => S.name = e.target.value;
-$("save").onclick = () => {
-  const out = {
+// serialize / apply — shared by the scene library (save/open) and the file export/import
+function serializeScene() {
+  return {
     name: S.name, meta: S.meta, floorY: S.floorY, lens: S.lens, cam: S.cam,
     layers: S.layers.map(L => ({
       src: L.src, w: L.w, h: L.h, x: +L.x.toFixed(3), y: +L.y.toFixed(3), z: +L.z.toFixed(3),
       scale: +L.scale.toFixed(3), horizon: +(L.horizon ?? 0.5).toFixed(3), shadow: !!L.shadow, meta: L.meta || {}
     }))
   };
-  const blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
+}
+function applyScene(j) {
+  S.name = j.name || "untitled"; S.meta = j.meta || {}; S.floorY = j.floorY ?? -1.6; S.lens = j.lens || 62;
+  S.cam = Object.assign({ x: 1.2, y: 0.35, z: 1.5, yaw: 22, pitch: 10 }, j.cam || {});
+  S.layers = (j.layers || []).map(L => ({ x: 0, y: 0, z: -6, scale: 1.6, horizon: 0.5, shadow: false, meta: {}, ...L }));
+  $("name").value = S.name; HFOV = S.lens * Math.PI / 180;
+  const map = { floor: S.floorY, lens: S.lens, cx: S.cam.x, cy: S.cam.y, cz: S.cam.z, cyaw: S.cam.yaw, cpit: S.cam.pitch };
+  for (const id in map) { $(id).value = map[id]; $(id + "V").textContent = (id === "lens" || id === "cyaw" || id === "cpit") ? Math.round(map[id]) + "°" : (+map[id]).toFixed(2); }
+  sel = -1; resize(); rebuild(); showSel();
+}
+const status = (msg, cls) => { const s = $("status"); s.textContent = msg; s.className = "stat" + (cls ? " " + cls : ""); if (msg) setTimeout(() => { if (s.textContent === msg) { s.textContent = ""; s.className = "stat"; } }, 2600); };
+
+$("name").oninput = e => S.name = e.target.value;
+
+// scene library — save / open / delete by name
+function refreshScenes(selected) {
+  fetch("/shadowbox/scenes").then(r => r.json()).then(list => {
+    const cur = selected ?? "";
+    $("scenes").innerHTML = `<option value="">Open…</option>` +
+      list.map(s => `<option value="${s.name}" ${s.name === cur ? "selected" : ""}>${s.name} · ${s.layers}L</option>`).join("");
+  }).catch(() => {});
+}
+$("dosave").onclick = () => {
+  const name = (S.name || "untitled").trim();
+  fetch("/shadowbox/scenes/" + encodeURIComponent(name), {
+    method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(serializeScene())
+  }).then(async r => {
+    const j = await r.json().catch(() => ({}));
+    if (r.ok) { S.name = j.saved || name; $("name").value = S.name; status("saved “" + S.name + "”", "ok"); refreshScenes(S.name); }
+    else status(j.error || "save failed", "err");
+  }).catch(() => status("save failed", "err"));
+};
+$("scenes").onchange = e => {
+  const name = e.target.value; if (!name) return;
+  fetch("/shadowbox/scenes/" + encodeURIComponent(name)).then(r => r.json()).then(j => {
+    applyScene(j); status("opened “" + name + "”", "ok");
+  }).catch(() => status("open failed", "err"));
+};
+$("dodelete").onclick = () => {
+  const name = (S.name || "").trim(); if (!name) return;
+  if (!confirm(`Delete scene “${name}” from the library?`)) return;
+  fetch("/shadowbox/scenes/" + encodeURIComponent(name), { method: "DELETE" }).then(r => {
+    if (r.ok) { status("deleted “" + name + "”", "ok"); refreshScenes(); } else status("not in library", "err");
+  }).catch(() => status("delete failed", "err"));
+};
+refreshScenes();
+
+// file export / import — portability, independent of the library
+$("exportfile").onclick = () => {
+  const blob = new Blob([JSON.stringify(serializeScene(), null, 2)], { type: "application/json" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = (S.name || "scene") + ".json"; a.click();
 };
-$("load").onclick = () => $("file").click();
+$("loadfile").onclick = () => $("file").click();
 $("file").onchange = e => {
   const f = e.target.files[0]; if (!f) return;
-  f.text().then(t => {
-    const j = JSON.parse(t);
-    S.name = j.name || "untitled"; S.meta = j.meta || {}; S.floorY = j.floorY ?? -1.6; S.lens = j.lens || 62;
-    S.cam = Object.assign({ x: 1.2, y: 0.35, z: 1.5, yaw: 22, pitch: 10 }, j.cam || {});
-    S.layers = (j.layers || []).map(L => ({ x: 0, y: 0, z: -6, scale: 1.6, horizon: 0.5, shadow: false, meta: {}, ...L }));
-    $("name").value = S.name; HFOV = S.lens * Math.PI / 180;
-    const map = { floor: S.floorY, lens: S.lens, cx: S.cam.x, cy: S.cam.y, cz: S.cam.z, cyaw: S.cam.yaw, cpit: S.cam.pitch };
-    for (const id in map) { $(id).value = map[id]; $(id + "V").textContent = (id === "lens" || id === "cyaw" || id === "cpit") ? Math.round(map[id]) + "°" : (+map[id]).toFixed(2); }
-    sel = -1; resize(); rebuild(); showSel();
-  });
+  f.text().then(t => { applyScene(JSON.parse(t)); status("imported file", "ok"); }).catch(() => status("bad file", "err"));
 };
 
 const WALK = 2.4, RISE = 1.2;

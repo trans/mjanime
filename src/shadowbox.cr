@@ -65,6 +65,43 @@ module MJ
           "not found"
         end
       end
+
+      # Scene library — compositions saved by name. SceneLibrary.safe_name keeps every name inside
+      # the root, so these need no extra traversal guard.
+      get "/#{SLUG}/scenes" do |env|
+        env.response.content_type = "application/json"
+        SceneLibrary.list.to_json
+      end
+
+      get "/#{SLUG}/scenes/:name" do |env|
+        if body = SceneLibrary.read(env.params.url["name"])
+          env.response.content_type = "application/json"
+          body
+        else
+          env.response.status_code = 404
+          env.response.content_type = "application/json"
+          %({"error":"not found"})
+        end
+      end
+
+      put "/#{SLUG}/scenes/:name" do |env|
+        env.response.content_type = "application/json"
+        body = env.request.body.try(&.gets_to_end) || ""
+        begin
+          saved = SceneLibrary.save(env.params.url["name"], body)
+          {saved: saved}.to_json
+        rescue ex
+          env.response.status_code = 400
+          {error: ex.message}.to_json
+        end
+      end
+
+      delete "/#{SLUG}/scenes/:name" do |env|
+        env.response.content_type = "application/json"
+        ok = SceneLibrary.delete(env.params.url["name"])
+        env.response.status_code = 404 unless ok
+        {deleted: ok}.to_json
+      end
     end
 
     # True only if `path` resolves to somewhere inside `root` — the definitive traversal guard.
