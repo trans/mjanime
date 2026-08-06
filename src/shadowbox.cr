@@ -21,9 +21,15 @@ module MJ
     end
 
     def self.register
-      # Editor (P0 stub — full editor lands in P2).
+      # Editor.
       get "/#{SLUG}" do |env|
         render "src/views/shadowbox.ecr", "src/views/layout.ecr"
+      end
+
+      # Standalone player — a saved scene rendered chrome-less (no mj nav), embeddable. The scene
+      # name is the last path segment; the player JS reads it from the URL and fetches the scene.
+      get "/#{SLUG}/play/:name" do |env|
+        render "src/views/shadowbox_player.ecr" # one arg → no layout wrapper
       end
 
       # Palette manifest: every placeable asset as {src,w,h,cut}. Props (cut-outs) come from the prop

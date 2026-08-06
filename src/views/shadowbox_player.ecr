@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Shadowbox — player</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden;cursor:crosshair}
+  #stage{position:fixed;inset:0}
+  #stage canvas{display:block}
+  #hint{position:fixed;left:12px;bottom:12px;z-index:9;font:12px ui-monospace,monospace;color:#9fe;
+    opacity:.5;pointer-events:none;line-height:1.5;text-shadow:0 1px 3px #000}
+  #msg{position:fixed;inset:0;display:none;place-items:center;color:#c9b27a;
+    font:14px ui-monospace,monospace;background:#000}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="hint">move to drift · <b>P</b> walk through · click to look · WASD move · ESC out</div>
+<div id="msg"></div>
+<script type="module" src="/js/shadowbox-player.js"></script>
+</body>
+</html>

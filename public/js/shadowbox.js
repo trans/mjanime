@@ -280,6 +280,11 @@ $("scenes").onchange = e => {
     applyScene(j); status("opened “" + name + "”", "ok");
   }).catch(() => status("open failed", "err"));
 };
+$("playtab").onclick = () => {
+  const name = (S.name || "").trim();
+  if (!name) { status("name the scene first", "err"); return; }
+  window.open("/shadowbox/play/" + encodeURIComponent(name), "_blank");
+};
 $("dodelete").onclick = () => {
   const name = (S.name || "").trim(); if (!name) return;
   if (!confirm(`Delete scene “${name}” from the library?`)) return;

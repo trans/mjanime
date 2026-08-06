@@ -5,6 +5,17 @@ first-class tool. Source today: `~/Projects/siliconcircus.lol/pirateship/public/
 (`index.html` = drift *player*, `sbedit.html` = *editor*), Three.js r170, reads a hand-kept
 `assets/manifest.json`, exports/loads scene JSON.
 
+## Status (2026-08-06)
+
+- **P0 ✔** scaffold (name-centralized tool, vendored three, drift stub) — `fe3e499`
+- **P1 ✔** asset bridge (palette from prop + backdrop libraries, /lib image routes) — `18b988b`
+- **P2 ✔** editor port (sbedit → `shadowbox.ecr` + `shadowbox.js`, under mj nav) — `6455175`
+- **P3 ✔** scenes library (save/open/delete by name, `SceneLibrary`) — `e216f99`
+- **P4 ✔** standalone player (`/shadowbox/play/<name>`, drift + walk-through, embeddable)
+- **P5 ☐** polish — `.webp` option, backdrop import, optional `mj scene`/bus surface
+
+generate → compose → play is now complete end-to-end.
+
 ## Why it belongs in mj
 
 mj is a *generator* (props, backdrops, strips, sfx, voices). It has no *composition/output* stage.
