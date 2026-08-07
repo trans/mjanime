@@ -40,11 +40,11 @@ require "./engine/pixelize"
 require "./engine/decorate"
 require "./engine/sfx"
 require "./web/routes"
-require "./shadowbox"
+require "./diorama"
 require "./bus_service"
 
 module MJ
-  VERSION = "0.4.0"
+  VERSION = "0.5.0"
 
   module App
     @@renderer : Renderer? = nil

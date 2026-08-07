@@ -1,16 +1,16 @@
 require "kemal"
 
 module MJ
-  # Shadowbox: compose mj's props/backdrops into a parallax depth-layer scene, then play it.
-  # See notes/shadowbox-plan.md.
+  # Diorama: compose mj's props/backdrops into a parallax depth-layer scene, then play it.
+  # See notes/diorama-plan.md.
   #
   # NAME IS CENTRALISED HERE. The URL slug and display title live in these two constants and nowhere
   # else — routes and the nav derive from them. Renaming the tool (e.g. to "Diorama") is a one-line
-  # change here plus renaming the .ecr/.js files; there is no hardcoded "shadowbox" scattered through
+  # change here plus renaming the .ecr/.js files; there is no hardcoded "diorama" scattered through
   # the routes or templates.
-  module Shadowbox
-    SLUG  = "shadowbox" # URL base + asset/scene namespace
-    TITLE = "Shadowbox" # display name in the nav
+  module Diorama
+    SLUG  = "diorama" # URL base + asset/scene namespace
+    TITLE = "Diorama" # display name in the nav
 
     def self.slug : String
       SLUG
@@ -23,13 +23,13 @@ module MJ
     def self.register
       # Editor.
       get "/#{SLUG}" do |env|
-        render "src/views/shadowbox.ecr", "src/views/layout.ecr"
+        render "src/views/diorama.ecr", "src/views/layout.ecr"
       end
 
       # Standalone player — a saved scene rendered chrome-less (no mj nav), embeddable. The scene
       # name is the last path segment; the player JS reads it from the URL and fetches the scene.
       get "/#{SLUG}/play/:name" do |env|
-        render "src/views/shadowbox_player.ecr" # one arg → no layout wrapper
+        render "src/views/diorama_player.ecr" # one arg → no layout wrapper
       end
 
       # Palette manifest: every placeable asset as {src,w,h,cut}. Props (cut-outs) come from the prop

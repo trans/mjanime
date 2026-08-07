@@ -1,7 +1,7 @@
 require "json"
 
 module MJ
-  # Scene library: shadowbox compositions saved as <name>.json under Config.scenes_dir. A scene is a
+  # Scene library: diorama compositions saved as <name>.json under Config.scenes_dir. A scene is a
   # self-describing JSON document (the editor's export shape), so — unlike the prop library — it needs
   # no folder-per-item and no separate manifest; a listing just scans the directory. Same relocatable
   # pattern as the prop/backdrop libraries, so it maps onto a future TransFS/DataDungeon backend.

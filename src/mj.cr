@@ -12,7 +12,7 @@ when "serve", nil
   MJ::Config.load!
   MJ::Database.setup!
   MJ::Routes.register
-  MJ::Shadowbox.register
+  MJ::Diorama.register
 
   # Join the Arcana bus alongside the web server (opt out with MJ_BUS=0).
   MJ::BusService.start_background unless ENV["MJ_BUS"]? == "0"
@@ -206,7 +206,7 @@ when "bus"
   MJ::BusService.run
 when "webp"
   # mj webp [<prop-name>] [--quality N] — transcode library deliverables to .webp (kept next to the
-  # PNG). Shadowbox serves the .webp when present. No name = every prop + every backdrop.
+  # PNG). Diorama serves the .webp when present. No name = every prop + every backdrop.
   MJ::Config.load!
   unless MJ::Webp.available?
     STDERR.puts "mj webp needs ImageMagick (magick/convert) on PATH."
@@ -257,7 +257,7 @@ when "webp"
   end
 when "backdrop"
   # mj backdrop <image.png> [name] — import a full-frame image (e.g. a base/strip output) into the
-  # backdrop library so it appears in the shadowbox palette as a cut:false entry.
+  # backdrop library so it appears in the diorama palette as a cut:false entry.
   MJ::Config.load!
   src = ARGV[1]?
   unless src && File.file?(src)

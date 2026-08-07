@@ -1,9 +1,9 @@
-// Shadowbox editor — ported from siliconcircus sbedit.html, wired to mj.
+// Diorama editor — ported from siliconcircus sbedit.html, wired to mj.
 // Scenes are stacks of images at real depths. A layer carries POSITION (x,y,z) and SCALE in world
 // units. There is no "backdrop" type — a room is just a big image far away. Two alignment ideas do
 // the heavy lifting: HORIZON (every image's baked eye-level sits at world y=0) and SCALE (an image
 // reproduces its shot FOV when it subtends the same angle, so scale IS the FOV knob). FLOOR seats
-// grounded props. Adaptations from the original: assets come from mj's /shadowbox/assets.json, three
+// grounded props. Adaptations from the original: assets come from mj's /diorama/assets.json, three
 // is vendored at /vendor, the app fits under mj's nav, and scenes carry open `meta` fields (scene +
 // per-layer) so the JSON format is portable for other programs.
 import * as THREE from "/vendor/three.module.js";
@@ -93,7 +93,7 @@ addEventListener("resize", resize);
 
 // palette — from mj's asset manifest
 let MANIFEST = [], filter = "all";
-fetch("/shadowbox/assets.json").then(r => r.json()).then(m => {
+fetch("/diorama/assets.json").then(r => r.json()).then(m => {
   MANIFEST = m; drawPalette();
   const bg = m.find(a => !a.cut); if (bg) addLayer(bg.src);   // seed with the first backdrop (de-piraten: no hardcoded room)
 });
@@ -258,7 +258,7 @@ $("name").oninput = e => S.name = e.target.value;
 
 // scene library — save / open / delete by name
 function refreshScenes(selected) {
-  fetch("/shadowbox/scenes").then(r => r.json()).then(list => {
+  fetch("/diorama/scenes").then(r => r.json()).then(list => {
     const cur = selected ?? "";
     $("scenes").innerHTML = `<option value="">Open…</option>` +
       list.map(s => `<option value="${s.name}" ${s.name === cur ? "selected" : ""}>${s.name} · ${s.layers}L</option>`).join("");
@@ -266,7 +266,7 @@ function refreshScenes(selected) {
 }
 $("dosave").onclick = () => {
   const name = (S.name || "untitled").trim();
-  fetch("/shadowbox/scenes/" + encodeURIComponent(name), {
+  fetch("/diorama/scenes/" + encodeURIComponent(name), {
     method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(serializeScene())
   }).then(async r => {
     const j = await r.json().catch(() => ({}));
@@ -276,19 +276,19 @@ $("dosave").onclick = () => {
 };
 $("scenes").onchange = e => {
   const name = e.target.value; if (!name) return;
-  fetch("/shadowbox/scenes/" + encodeURIComponent(name)).then(r => r.json()).then(j => {
+  fetch("/diorama/scenes/" + encodeURIComponent(name)).then(r => r.json()).then(j => {
     applyScene(j); status("opened “" + name + "”", "ok");
   }).catch(() => status("open failed", "err"));
 };
 $("playtab").onclick = () => {
   const name = (S.name || "").trim();
   if (!name) { status("name the scene first", "err"); return; }
-  window.open("/shadowbox/play/" + encodeURIComponent(name), "_blank");
+  window.open("/diorama/play/" + encodeURIComponent(name), "_blank");
 };
 $("dodelete").onclick = () => {
   const name = (S.name || "").trim(); if (!name) return;
   if (!confirm(`Delete scene “${name}” from the library?`)) return;
-  fetch("/shadowbox/scenes/" + encodeURIComponent(name), { method: "DELETE" }).then(r => {
+  fetch("/diorama/scenes/" + encodeURIComponent(name), { method: "DELETE" }).then(r => {
     if (r.ok) { status("deleted “" + name + "”", "ok"); refreshScenes(); } else status("not in library", "err");
   }).catch(() => status("delete failed", "err"));
 };

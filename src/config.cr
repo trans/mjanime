@@ -9,11 +9,11 @@ module MJ
     # future TransFS/DataDungeon backend (switching backends = repoint this root + adapter).
     # Resolved in load! to $MJ_PROPS_DIR, else $XDG_DATA_HOME/mj/props, else ~/.local/share/mj/props.
     class_property props_dir : String = ""
-    # Root of the backdrop library — full-frame background images for shadowbox scenes (the cut:false
+    # Root of the backdrop library — full-frame background images for diorama scenes (the cut:false
     # palette entries; props supply cut:true). Same relocatable pattern as props_dir. Resolved in
     # load! to $MJ_BACKDROPS_DIR, else $XDG_DATA_HOME/mj/backdrops, else ~/.local/share/mj/backdrops.
     class_property backdrops_dir : String = ""
-    # Root of the scene library — shadowbox compositions saved as <name>.json. Same relocatable
+    # Root of the scene library — diorama compositions saved as <name>.json. Same relocatable
     # pattern as props/backdrops. Resolved in load! to $MJ_SCENES_DIR, else $XDG_DATA_HOME/mj/scenes,
     # else ~/.local/share/mj/scenes.
     class_property scenes_dir : String = ""

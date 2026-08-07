@@ -1,4 +1,4 @@
-// Shadowbox player — a saved scene rendered chrome-less. Ported from siliconcircus index.html (the
+// Diorama player — a saved scene rendered chrome-less. Ported from siliconcircus index.html (the
 // drift/parallax loop) but scene-driven: it reads the scene name from the URL, fetches the scene JSON
 // from mj, places each layer at its stored world position, and lets the camera DRIFT inside the box
 // (or WALK through it, clamped to the scene's camera box). This is the "play" third of
@@ -116,7 +116,7 @@ function step(now) {
 
 // ── load the scene, then run ──────────────────────────────────────────────────────────────────────
 function fail(msg) { const m = document.getElementById("msg"); m.textContent = msg; m.style.display = "grid"; }
-fetch("/shadowbox/scenes/" + encodeURIComponent(sceneName))
+fetch("/diorama/scenes/" + encodeURIComponent(sceneName))
   .then(r => r.ok ? r.json() : Promise.reject(r.status))
   .then(j => {
     S = Object.assign(S, j);
@@ -125,7 +125,7 @@ fetch("/shadowbox/scenes/" + encodeURIComponent(sceneName))
     HFOV = (S.lens || 62) * Math.PI / 180;
     DX = clamp(S.cam.x, 0.1, 1.2); DY = clamp(S.cam.y, 0.05, 0.6);
     sway = S.meta?.ambientSway !== false;                 // on unless the scene opts out
-    document.title = "Shadowbox — " + (S.name || sceneName);
+    document.title = "Diorama — " + (S.name || sceneName);
     build(); refit(); requestAnimationFrame(step);
   })
   .catch(() => fail(sceneName ? `scene “${sceneName}” not found` : "no scene specified"));

@@ -1,21 +1,27 @@
-# Shadow Box in mj — Plan (draft 2026-08-05)
+# Diorama in mj — Plan (draft 2026-08-05)
+
+**The mj tool is named "Diorama"** (renamed from "Shadowbox" 2026-08-07 — "diorama" better invokes
+*being there* + exploration of a constrained 3D scene, and scenes can lead to other scenes). URL slug
+`/diorama`, module `MJ::Diorama` (name centralized in `SLUG`/`TITLE`). The *source* it was ported from
+is still literally the Silicon Circus "shadow box".
 
 Bring the Silicon Circus **shadow box** (parallax depth-layer dioramas) into mj as a generalized,
-first-class tool. Source today: `~/Projects/siliconcircus.lol/pirateship/public/shadowbox/`
+first-class tool. Source: `~/Projects/siliconcircus.lol/pirateship/public/shadowbox/`
 (`index.html` = drift *player*, `sbedit.html` = *editor*), Three.js r170, reads a hand-kept
 `assets/manifest.json`, exports/loads scene JSON.
 
-## Status (2026-08-06)
+## Status (2026-08-07)
 
 - **P0 ✔** scaffold (name-centralized tool, vendored three, drift stub) — `fe3e499`
 - **P1 ✔** asset bridge (palette from prop + backdrop libraries, /lib image routes) — `18b988b`
-- **P2 ✔** editor port (sbedit → `shadowbox.ecr` + `shadowbox.js`, under mj nav) — `6455175`
+- **P2 ✔** editor port (sbedit → editor view + js, under mj nav) — `6455175`
 - **P3 ✔** scenes library (save/open/delete by name, `SceneLibrary`) — `e216f99`
-- **P4 ✔** standalone player (`/shadowbox/play/<name>`, drift + walk-through, embeddable)
+- **P4 ✔** standalone player (`/diorama/play/<name>`, drift + walk-through, embeddable) — `240b128`
 - **P5 ◐** polish — `.webp` option ✔ (`mj webp`, serve-preferred, ~93% smaller) · backdrop import ✔
-  (`mj backdrop <img> [name]`) · `mj scene` CLI still optional/deferred (editor UI already covers it)
+  (`mj backdrop <img> [name]`) · `mj scene` CLI still optional/deferred (editor UI already covers it) — `2cc38bf`
+- **Rename ✔** Shadowbox → Diorama (files `diorama*.{cr,ecr,js}`, routes `/diorama/*`, nav "Diorama")
 
-generate → compose → play is now complete end-to-end.
+generate → compose → play is complete end-to-end.
 
 ## Why it belongs in mj
 
@@ -36,14 +42,15 @@ scale *is* the FOV knob). **Floor** seats grounded props; each carries a soft co
 ## Target architecture in mj
 
 ```
-Palette  ─ GET /shadowbox/assets.json ─ aggregates:
+Palette  ─ GET /diorama/assets.json ─ aggregates:
              • prop library   (index.json)      → cut:true
              • backdrop library (index.json)    → cut:false
-Images   ─ GET /lib/props/<name>.png , /lib/backdrops/<name>.png   (libraries live outside public/)
-Editor   ─ GET /shadowbox            → src/views/shadowbox.ecr + public/js/shadowbox.js
+Images   ─ GET /lib/props/<name>.png , /lib/backdrops/<name>.png   (outside public/; .webp preferred)
+Editor   ─ GET /diorama             → src/views/diorama.ecr + public/js/diorama.js
 Scenes   ─ filesystem library  ~/.local/share/mj/scenes/<name>.json  (Config.scenes_dir)
-             GET/PUT/DELETE /shadowbox/scenes[/<name>]
-Player   ─ GET /shadowbox/play/<name> → drift/parallax viewer (no editor chrome), embeddable
+             GET/PUT/DELETE /diorama/scenes[/<name>]
+Player   ─ GET /diorama/play/<name> → drift/parallax viewer (no editor chrome), embeddable
+             (public/js/diorama-player.js + src/views/diorama_player.ecr)
 Vendor   ─ public/vendor/three.module.js  (r170, re-vendored)
 ```
 
@@ -58,10 +65,10 @@ arbitrary custom data. A scene is self-describing and relocatable.
 - **The scene JSON + assets are the deliverable; the player is just one consumer.** Other programs can
   copy the player and the format and adapt it. So the format stays small, documented, and free of
   mj-only assumptions, and carries open `meta` fields (scene + per-layer) for custom info.
-- **Name is not hardcoded.** The tool identity (URL slug + display title) lives in ONE place
-  (`MJ::Shadowbox::SLUG` / `TITLE`); routes and nav derive from it. Renaming to "Diorama" later is a
-  one-line change (plus a couple of file renames), not a find-and-replace. (Naming still debated —
-  "Shadowbox" for now.)
+- **Name is centralized.** The tool identity (URL slug + display title) lives in ONE place
+  (`MJ::Diorama::SLUG` / `TITLE`); routes and nav derive from it. This is what made the
+  Shadowbox → Diorama rename a small change (constants + file renames + the JS's hardcoded `/diorama/`
+  URLs), not a sprawling find-and-replace.
 - **Everything mj-served, same-origin, no external hosts** — CSP-clean, works offline.
 
 ## Phases

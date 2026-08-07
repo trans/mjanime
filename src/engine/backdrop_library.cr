@@ -1,5 +1,5 @@
 module MJ
-  # Backdrop library: full-frame background images for shadowbox scenes — the cut:false palette
+  # Backdrop library: full-frame background images for diorama scenes — the cut:false palette
   # entries (the prop library supplies the cut:true cut-outs). A flat directory of image files under
   # Config.backdrops_dir; a backdrop is a single image, so unlike props it needs no folder. PNG for
   # now (dims read straight from the header); .webp support is a later option (P5).
