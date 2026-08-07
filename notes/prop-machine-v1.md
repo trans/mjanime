@@ -191,6 +191,12 @@ Chroma-key fringe is fought in four stacked passes; each cleans a different pixe
 **`mj prop <dir> --rekey`** re-runs *only* the keying step on an existing `render.png` — no API call —
 for tuning any of the knobs above against a render you already like.
 
+**`mj webp [<prop>] [--quality N]`** transcodes library deliverables (`prop.png`, backdrop PNGs) to
+`.webp` next to the PNG via ImageMagick — a build-time step; the server just serves the `.webp` when it
+exists (shadowbox's `/lib/...` routes prefer it, transparently, at the same `.png` URL). ~90-97% smaller
+(the whole library went 21M→1.5M). Safe on transparency because alpha-bleed already neutralised the
+colour under the alpha, so lossy webp can't resurrect the key hue.
+
 - Evidence: `data/prop-spring/` (see-through steel coil) and `data/prop-gear/` (worn cast cog).
   Both verified: zero magenta-leaning pixels at any threshold, and zero magenta in a 48px downscale
   (the operation that used to bring the pink back).

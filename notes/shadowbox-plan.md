@@ -12,7 +12,8 @@ first-class tool. Source today: `~/Projects/siliconcircus.lol/pirateship/public/
 - **P2 ✔** editor port (sbedit → `shadowbox.ecr` + `shadowbox.js`, under mj nav) — `6455175`
 - **P3 ✔** scenes library (save/open/delete by name, `SceneLibrary`) — `e216f99`
 - **P4 ✔** standalone player (`/shadowbox/play/<name>`, drift + walk-through, embeddable)
-- **P5 ☐** polish — `.webp` option, backdrop import, optional `mj scene`/bus surface
+- **P5 ◐** polish — `.webp` option ✔ (`mj webp`, serve-preferred, ~93% smaller) · backdrop import ✔
+  (`mj backdrop <img> [name]`) · `mj scene` CLI still optional/deferred (editor UI already covers it)
 
 generate → compose → play is now complete end-to-end.
 

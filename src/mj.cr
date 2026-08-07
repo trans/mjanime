@@ -204,9 +204,80 @@ when "sfx"
 when "bus"
   # mj bus — join the Arcana bus and serve the tools (pixelize/prop/base/decorate/sfx).
   MJ::BusService.run
+when "webp"
+  # mj webp [<prop-name>] [--quality N] — transcode library deliverables to .webp (kept next to the
+  # PNG). Shadowbox serves the .webp when present. No name = every prop + every backdrop.
+  MJ::Config.load!
+  unless MJ::Webp.available?
+    STDERR.puts "mj webp needs ImageMagick (magick/convert) on PATH."
+    exit 1
+  end
+  quality = 82
+  ARGV.each_with_index { |a, i| quality = (ARGV[i + 1]?.try(&.to_i) || quality) if a == "--quality" }
+  only = ARGV[1]?.try { |x| x.starts_with?("--") ? nil : x }
+
+  jobs = [] of {String, String, String} # {label, src.png, dst.webp}
+  if only
+    p = File.join(MJ::Config.props_dir, only, "prop.png")
+    jobs << {"prop #{only}", p, File.join(MJ::Config.props_dir, only, "prop.webp")} if File.file?(p)
+    STDERR.puts "No prop.png for '#{only}'." if jobs.empty?
+  else
+    if Dir.exists?(MJ::Config.props_dir)
+      Dir.each_child(MJ::Config.props_dir) do |n|
+        p = File.join(MJ::Config.props_dir, n, "prop.png")
+        jobs << {"prop #{n}", p, File.join(MJ::Config.props_dir, n, "prop.webp")} if File.file?(p)
+      end
+    end
+    if Dir.exists?(MJ::Config.backdrops_dir)
+      Dir.each_child(MJ::Config.backdrops_dir) do |f|
+        next unless f.downcase.ends_with?(".png")
+        src = File.join(MJ::Config.backdrops_dir, f)
+        jobs << {"backdrop #{f}", src, src.sub(/\.png\z/i, ".webp")}
+      end
+    end
+  end
+
+  before = 0_i64
+  after = 0_i64
+  ok = 0
+  jobs.sort_by! { |j| j[0] }.each do |label, src, dst|
+    if MJ::Webp.encode(src, dst, quality)
+      psz = File.size(src); wsz = File.size(dst)
+      before += psz; after += wsz; ok += 1
+      STDERR.puts "[webp] #{label}: #{psz // 1024}K -> #{wsz // 1024}K (#{(100 - wsz * 100 // psz)}% smaller)"
+    else
+      STDERR.puts "[webp] #{label}: FAILED"
+    end
+  end
+  if ok > 0
+    STDERR.puts "[webp] #{ok} file(s) q=#{quality}: #{before // 1024}K -> #{after // 1024}K " \
+      "(saved #{(before - after) // 1024}K, #{(100 - after * 100 // before)}%)"
+  else
+    STDERR.puts "[webp] nothing converted."
+  end
+when "backdrop"
+  # mj backdrop <image.png> [name] — import a full-frame image (e.g. a base/strip output) into the
+  # backdrop library so it appears in the shadowbox palette as a cut:false entry.
+  MJ::Config.load!
+  src = ARGV[1]?
+  unless src && File.file?(src)
+    STDERR.puts "Usage: mj backdrop <image.png> [name]   (imports into #{MJ::Config.backdrops_dir})"
+    exit 1
+  end
+  name = (ARGV[2]? || File.basename(src, File.extname(src))).gsub(/[^A-Za-z0-9._-]/, "-")
+  Dir.mkdir_p(MJ::Config.backdrops_dir)
+  dst = File.join(MJ::Config.backdrops_dir, name + ".png")
+  if File.extname(src).downcase == ".png"
+    File.copy(src, dst)
+  elsif MJ::Webp.available? # convert non-PNG to PNG (the library reads dims from the PNG header)
+    MJ::Webp.encode(src, dst) # magick handles any->png by the .png extension
+  else
+    File.copy(src, dst)
+  end
+  STDERR.puts "[backdrop] imported -> #{dst}"
 when "version", "--version", "-v"
   puts "mj #{MJ::VERSION}"
 else
-  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|sfx|bus|version]"
+  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|sfx|webp|backdrop|bus|version]"
   exit 1
 end

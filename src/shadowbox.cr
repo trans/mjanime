@@ -52,9 +52,14 @@ module MJ
       get "/lib/props/:name" do |env|
         raw = env.params.url["name"]
         name = File.basename(raw, File.extname(raw)) # strips dir + extension → the prop name
-        path = File.join(Config.props_dir, name, "prop.png")
-        if within?(Config.props_dir, path) && File.file?(path)
-          send_file env, path, "image/png"
+        dir = File.join(Config.props_dir, name)
+        # Prefer the smaller .webp (mj webp) over the .png, transparently.
+        webp = File.join(dir, "prop.webp")
+        png = File.join(dir, "prop.png")
+        if within?(Config.props_dir, webp) && File.file?(webp)
+          send_file env, webp, "image/webp"
+        elsif within?(Config.props_dir, png) && File.file?(png)
+          send_file env, png, "image/png"
         else
           env.response.status_code = 404
           "not found"
@@ -63,8 +68,12 @@ module MJ
 
       get "/lib/backdrops/:name" do |env|
         file = File.basename(env.params.url["name"]) # keep the extension; strip any dir
+        base = File.basename(file, File.extname(file))
+        webp = File.join(Config.backdrops_dir, base + ".webp")
         path = File.join(Config.backdrops_dir, file)
-        if within?(Config.backdrops_dir, path) && File.file?(path)
+        if within?(Config.backdrops_dir, webp) && File.file?(webp)
+          send_file env, webp, "image/webp"
+        elsif within?(Config.backdrops_dir, path) && File.file?(path)
           send_file env, path
         else
           env.response.status_code = 404
