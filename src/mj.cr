@@ -275,9 +275,50 @@ when "backdrop"
     File.copy(src, dst)
   end
   STDERR.puts "[backdrop] imported -> #{dst}"
+when "matte"
+  # mj matte <image> [out.png] [--local N] [--global N] [--feather N] — Tier 1 procedural background
+  # removal: flood-fill the connected border background, soft edge, despill, alpha-bleed. Best on
+  # simple/near-uniform backgrounds. Writes a transparent PNG.
+  input = ARGV[1]?
+  unless input && File.file?(input)
+    STDERR.puts "Usage: mj matte <image> [out.png] [--local N] [--global N] [--feather N]"
+    exit 1
+  end
+  local_tol = 20.0
+  global_tol = 70.0
+  feather = 2
+  ARGV.each_with_index do |a, i|
+    case a
+    when "--local"   then local_tol = ARGV[i + 1]?.try(&.to_f) || local_tol
+    when "--global"  then global_tol = ARGV[i + 1]?.try(&.to_f) || global_tol
+    when "--feather" then feather = ARGV[i + 1]?.try(&.to_i) || feather
+    end
+  end
+  out_path = ARGV[2]?.try { |x| x.starts_with?("--") ? nil : x } ||
+             (input.sub(/\.[^.\/]+\z/, "") + "-matte.png")
+
+  # Load any format: PNG directly, else transcode to a temp PNG via ImageMagick.
+  canvas =
+    if File.extname(input).downcase == ".png"
+      MJ::CanvasUtil.from_png_file(input)
+    elsif MJ::Webp.available?
+      tmp = File.tempfile("mj-matte", ".png")
+      MJ::Webp.encode(input, tmp.path) # magick: any -> png by extension
+      c = MJ::CanvasUtil.from_png_file(tmp.path)
+      tmp.delete
+      c
+    else
+      STDERR.puts "Non-PNG input needs ImageMagick (magick/convert) on PATH."
+      exit 1
+    end
+
+  res = MJ::Matte.remove_bg(canvas, local_tol, global_tol, feather)
+  MJ::CanvasUtil.write_png_file(res.matte, out_path)
+  STDERR.puts "[matte] seed bg=#{res.bg} removed #{(res.removed * 100).round(1)}% " \
+    "(local=#{local_tol} global=#{global_tol} feather=#{feather}) -> #{out_path}"
 when "version", "--version", "-v"
   puts "mj #{MJ::VERSION}"
 else
-  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|sfx|webp|backdrop|bus|version]"
+  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|sfx|matte|webp|backdrop|bus|version]"
   exit 1
 end
