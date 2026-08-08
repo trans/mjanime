@@ -252,6 +252,42 @@ module MJ
       post_inference(body, task_uuid)
     end
 
+    # Background removal via Runware's imageBackgroundRemoval task (Tier 3 matting — GPU-backed,
+    # heavier models than the local CPU tier). Uploads the image, runs the remover, downloads the
+    # transparent PNG. `model` is an optional AIR id for a specific remover (nil = Runware default);
+    # `alpha_matting` turns on edge refinement for crisper fine detail.
+    def remove_background(image_bytes : Bytes, model : String? = nil,
+                          alpha_matting : Bool = false) : GenerationResult
+      task_uuid = UUID.random.to_s
+      STDERR.puts "[runware] Background removal#{model ? " model=#{model}" : " (default model)"}#{alpha_matting ? " +alpha-matting" : ""}"
+      input_uuid = upload_image_bytes(image_bytes)
+
+      body = JSON.build do |json|
+        json.array do
+          json.object do
+            json.field "taskType", "imageBackgroundRemoval"
+            json.field "taskUUID", task_uuid
+            json.field "inputImage", input_uuid
+            json.field "model", model if model
+            json.field "outputType", "URL"
+            json.field "outputFormat", "PNG" # PNG to preserve the alpha channel
+            if alpha_matting
+              json.field "settings" do
+                json.object do
+                  json.field "alphaMatting", true
+                  json.field "alphaMattingForegroundThreshold", 240
+                  json.field "alphaMattingBackgroundThreshold", 10
+                  json.field "alphaMattingErodeSize", 10
+                end
+              end
+            end
+          end
+        end
+      end
+
+      post_inference(body, task_uuid)
+    end
+
     # POST an imageInference task body, resolve its result, and download the image.
     private def post_inference(body : String, task_uuid : String) : GenerationResult
       response = HTTP::Client.post(

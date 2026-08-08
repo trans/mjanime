@@ -287,11 +287,15 @@ when "matte"
   local_tol = 20.0
   global_tol = 70.0
   feather = 2
+  runware = ARGV.includes?("--runware")   # Tier 3: GPU-backed cloud removal via Runware
+  rw_model : String? = nil
+  alpha_matting = ARGV.includes?("--alpha-matting")
   ARGV.each_with_index do |a, i|
     case a
-    when "--local"   then local_tol = ARGV[i + 1]?.try(&.to_f) || local_tol
-    when "--global"  then global_tol = ARGV[i + 1]?.try(&.to_f) || global_tol
-    when "--feather" then feather = ARGV[i + 1]?.try(&.to_i) || feather
+    when "--local"    then local_tol = ARGV[i + 1]?.try(&.to_f) || local_tol
+    when "--global"   then global_tol = ARGV[i + 1]?.try(&.to_f) || global_tol
+    when "--feather"  then feather = ARGV[i + 1]?.try(&.to_i) || feather
+    when "--rw-model" then rw_model = ARGV[i + 1]?
     end
   end
   out_path = ARGV[2]?.try { |x| x.starts_with?("--") ? nil : x } ||
@@ -312,10 +316,23 @@ when "matte"
       exit 1
     end
 
-  res = MJ::Matte.remove_bg(canvas, local_tol, global_tol, feather)
-  MJ::CanvasUtil.write_png_file(res.matte, out_path)
-  STDERR.puts "[matte] seed bg=#{res.bg} removed #{(res.removed * 100).round(1)}% " \
-    "(local=#{local_tol} global=#{global_tol} feather=#{feather}) -> #{out_path}"
+  if runware
+    # Tier 3: send the image to Runware's GPU-backed background removal.
+    MJ::Config.load!
+    if MJ::Config.runware_api_key.empty?
+      STDERR.puts "--runware needs RUNWARE_API_KEY."
+      exit 1
+    end
+    client = MJ::RunwareClient.new(MJ::Config.runware_api_key)
+    result = client.remove_background(MJ::CanvasUtil.to_png_bytes(canvas), rw_model, alpha_matting)
+    File.write(out_path, result.image_data)
+    STDERR.puts "[matte] runware background removal -> #{out_path}"
+  else
+    res = MJ::Matte.remove_bg(canvas, local_tol, global_tol, feather)
+    MJ::CanvasUtil.write_png_file(res.matte, out_path)
+    STDERR.puts "[matte] seed bg=#{res.bg} removed #{(res.removed * 100).round(1)}% " \
+      "(local=#{local_tol} global=#{global_tol} feather=#{feather}) -> #{out_path}"
+  end
 when "version", "--version", "-v"
   puts "mj #{MJ::VERSION}"
 else
