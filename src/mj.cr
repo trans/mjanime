@@ -288,14 +288,17 @@ when "matte"
   global_tol = 70.0
   feather = 2
   runware = ARGV.includes?("--runware")   # Tier 3: GPU-backed cloud removal via Runware
+  isnet = ARGV.includes?("--isnet")       # Tier 2: local neural matting (IS-Net via ONNX Runtime)
   rw_model : String? = nil
   alpha_matting = ARGV.includes?("--alpha-matting")
+  model_path = File.expand_path("~/.u2net/isnet-general-use.onnx", home: true)
   ARGV.each_with_index do |a, i|
     case a
     when "--local"    then local_tol = ARGV[i + 1]?.try(&.to_f) || local_tol
     when "--global"   then global_tol = ARGV[i + 1]?.try(&.to_f) || global_tol
     when "--feather"  then feather = ARGV[i + 1]?.try(&.to_i) || feather
     when "--rw-model" then rw_model = ARGV[i + 1]?
+    when "--model"    then model_path = ARGV[i + 1]? || model_path
     end
   end
   out_path = ARGV[2]?.try { |x| x.starts_with?("--") ? nil : x } ||
@@ -327,6 +330,16 @@ when "matte"
     result = client.remove_background(MJ::CanvasUtil.to_png_bytes(canvas), rw_model, alpha_matting)
     File.write(out_path, result.image_data)
     STDERR.puts "[matte] runware background removal -> #{out_path}"
+  elsif isnet
+    # Tier 2: local neural matting via IS-Net (ONNX Runtime).
+    unless File.exists?(model_path)
+      STDERR.puts "Model not found: #{model_path}. Pass --model <path> to an IS-Net .onnx."
+      exit 1
+    end
+    STDERR.puts "[matte] isnet (#{model_path}) #{canvas.width}x#{canvas.height}"
+    prop = MJ::Matte.isnet(canvas, model_path)
+    MJ::CanvasUtil.write_png_file(prop, out_path)
+    STDERR.puts "[matte] isnet -> #{out_path}"
   else
     res = MJ::Matte.remove_bg(canvas, local_tol, global_tol, feather)
     MJ::CanvasUtil.write_png_file(res.matte, out_path)

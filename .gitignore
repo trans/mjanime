@@ -3,6 +3,7 @@
 /bin/
 /.shards/
 *.dwarf
+*.o
 __pycache__/
 *.pyc
 /shard.lock

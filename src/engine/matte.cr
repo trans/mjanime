@@ -83,6 +83,66 @@ module MJ
       Result.new(dst, seed, removed.to_f / (w * h))
     end
 
+    ISNET_SIZE = 1024
+
+    # Tier 2: local neural matting via IS-Net through the ONNX Runtime shim. Resize to the model's
+    # 1024² input, normalise IS-Net style (x/255 − 0.5), run, min-max the score map, then bilinearly
+    # upsample it back to the original size as the alpha channel and alpha-bleed. Handles arbitrary /
+    # complex backgrounds a colour key can't. Requires onnxruntime-cpu + the .onnx model file.
+    def self.isnet(src : StumpyPNG::Canvas, model_path : String, bleed : Bool = true) : StumpyPNG::Canvas
+      w = src.width
+      h = src.height
+      small = CanvasUtil.resize(src, ISNET_SIZE, ISNET_SIZE)
+      plane = ISNET_SIZE * ISNET_SIZE
+      input = Slice(Float32).new(3 * plane)
+      (0...ISNET_SIZE).each do |y|
+        (0...ISNET_SIZE).each do |x|
+          px = small[x, y]
+          i = y * ISNET_SIZE + x
+          input[i] = (px.r // 257) / 255.0_f32 - 0.5_f32
+          input[plane + i] = (px.g // 257) / 255.0_f32 - 0.5_f32
+          input[2 * plane + i] = (px.b // 257) / 255.0_f32 - 0.5_f32
+        end
+      end
+
+      mask, oh, ow = Onnx.matte(model_path, input, ISNET_SIZE, ISNET_SIZE)
+
+      # min-max normalise the raw score map to 0..1 (IS-Net outputs unbounded scores)
+      mn = mask[0]
+      mx = mask[0]
+      mask.each do |v|
+        mn = v if v < mn
+        mx = v if v > mx
+      end
+      rng = (mx - mn) < 1e-6_f32 ? 1.0_f32 : (mx - mn)
+
+      dst = StumpyPNG::Canvas.new(w, h)
+      (0...h).each do |y|
+        sy = ((y + 0.5) * oh / h - 0.5).clamp(0.0, (oh - 1).to_f)
+        y0 = sy.to_i
+        y1 = Math.min(y0 + 1, oh - 1)
+        wy = (sy - y0).to_f32
+        (0...w).each do |x|
+          sx = ((x + 0.5) * ow / w - 0.5).clamp(0.0, (ow - 1).to_f)
+          x0 = sx.to_i
+          x1 = Math.min(x0 + 1, ow - 1)
+          wx = (sx - x0).to_f32
+          m00 = mask[y0 * ow + x0]
+          m10 = mask[y0 * ow + x1]
+          m01 = mask[y1 * ow + x0]
+          m11 = mask[y1 * ow + x1]
+          top = m00 + (m10 - m00) * wx
+          bot = m01 + (m11 - m01) * wx
+          v = (top + (bot - top) * wy - mn) / rng
+          a = (v.clamp(0.0_f32, 1.0_f32) * 65535.0_f32).to_u16
+          px = src[x, y]
+          dst[x, y] = StumpyPNG::RGBA.new(px.r, px.g, px.b, a)
+        end
+      end
+      bleed_alpha!(dst) if bleed
+      dst
+    end
+
     # Median border colour (per channel), robust to a subject touching an edge.
     private def self.border_seed(src : StumpyPNG::Canvas) : Array(Int32)
       w = src.width; h = src.height
