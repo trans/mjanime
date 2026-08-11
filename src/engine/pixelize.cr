@@ -54,29 +54,28 @@ module MJ
     def self.finish(redraw_bytes : Bytes, spec : PixelSpec) : StumpyPNG::Canvas
       canvas = CanvasUtil.from_png_bytes(redraw_bytes)
       canvas = snap(canvas, spec.grid, spec.colors) if spec.snap        # quantise on opaque art first
-      canvas = key_color(canvas, CHROMA, 40.0, 110.0) if spec.background == "transparent"
+      canvas = key_transparent(canvas, spec) if spec.background == "transparent"
       canvas
     end
 
-    # Distance-from-colour alpha key (drops the flat chroma background to transparent).
-    def self.key_color(src : StumpyPNG::Canvas, bg : Array(Int32), lo : Float64, hi : Float64) : StumpyPNG::Canvas
-      w = src.width
-      h = src.height
-      span = (hi - lo).abs < 1e-6 ? 1.0 : (hi - lo)
-      dst = StumpyPNG::Canvas.new(w, h)
-      (0...h).each do |y|
-        (0...w).each do |x|
-          px = src[x, y]
-          dr = ((px.r // 257).to_i - bg[0]).abs
-          dg = ((px.g // 257).to_i - bg[1]).abs
-          db = ((px.b // 257).to_i - bg[2]).abs
-          dist = {dr, dg, db}.max.to_f
-          t = ((dist - lo) / span).clamp(0.0, 1.0)
-          a = (t * t * (3.0 - 2.0 * t) * 65535.0).to_u16 # smoothstep
-          dst[x, y] = StumpyPNG::RGBA.new(px.r, px.g, px.b, a)
-        end
-      end
-      dst
+    # Key the flat magenta field to transparent using the PROP keyer, so pixel-art edges get
+    # despilled/defringed and transparent pixels solidified (alpha-bleed). The bare distance key
+    # used to leave the chroma colour in edge + transparent pixels, which showed as a magenta
+    # outline (and resurrected on downscale). Thresholds/toggles come from the PixelSpec.
+    def self.key_transparent(canvas : StumpyPNG::Canvas, spec : PixelSpec) : StumpyPNG::Canvas
+      prop_spec = PropSpec.from_yaml(<<-YAML)
+        prompt: ""
+        background: [#{CHROMA[0]}, #{CHROMA[1]}, #{CHROMA[2]}]
+        auto_background: true
+        key_low: #{spec.key_low}
+        key_high: #{spec.key_high}
+        edge_blur: 0
+        despill: #{spec.despill}
+        defringe: #{spec.defringe}
+        defringe_band: #{spec.defringe_band}
+        alpha_bleed: #{spec.alpha_bleed}
+        YAML
+      Prop.key_out(canvas, prop_spec)
     end
 
     # Deterministic pixel-perfect pass via ImageMagick: downscale to `grid`, quantise to

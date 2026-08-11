@@ -131,33 +131,52 @@ when "prop"
   MJ::PropLibrary.record(dir, spec)
   STDERR.puts "[prop] wrote #{render_path} and #{prop_path}"
 when "pixelize"
-  # mj pixelize <dir> — <dir> holds image.png + pixel.yml, writes redraw.png + pixel.png.
+  # mj pixelize <dir> [--rekey] — <dir> holds image.png + pixel.yml, writes redraw.png + pixel.png.
   # AI pixel-art restyle (8-bit/16-bit) via Nano Banana 2, optional transparency + snap.
+  # --rekey: re-run only the finish/keying step on the existing redraw.png (no API call).
   dir = ARGV[1]?
-  unless dir
-    STDERR.puts "Usage: mj pixelize <dir>"
+  if dir.nil? || dir.starts_with?("--")
+    STDERR.puts "Usage: mj pixelize <dir> [--rekey]"
     exit 1
   end
+  rekey = ARGV.includes?("--rekey")
+  spec_path = File.join(dir, "pixel.yml")
+  unless File.exists?(spec_path)
+    STDERR.puts "Need #{spec_path}. See examples/pixel/ for the format."
+    exit 1
+  end
+  spec = MJ::PixelSpec.from_yaml(File.read(spec_path))
+  redraw_path = File.join(dir, "redraw.png")
+  pixel_path = File.join(dir, "pixel.png")
+
+  if rekey
+    unless File.exists?(redraw_path)
+      STDERR.puts "--rekey needs an existing #{redraw_path} (run without --rekey first)."
+      exit 1
+    end
+    STDERR.puts "[pixelize] rekey #{redraw_path} -> pixel.png (snap=#{spec.snap} bg=#{spec.background})"
+    final = MJ::Pixelize.finish(File.read(redraw_path).to_slice, spec)
+    MJ::CanvasUtil.write_png_file(final, pixel_path)
+    STDERR.puts "[pixelize] wrote #{pixel_path}"
+    exit 0
+  end
+
   MJ::Config.load!
   if MJ::Config.runware_api_key.empty?
     STDERR.puts "RUNWARE_API_KEY not set."
     exit 1
   end
   image = File.join(dir, "image.png")
-  spec_path = File.join(dir, "pixel.yml")
-  unless File.exists?(image) && File.exists?(spec_path)
+  unless File.exists?(image)
     STDERR.puts "Need #{image} and #{spec_path}. See examples/pixel/ for the format."
     exit 1
   end
-  spec = MJ::PixelSpec.from_yaml(File.read(spec_path))
   client = MJ::RunwareClient.new(MJ::Config.runware_api_key)
   STDERR.puts "[pixelize] #{image} -> pixel.png (style=#{spec.style} model=#{spec.model} " \
     "snap=#{spec.snap} bg=#{spec.background})"
   redraw = MJ::Pixelize.redraw(client, File.read(image).to_slice, spec)
-  redraw_path = File.join(dir, "redraw.png")
   File.write(redraw_path, redraw)
   final = MJ::Pixelize.finish(redraw, spec)
-  pixel_path = File.join(dir, "pixel.png")
   MJ::CanvasUtil.write_png_file(final, pixel_path)
   STDERR.puts "[pixelize] wrote #{redraw_path} and #{pixel_path}"
 when "decorate"
