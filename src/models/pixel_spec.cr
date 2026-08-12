@@ -36,5 +36,10 @@ module MJ
     # legitimately magenta/pink pop-art colours in the SUBJECT interior are left alone.
     property defringe_band : Int32 = 2
     property alpha_bleed : Bool = true         # flood transparent pixels with nearest subject colour
+    # Sample the actual rendered corner colour instead of keying the known magenta. Default FALSE:
+    # the redraw is prompted for flat #FF00FF, and corner-sampling can grab a floor/subject colour
+    # that reaches a corner (then the magenta never keys — leaving an opaque magenta field). Only
+    # set true if a model renders an off-magenta field but with clean, subject-free corners.
+    property auto_background : Bool = false
   end
 end

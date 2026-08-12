@@ -66,7 +66,7 @@ module MJ
       prop_spec = PropSpec.from_yaml(<<-YAML)
         prompt: ""
         background: [#{CHROMA[0]}, #{CHROMA[1]}, #{CHROMA[2]}]
-        auto_background: true
+        auto_background: #{spec.auto_background}
         key_low: #{spec.key_low}
         key_high: #{spec.key_high}
         edge_blur: 0
