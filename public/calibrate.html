@@ -83,8 +83,9 @@
     <div class="grp">
       <button class="act primary" id="btnLoadImg">Load Image</button>
       <button class="act" id="btnSave">Save JSON</button>
+      <button class="act" id="btnCopy">Copy JSON</button>
       <button class="act" id="btnLoad">Load JSON</button>
-      <label class="chk"><input type="checkbox" id="embed" checked> embed image</label>
+      <label class="chk" title="Embed the full image (base64) inside the JSON so it reopens complete — off = small file, shapes + dimensions only"><input type="checkbox" id="embed"> embed image</label>
       <button class="act" id="btnClear" title="Delete all shapes">Clear</button>
     </div>
     <input type="file" id="fileImg" accept="image/*">
@@ -401,15 +402,25 @@ function serialize(s){
   else{o.cx=r(s.cx);o.cy=r(s.cy);o.rx=r(s.rx);o.ry=r(s.ry); if(s.type==="ellipse"&&Math.abs(normRot(rot(s)))>=.05) o.rotation=r(normRot(rot(s)));}
   return o;
 }
-document.getElementById("btnSave").onclick=()=>{
+// The calibration payload — image is name + dimensions + the shapes (coords in image
+// space). The full image is embedded (base64) ONLY when "embed image" is ticked; by
+// default the file stays small and just references the image by name.
+function buildPayload(){
   const embed=document.getElementById("embed").checked;
-  const data={ type:"mj-calibration", version:1,
-    image:{ name:imgName, width:ART_W, height:ART_H, data: (embed&&imgReady)?img.src:null },
+  return { type:"mj-calibration", version:1,
+    image:{ name:imgName, width:ART_W, height:ART_H, data:(embed&&imgReady)?img.src:null },
     shapes: shapes.map(serialize) };
+}
+document.getElementById("btnSave").onclick=()=>{
   const base=(imgName||"calibration").replace(/\.[^.]+$/,"");
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const blob=new Blob([JSON.stringify(buildPayload(),null,2)],{type:"application/json"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=base+".calib.json"; a.click();
   URL.revokeObjectURL(a.href); flash("Saved "+a.download+" ("+shapes.length+" shapes)");
+};
+document.getElementById("btnCopy").onclick=async()=>{
+  const json=JSON.stringify(buildPayload(),null,2);
+  try{ await navigator.clipboard.writeText(json); flash("Copied JSON to clipboard ("+shapes.length+" shapes)"); }
+  catch(e){ flash("Copy failed — clipboard blocked in this context"); }
 };
 document.getElementById("btnLoad").onclick=()=>fileJson.click();
 fileJson.onchange=()=>{ const f=fileJson.files[0]; if(f) loadJsonFile(f); fileJson.value=""; };
