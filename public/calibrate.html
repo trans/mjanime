@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Calibrate — mj</title>
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#1a1a2e; --panel:#16213e; --panel2:#0d1830; --border:#0f3460;
+    --accent:#e94560; --accent2:#22e4ff; --text:#e0e0e0; --dim:#8a97b5;
+  }
+  *{box-sizing:border-box}
+  html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;touch-action:none;
+    -webkit-user-select:none;user-select:none}
+
+  /* ---- top toolbar ---- */
+  #bar{position:fixed;left:0;right:0;top:0;height:46px;z-index:10;display:flex;align-items:center;gap:10px;
+    padding:0 10px;background:var(--panel);border-bottom:1px solid var(--border);overflow-x:auto;white-space:nowrap}
+  #bar .logo{color:var(--accent);font-weight:800;text-decoration:none;font-size:15px;letter-spacing:.02em}
+  #bar .title{color:var(--dim);font-size:12px;margin-right:4px}
+  .sep{width:1px;height:24px;background:var(--border);flex:0 0 auto}
+  .grp{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+  .grp .lbl{color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-right:2px}
+  button.tool,button.act{background:var(--panel2);color:var(--text);border:1px solid var(--border);
+    border-radius:5px;padding:6px 9px;font-size:12px;font-weight:600;cursor:pointer;flex:0 0 auto}
+  button.tool:hover,button.act:hover{border-color:var(--accent)}
+  button.tool.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+  button.act.primary{background:var(--border)}
+  button.act.primary:hover{background:#1a4a8a}
+  .swatch{width:20px;height:20px;border-radius:4px;border:2px solid rgba(255,255,255,.25);cursor:pointer;flex:0 0 auto}
+  .swatch.on{border-color:#fff;box-shadow:0 0 0 2px var(--accent)}
+  input[type=color]{width:26px;height:24px;padding:0;border:1px solid var(--border);background:var(--panel2);border-radius:4px;cursor:pointer}
+  label.chk{color:var(--dim);font-size:11px;display:flex;align-items:center;gap:4px;cursor:pointer;flex:0 0 auto}
+
+  /* ---- canvas ---- */
+  #c{position:fixed;left:0;top:46px;right:0;bottom:0;display:block;cursor:crosshair;background:#0a0e1a}
+
+  /* ---- overlays ---- */
+  #help{position:fixed;left:10px;top:56px;z-index:5;font:600 11px/1.5 ui-monospace,"Courier New",monospace;
+    color:#bfeede;text-shadow:0 1px 3px #000;pointer-events:none;white-space:pre}
+  #panel{position:fixed;right:12px;bottom:14px;z-index:6;min-width:180px;max-width:44vw;
+    background:rgba(13,24,48,.92);border:1px solid var(--border);border-radius:6px;padding:8px 10px;
+    font:600 11px/1.5 ui-monospace,"Courier New",monospace;color:#ffd9a8}
+  #panel .row{display:flex;align-items:center;gap:6px;margin-top:5px}
+  #panel input.lab{flex:1;min-width:60px;background:var(--panel2);border:1px solid var(--border);
+    color:var(--text);border-radius:4px;padding:3px 6px;font:600 11px ui-monospace,monospace}
+  #panel button{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:4px;
+    padding:3px 7px;font-size:11px;cursor:pointer}
+  #panel button.del:hover{border-color:var(--accent);color:var(--accent)}
+  #drop{position:fixed;inset:46px 0 0 0;z-index:8;display:none;align-items:center;justify-content:center;
+    background:rgba(10,14,26,.8);border:3px dashed var(--accent2);color:var(--accent2);
+    font:700 18px ui-monospace,monospace;pointer-events:none}
+  #hint{position:fixed;left:0;right:0;top:46px;bottom:0;z-index:4;display:flex;align-items:center;justify-content:center;
+    text-align:center;color:var(--dim);font-size:14px;pointer-events:none}
+  #hint b{color:var(--text)}
+  input[type=file]{display:none}
+</style>
+</head>
+<body>
+  <div id="bar">
+    <a class="logo" href="/">mj</a><span class="title">Calibrate</span>
+    <span class="sep"></span>
+    <div class="grp" id="tools">
+      <span class="lbl">tool</span>
+      <button class="tool" data-tool="point">Point</button>
+      <button class="tool" data-tool="line">Line</button>
+      <button class="tool" data-tool="rect">Rect</button>
+      <button class="tool" data-tool="ellipse">Ellipse</button>
+      <button class="tool" data-tool="pan">Pan</button>
+    </div>
+    <span class="sep"></span>
+    <div class="grp" id="colors"><span class="lbl">color</span></div>
+    <input type="color" id="customColor" title="Custom colour">
+    <span class="sep"></span>
+    <div class="grp">
+      <button class="act" id="btnFit" title="Fit image to view (F)">Fit</button>
+      <button class="act" id="btnZoomIn" title="Zoom in">+</button>
+      <button class="act" id="btnZoomOut" title="Zoom out">−</button>
+    </div>
+    <span class="sep"></span>
+    <div class="grp">
+      <button class="act primary" id="btnLoadImg">Load Image</button>
+      <button class="act" id="btnSave">Save JSON</button>
+      <button class="act" id="btnLoad">Load JSON</button>
+      <label class="chk"><input type="checkbox" id="embed" checked> embed image</label>
+      <button class="act" id="btnClear" title="Delete all shapes">Clear</button>
+    </div>
+    <input type="file" id="fileImg" accept="image/*">
+    <input type="file" id="fileJson" accept="application/json,.json">
+  </div>
+
+  <canvas id="c"></canvas>
+  <div id="help"></div>
+  <div id="hint">Load a room image — <b>Load Image</b> button, drag &amp; drop, or paste (Ctrl+V)</div>
+  <div id="drop">drop image to load</div>
+  <div id="panel"></div>
+
+<script>
+"use strict";
+// mj calibration / markup tool. Load any image, zoom & pan, draw points, lines,
+// rectangles and ellipses, label & colour them, save/load the markup as JSON.
+// Coordinates are stored in IMAGE pixel space (independent of zoom/pan/dpr).
+// Salvaged and generalised from the wcfranks skee-ball calibration editor.
+
+const PALETTE=["#ff00ff","#00ffff","#ffff00","#00ff66","#ff8000","#ff2b2b","#ffffff","#000000"];
+let currentColor=PALETTE[0];
+
+const cv=document.getElementById("c"), ctx=cv.getContext("2d");
+const helpEl=document.getElementById("help"), panelEl=document.getElementById("panel");
+const hintEl=document.getElementById("hint"), dropEl=document.getElementById("drop");
+
+// ---- image ----
+const img=new Image();
+let imgReady=false, imgName="", ART_W=1000, ART_H=1000;
+function setImage(dataURL,name,cb){
+  img.onload=()=>{ imgReady=true; ART_W=img.naturalWidth; ART_H=img.naturalHeight;
+    imgName=name||"image"; hintEl.style.display="none"; fit(); draw(); cb&&cb(); };
+  img.onerror=()=>{ flash("Failed to load image"); };
+  img.src=dataURL;
+}
+
+// ---- view (image->screen) ----
+const view={scale:1,ox:0,oy:0}, DPR=Math.min(window.devicePixelRatio||1,2);
+function fit(){
+  const w=cv.clientWidth, h=cv.clientHeight;
+  view.scale=Math.min(w/ART_W, h/ART_H)*0.95;
+  view.ox=(w-ART_W*view.scale)/2; view.oy=(h-ART_H*view.scale)/2;
+}
+function zoomAt(f,sx,sy){
+  const b=toImg(sx,sy);
+  view.scale=Math.max(0.02,Math.min(40,view.scale*f));
+  view.ox=sx-b.x*view.scale; view.oy=sy-b.y*view.scale;
+}
+const toImg=(sx,sy)=>({x:(sx-view.ox)/view.scale, y:(sy-view.oy)/view.scale});
+const sX=ix=>view.ox+ix*view.scale, sY=iy=>view.oy+iy*view.scale;
+
+// ---- shapes ----
+// point   {type,x,y,label,color}
+// line    {type,x1,y1,x2,y2,label,color}
+// rect    {type,cx,cy,rx,ry,label,color}         (center + half-extents, axis-aligned)
+// ellipse {type,cx,cy,rx,ry,rotation,label,color}
+let shapes=[];
+let tool="point", sel=-1, action=null, grab=null, pan=null;
+let cursorImg={x:0,y:0}, flashMsg="", flashT=0, spaceDown=false;
+
+const rot=e=>Number.isFinite(e.rotation)?e.rotation:0;
+const rad=e=>rot(e)*Math.PI/180;
+const normRot=d=>((d+180)%360+360)%360-180;
+function ellipseNorm(e,ix,iy){
+  const a=rad(e),c=Math.cos(a),s=Math.sin(a),dx=ix-e.cx,dy=iy-e.cy;
+  return Math.hypot((dx*c+dy*s)/Math.max(1e-3,e.rx), (-dx*s+dy*c)/Math.max(1e-3,e.ry));
+}
+function distSeg(px,py,x1,y1,x2,y2){
+  const dx=x2-x1,dy=y2-y1,L2=dx*dx+dy*dy||1;
+  let t=((px-x1)*dx+(py-y1)*dy)/L2; t=Math.max(0,Math.min(1,t));
+  return Math.hypot(px-(x1+t*dx),py-(y1+t*dy));
+}
+// corner handles (image space) for the selected rect/ellipse
+function corners(s){ return [[s.cx-s.rx,s.cy-s.ry],[s.cx+s.rx,s.cy-s.ry],[s.cx+s.rx,s.cy+s.ry],[s.cx-s.rx,s.cy+s.ry]]; }
+function hitHandle(ix,iy){
+  if(sel<0) return null; const s=shapes[sel]; const tol=9/view.scale;
+  if(s.type==="line"){
+    if(Math.hypot(ix-s.x1,iy-s.y1)<=tol) return {pt:1};
+    if(Math.hypot(ix-s.x2,iy-s.y2)<=tol) return {pt:2};
+  }else if(s.type==="rect"||s.type==="ellipse"){
+    const cs=corners(s);
+    for(let i=0;i<4;i++) if(Math.hypot(ix-cs[i][0],iy-cs[i][1])<=tol) return {corner:i};
+  }
+  return null;
+}
+function hitShape(ix,iy){
+  const tol=8/view.scale;
+  let bestEdge=-1,bestED=Infinity, bestIn=-1,bestArea=Infinity;
+  for(let i=0;i<shapes.length;i++){ const s=shapes[i];
+    if(s.type==="point"){ const d=Math.hypot(ix-s.x,iy-s.y); if(d<=tol+3/view.scale&&d<bestED){bestED=d;bestEdge=i;} }
+    else if(s.type==="ellipse"){ const n=ellipseNorm(s,ix,iy); const edge=Math.abs(n-1)*Math.min(s.rx,s.ry);
+      if(edge<=tol&&edge<bestED){bestED=edge;bestEdge=i;} if(n<=1){const a=s.rx*s.ry; if(a<bestArea){bestArea=a;bestIn=i;}} }
+    else if(s.type==="rect"){ const qx=Math.abs(ix-s.cx)-s.rx, qy=Math.abs(iy-s.cy)-s.ry; const inside=qx<=0&&qy<=0;
+      const edge=inside?Math.min(-qx,-qy):Math.hypot(Math.max(qx,0),Math.max(qy,0));
+      if(edge<=tol&&edge<bestED){bestED=edge;bestEdge=i;} if(inside){const a=s.rx*s.ry; if(a<bestArea){bestArea=a;bestIn=i;}} }
+    else{ const d=distSeg(ix,iy,s.x1,s.y1,s.x2,s.y2); if(d<=tol&&d<bestED){bestED=d;bestEdge=i;} }
+  }
+  return bestEdge>=0?bestEdge:bestIn;
+}
+
+// ---- undo ----
+const undoStack=[]; const MAX_UNDO=80; let lastTag=null;
+function snap(){ return JSON.stringify(shapes); }
+function pushUndo(tag){ undoStack.push(snap()); if(undoStack.length>MAX_UNDO)undoStack.shift(); lastTag=tag??null; }
+function pushCoalesced(tag){ if(lastTag!==tag) pushUndo(tag); }
+function endOp(){ if(undoStack.length&&undoStack[undoStack.length-1]===snap()) undoStack.pop(); lastTag=null; }
+function undo(){ if(!undoStack.length){flash("Nothing to undo");return;}
+  shapes=JSON.parse(undoStack.pop()); sel=-1; grab=null; lastTag=null; draw(); flash("Undo ("+undoStack.length+" left)"); }
+
+// ---- pointer ----
+function canvasXY(e){ const r=cv.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
+cv.addEventListener("pointerdown",e=>{
+  cv.setPointerCapture(e.pointerId);
+  const cxy=canvasXY(e);
+  if(e.button===1 || tool==="pan" || spaceDown){ e.preventDefault(); pan={x:cxy.x,y:cxy.y}; return; }
+  const p=toImg(cxy.x,cxy.y);
+  // handle drag on the selected shape first (resize / endpoint)
+  const h=e.shiftKey?null:hitHandle(p.x,p.y);
+  if(h){ pushUndo(); grab=h; action={kind:h.corner!=null?"resize":"movePoint"}; return; }
+  const hit=e.shiftKey?-1:hitShape(p.x,p.y);
+  pushUndo();
+  if(hit>=0){ sel=hit; grab=null; const s=shapes[hit];
+    action={kind:"move", start:p, orig:JSON.parse(JSON.stringify(s))}; draw(); return; }
+  // draw a new shape
+  if(tool==="point"){ shapes.push({type:"point",x:p.x,y:p.y,label:"",color:currentColor});
+    sel=shapes.length-1; action={kind:"place"}; }
+  else if(tool==="ellipse"||tool==="rect"){ shapes.push({type:tool,cx:p.x,cy:p.y,rx:0,ry:0,label:"",color:currentColor});
+    sel=shapes.length-1; action={kind:"draw", start:p}; }
+  else{ shapes.push({type:"line",x1:p.x,y1:p.y,x2:p.x,y2:p.y,label:"",color:currentColor});
+    sel=shapes.length-1; action={kind:"draw", start:p}; }
+  draw();
+});
+cv.addEventListener("pointermove",e=>{
+  const cxy=canvasXY(e);
+  if(pan){ view.ox+=cxy.x-pan.x; view.oy+=cxy.y-pan.y; pan={x:cxy.x,y:cxy.y}; draw(); return; }
+  const p=toImg(cxy.x,cxy.y); cursorImg=p;
+  if(action){ const s=shapes[sel];
+    if(action.kind==="draw"){ if(s.type==="line"){s.x2=p.x;s.y2=p.y;} else {s.rx=Math.max(1,Math.abs(p.x-s.cx));s.ry=Math.max(1,Math.abs(p.y-s.cy));} }
+    else if(action.kind==="place"){ s.x=p.x; s.y=p.y; }
+    else if(action.kind==="movePoint"){ if(grab.pt===1){s.x1=p.x;s.y1=p.y;} else {s.x2=p.x;s.y2=p.y;} }
+    else if(action.kind==="resize"){ s.rx=Math.max(1,Math.abs(p.x-s.cx)); s.ry=Math.max(1,Math.abs(p.y-s.cy)); }
+    else{ const dx=p.x-action.start.x, dy=p.y-action.start.y, o=action.orig;
+      if(s.type==="point"){s.x=o.x+dx;s.y=o.y+dy;}
+      else if(s.type==="line"){s.x1=o.x1+dx;s.y1=o.y1+dy;s.x2=o.x2+dx;s.y2=o.y2+dy;}
+      else{s.cx=o.cx+dx;s.cy=o.cy+dy;} }
+  }
+  draw();
+});
+cv.addEventListener("pointerup",()=>{
+  if(pan){ pan=null; return; }
+  if(action&&action.kind==="draw"){ const s=shapes[sel];
+    const tiny=s.type==="line"?Math.hypot(s.x2-s.x1,s.y2-s.y1)<2:(s.rx<2&&s.ry<2);
+    if(tiny){ shapes.pop(); sel=-1; } }
+  action=null; grab=null; endOp(); draw();
+});
+cv.addEventListener("wheel",e=>{ e.preventDefault();
+  zoomAt(e.deltaY<0?1.12:1/1.12, ...Object.values(canvasXY(e))); draw();
+},{passive:false});
+cv.addEventListener("dblclick",e=>{ const p=toImg(...Object.values(canvasXY(e)));
+  const hit=hitShape(p.x,p.y); if(hit<0) return;
+  const v=prompt("Label:", shapes[hit].label||"");
+  if(v!==null){ if(v.trim()!==shapes[hit].label) pushUndo(); shapes[hit].label=v.trim(); sel=hit; draw(); }
+});
+
+// ---- keyboard ----
+addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT") { if(e.key==="Escape") e.target.blur(); return; }
+  if(e.code==="Space"){ spaceDown=true; cv.style.cursor="grab"; }
+  if((e.ctrlKey||e.metaKey)&&(e.key==="z"||e.key==="Z")){ e.preventDefault(); undo(); return; }
+  const k=e.key.toLowerCase();
+  if(k==="p"){ setTool("point"); } else if(k==="l"){ setTool("line"); }
+  else if(k==="r"){ setTool("rect"); } else if(k==="e"){ setTool("ellipse"); }
+  else if(k==="h"){ setTool("pan"); } else if(k==="f"){ fit(); draw(); }
+  else if((e.key==="Delete"||e.key==="Backspace")&&sel>=0){ pushUndo(); shapes.splice(sel,1); sel=-1; e.preventDefault(); draw(); }
+  else if(sel>=0 && e.key.indexOf("Arrow")===0){
+    const n=e.shiftKey?10:1;
+    const dx=e.key==="ArrowLeft"?-n:e.key==="ArrowRight"?n:0, dy=e.key==="ArrowUp"?-n:e.key==="ArrowDown"?n:0;
+    pushCoalesced("arrow"+sel); const s=shapes[sel];
+    if(s.type==="point"){s.x+=dx;s.y+=dy;}
+    else if(s.type==="line"){ if(grab&&grab.pt===1){s.x1+=dx;s.y1+=dy;} else if(grab&&grab.pt===2){s.x2+=dx;s.y2+=dy;} else {s.x1+=dx;s.y1+=dy;s.x2+=dx;s.y2+=dy;} }
+    else {s.cx+=dx;s.cy+=dy;}
+    e.preventDefault(); draw();
+  }
+  else if((k===","||k===".")&&sel>=0&&(shapes[sel].type==="ellipse"||shapes[sel].type==="rect")){
+    pushCoalesced("size"+sel); const s=shapes[sel], step=k==="."?1:-1;
+    if(e.shiftKey&&s.type==="ellipse"){ s.rotation=normRot(rot(s)+step); }
+    else { s.rx=Math.max(1,s.rx+step); s.ry=Math.max(1,s.ry+step); } draw();
+  }
+});
+addEventListener("keyup",e=>{ if(e.code==="Space"){ spaceDown=false; cv.style.cursor="crosshair"; } });
+
+// ---- draw ----
+const BAR_H=46;
+function resize(){
+  // A <canvas> is a replaced element: left/right:0 won't stretch it, so set an
+  // explicit CSS size (fill the viewport below the toolbar) AND the backing store.
+  const W=Math.max(1,innerWidth), H=Math.max(1,innerHeight-BAR_H);
+  cv.style.width=W+"px"; cv.style.height=H+"px";
+  cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
+  draw();
+}
+function draw(){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  const w=cv.clientWidth,h=cv.clientHeight;
+  ctx.clearRect(0,0,w,h); ctx.fillStyle="#0a0e1a"; ctx.fillRect(0,0,w,h);
+  if(imgReady) ctx.drawImage(img, view.ox, view.oy, ART_W*view.scale, ART_H*view.scale);
+  shapes.forEach((s,i)=>{
+    const on=i===sel; ctx.strokeStyle=s.color; ctx.fillStyle=s.color; ctx.lineWidth=on?2.4:1.6;
+    if(s.type==="point"){
+      const x=sX(s.x),y=sY(s.y),r=on?7:5;
+      ctx.beginPath();ctx.moveTo(x-r-3,y);ctx.lineTo(x+r+3,y);ctx.moveTo(x,y-r-3);ctx.lineTo(x,y+r+3);ctx.stroke();
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();
+      ctx.beginPath();ctx.arc(x,y,1.8,0,Math.PI*2);ctx.fill();
+    }else if(s.type==="ellipse"){
+      ctx.beginPath();ctx.ellipse(sX(s.cx),sY(s.cy),s.rx*view.scale,s.ry*view.scale,rad(s),0,Math.PI*2);ctx.stroke();
+      ctx.beginPath();ctx.arc(sX(s.cx),sY(s.cy),2.2,0,Math.PI*2);ctx.fill();
+    }else if(s.type==="rect"){
+      ctx.strokeRect(sX(s.cx-s.rx),sY(s.cy-s.ry),2*s.rx*view.scale,2*s.ry*view.scale);
+      ctx.beginPath();ctx.arc(sX(s.cx),sY(s.cy),2.2,0,Math.PI*2);ctx.fill();
+    }else{
+      ctx.beginPath();ctx.moveTo(sX(s.x1),sY(s.y1));ctx.lineTo(sX(s.x2),sY(s.y2));ctx.stroke();
+      const r=on?4.5:2.6;
+      ctx.beginPath();ctx.arc(sX(s.x1),sY(s.y1),r,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(sX(s.x2),sY(s.y2),r,0,Math.PI*2);ctx.fill();
+    }
+    if(s.label){ const lx=labelX(s),ly=labelY(s);
+      ctx.font="700 13px ui-monospace,'Courier New',monospace"; ctx.textAlign="left"; ctx.textBaseline="bottom";
+      ctx.lineWidth=3.5; ctx.strokeStyle="rgba(0,0,0,.85)"; ctx.strokeText(s.label,lx+8,ly-6);
+      ctx.fillStyle=s.color; ctx.fillText(s.label,lx+8,ly-6); }
+  });
+  // selection handles
+  if(sel>=0){ const s=shapes[sel];
+    ctx.fillStyle="#fff"; ctx.strokeStyle="#000"; ctx.lineWidth=1;
+    const hd=(x,y)=>{ctx.fillRect(x-3.5,y-3.5,7,7);ctx.strokeRect(x-3.5,y-3.5,7,7);};
+    if(s.type==="rect"||s.type==="ellipse") corners(s).forEach(c=>hd(sX(c[0]),sY(c[1])));
+    else if(s.type==="line"){ hd(sX(s.x1),sY(s.y1)); hd(sX(s.x2),sY(s.y2)); }
+  }
+  overlays();
+}
+const labelX=s=>s.type==="point"?sX(s.x):s.type==="line"?sX((s.x1+s.x2)/2):sX(s.cx);
+const labelY=s=>s.type==="point"?sY(s.y):s.type==="line"?sY((s.y1+s.y2)/2):sY(s.cy-(s.ry||0));
+function overlays(){
+  helpEl.textContent =
+    "[P]oint [L]ine [R]ect [E]llipse  [H]/space/mid-drag = pan   wheel = zoom  [F] = fit\n"+
+    "drag = draw   click shape = select   drag handles = resize/move end   arrows = nudge (shift ×10)\n"+
+    ", . = size ellipse/rect   shift+,. = rotate ellipse   dbl-click = label   Del = delete   Ctrl+Z = undo\n"+
+    (imgReady?imgName+"  "+ART_W+"×"+ART_H+"   cursor "+cursorImg.x.toFixed(0)+", "+cursorImg.y.toFixed(0):"no image")+
+    (Date.now()<flashT?"\n\n▶ "+flashMsg:"");
+  renderPanel();
+}
+function flash(m){ flashMsg=m; flashT=Date.now()+2400; draw(); setTimeout(draw,2500); }
+
+// ---- toolbar wiring ----
+function setTool(t){ tool=t; document.querySelectorAll("#tools .tool").forEach(b=>b.classList.toggle("on",b.dataset.tool===t));
+  cv.style.cursor=t==="pan"?"grab":"crosshair"; }
+document.querySelectorAll("#tools .tool").forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+const colorsEl=document.getElementById("colors");
+PALETTE.forEach(col=>{ const sw=document.createElement("div"); sw.className="swatch"; sw.style.background=col; sw.dataset.col=col;
+  sw.title=col; sw.onclick=()=>pickColor(col); colorsEl.appendChild(sw); });
+const customColor=document.getElementById("customColor");
+customColor.value="#ff00ff"; customColor.oninput=()=>pickColor(customColor.value);
+// Toolbar palette sets the colour NEW shapes are drawn with. To recolour an
+// existing shape, select it and use the colour control in the panel — otherwise
+// picking a colour for your next shape would silently repaint the selected one.
+function pickColor(col){ currentColor=col;
+  document.querySelectorAll(".swatch").forEach(s=>s.classList.toggle("on",s.dataset.col===col)); }
+function renderPanel(){
+  if(sel<0){ panelEl.innerHTML='<div>'+shapes.length+' shape'+(shapes.length===1?'':'s')+'</div>'; return; }
+  const s=shapes[sel];
+  const geo=s.type==="point"?`${s.x.toFixed(1)}, ${s.y.toFixed(1)}`
+    :s.type==="line"?`${s.x1.toFixed(1)},${s.y1.toFixed(1)} → ${s.x2.toFixed(1)},${s.y2.toFixed(1)}`
+    :`c ${s.cx.toFixed(1)},${s.cy.toFixed(1)}  r ${s.rx.toFixed(1)}×${s.ry.toFixed(1)}`+(s.type==="ellipse"?`  ${rot(s).toFixed(0)}°`:"");
+  panelEl.innerHTML =
+    `<div>${s.type.toUpperCase()} #${sel}</div>`+
+    `<div class="row"><input class="lab" id="labIn" placeholder="label" value="${(s.label||"").replace(/"/g,'&quot;')}"></div>`+
+    `<div class="row" style="color:var(--dim)">${geo}</div>`+
+    `<div class="row"><input type="color" id="shapeCol" value="${s.color}" title="Recolour this shape">`+
+    `<span style="color:var(--dim)">colour</span>`+
+    `<button class="del" id="delBtn" style="margin-left:auto">Delete</button></div>`;
+  const li=document.getElementById("labIn");
+  li.oninput=()=>{ shapes[sel].label=li.value; };
+  li.onchange=()=>{ pushUndo(); draw(); };
+  const sc=document.getElementById("shapeCol");
+  sc.oninput=()=>{ shapes[sel].color=sc.value; draw(); };
+  sc.onchange=()=>{ pushUndo(); };
+  document.getElementById("delBtn").onclick=()=>{ pushUndo(); shapes.splice(sel,1); sel=-1; draw(); };
+}
+
+document.getElementById("btnFit").onclick=()=>{ fit(); draw(); };
+document.getElementById("btnZoomIn").onclick=()=>{ zoomAt(1.2,cv.clientWidth/2,cv.clientHeight/2); draw(); };
+document.getElementById("btnZoomOut").onclick=()=>{ zoomAt(1/1.2,cv.clientWidth/2,cv.clientHeight/2); draw(); };
+document.getElementById("btnClear").onclick=()=>{ if(!shapes.length)return; if(confirm("Delete all "+shapes.length+" shapes?")){ pushUndo(); shapes=[]; sel=-1; draw(); } };
+
+// ---- image load ----
+const fileImg=document.getElementById("fileImg"), fileJson=document.getElementById("fileJson");
+document.getElementById("btnLoadImg").onclick=()=>fileImg.click();
+fileImg.onchange=()=>{ const f=fileImg.files[0]; if(f) loadImageFile(f); fileImg.value=""; };
+function loadImageFile(f){ const rd=new FileReader(); rd.onload=()=>setImage(rd.result, f.name, ()=>flash("Loaded "+f.name)); rd.readAsDataURL(f); }
+// drag & drop
+addEventListener("dragover",e=>{ e.preventDefault(); dropEl.style.display="flex"; });
+addEventListener("dragleave",e=>{ if(e.relatedTarget===null) dropEl.style.display="none"; });
+addEventListener("drop",e=>{ e.preventDefault(); dropEl.style.display="none";
+  const f=[...e.dataTransfer.files].find(f=>f.type.startsWith("image/")); if(f) loadImageFile(f);
+  else { const jf=[...e.dataTransfer.files].find(f=>f.name.endsWith(".json")); if(jf) loadJsonFile(jf); } });
+// paste
+addEventListener("paste",e=>{ const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith("image/"));
+  if(it){ const f=it.getAsFile(); if(f){ f.name?loadImageFile(f):setImage(URL.createObjectURL(f),"pasted"); flash("Pasted image"); } } });
+
+// ---- JSON save / load ----
+function serialize(s){
+  const r=v=>+(+v).toFixed(1), o={type:s.type,label:s.label||"",color:s.color};
+  if(s.type==="point"){o.x=r(s.x);o.y=r(s.y);}
+  else if(s.type==="line"){o.x1=r(s.x1);o.y1=r(s.y1);o.x2=r(s.x2);o.y2=r(s.y2);}
+  else{o.cx=r(s.cx);o.cy=r(s.cy);o.rx=r(s.rx);o.ry=r(s.ry); if(s.type==="ellipse"&&Math.abs(normRot(rot(s)))>=.05) o.rotation=r(normRot(rot(s)));}
+  return o;
+}
+document.getElementById("btnSave").onclick=()=>{
+  const embed=document.getElementById("embed").checked;
+  const data={ type:"mj-calibration", version:1,
+    image:{ name:imgName, width:ART_W, height:ART_H, data: (embed&&imgReady)?img.src:null },
+    shapes: shapes.map(serialize) };
+  const base=(imgName||"calibration").replace(/\.[^.]+$/,"");
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=base+".calib.json"; a.click();
+  URL.revokeObjectURL(a.href); flash("Saved "+a.download+" ("+shapes.length+" shapes)");
+};
+document.getElementById("btnLoad").onclick=()=>fileJson.click();
+fileJson.onchange=()=>{ const f=fileJson.files[0]; if(f) loadJsonFile(f); fileJson.value=""; };
+function loadJsonFile(f){ const rd=new FileReader(); rd.onload=()=>{ try{ applyJson(JSON.parse(rd.result), f.name); }catch(err){ flash("Bad JSON: "+err.message); } }; rd.readAsText(f); }
+function applyJson(data,fname){
+  if(!data||!Array.isArray(data.shapes)) return flash("Not a calibration file");
+  const load=()=>{ pushUndo(); shapes=data.shapes.map(s=>({label:"",color:currentColor,...s})); sel=-1;
+    if(data.image&&data.image.width&&!data.image.data){ ART_W=data.image.width; ART_H=data.image.height; if(!imgReady){fit();} }
+    draw(); flash("Loaded "+(fname||"json")+" ("+shapes.length+" shapes)"); };
+  if(data.image&&data.image.data) setImage(data.image.data, data.image.name||fname, load); else load();
+}
+
+// ---- boot ----
+addEventListener("resize",resize);
+setTool("point"); pickColor(PALETTE[0]); resize();
+</script>
+</body>
+</html>
