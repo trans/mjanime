@@ -151,21 +151,10 @@ module MJ
       end
       # Nano Banana only supports a fixed set of output sizes; request the one
       # nearest our canvas aspect, then resize the result back so the crop aligns.
-      rw, rh = nano_dimensions(canvas_w, height)
+      rw, rh = MJ.nano_dimensions(canvas_w, height)
       result = @client.edit_references([CanvasUtil.to_png_bytes(seed)], instruction, rw, rh, script.bridge_model)
       rendered = CanvasUtil.from_png_bytes(result.image_data)
       CanvasUtil.resize(rendered, canvas_w, height)
-    end
-
-    # Supported output sizes for google:4@x (Nano Banana / Gemini Flash Image).
-    NANO_DIMENSIONS = [
-      {1024, 1024}, {1248, 832}, {832, 1248}, {1184, 864}, {864, 1184},
-      {896, 1152}, {1152, 896}, {768, 1344}, {1344, 768}, {1536, 672},
-    ]
-
-    private def nano_dimensions(width : Int32, height : Int32) : Tuple(Int32, Int32)
-      aspect = width.to_f / height
-      NANO_DIMENSIONS.min_by { |w, h| (w.to_f / h - aspect).abs }
     end
 
     private def snap64(n : Int32) : Int32
