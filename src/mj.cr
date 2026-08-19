@@ -207,6 +207,53 @@ when "decorate"
   out_path = File.join(dir, "decorated.png")
   File.write(out_path, bytes)
   STDERR.puts "[decorate] wrote #{out_path}"
+when "cyclorama"
+  # mj cyclorama <dir> [--steps N] — extend the world image one (or N) step(s) on the
+  # spec's side, married to the current edge. First run seeds world.png from the spec's
+  # seed image (the seed is never modified). Each new tile is also saved to tiles/NNN.png.
+  dir = ARGV[1]?
+  if dir.nil? || dir.starts_with?("--")
+    STDERR.puts "Usage: mj cyclorama <dir> [--steps N]   (dir holds cyclorama.yml + a seed image)"
+    exit 1
+  end
+  steps = 1
+  ARGV.each_with_index { |a, i| steps = (ARGV[i + 1]?.try(&.to_i) || steps) if a == "--steps" }
+  spec_path = File.join(dir, "cyclorama.yml")
+  unless File.exists?(spec_path)
+    STDERR.puts "Need #{spec_path}. See examples/cyclorama/ for the format."
+    exit 1
+  end
+  MJ::Config.load!
+  if MJ::Config.runware_api_key.empty?
+    STDERR.puts "RUNWARE_API_KEY not set."
+    exit 1
+  end
+  spec = MJ::CycloramaSpec.from_yaml(File.read(spec_path))
+  world_path = File.join(dir, "world.png")
+  unless File.exists?(world_path)
+    seed_path = File.join(dir, spec.seed)
+    unless File.exists?(seed_path)
+      STDERR.puts "No world.png yet — put your starting image at #{seed_path} (or set `seed:` in cyclorama.yml)."
+      exit 1
+    end
+    MJ::CanvasUtil.write_png_file(MJ::CanvasUtil.from_png_file(seed_path), world_path)
+    STDERR.puts "[cyclorama] seeded world.png from #{spec.seed}"
+  end
+  client = MJ::RunwareClient.new(MJ::Config.runware_api_key)
+  tiles_dir = File.join(dir, "tiles")
+  Dir.mkdir_p(tiles_dir)
+  world = MJ::CanvasUtil.from_png_file(world_path)
+  steps.times do |i|
+    STDERR.puts "[cyclorama] step #{i + 1}/#{steps} (#{spec.direction}) world=#{world.width}x#{world.height}"
+    tile = MJ::Cyclorama.extend(client, world, spec)
+    n = Dir.glob(File.join(tiles_dir, "*.png")).size
+    MJ::CanvasUtil.write_png_file(tile, File.join(tiles_dir, sprintf("%03d.png", n)))
+    world = MJ::Cyclorama.join(world, tile, spec)
+  end
+  # Keep one rollback of the previous world, then write the grown one.
+  File.rename(world_path, File.join(dir, "world.prev.png"))
+  MJ::CanvasUtil.write_png_file(world, world_path)
+  STDERR.puts "[cyclorama] wrote #{world_path} (#{world.width}x#{world.height}); tiles in #{tiles_dir}/"
 when "sfx"
   # mj sfx <input.wav|mp3> [out.sfx.json] [preview.wav]
   # Fit a procedural Web Audio SFX recipe from a reference sound (no API needed).
@@ -368,6 +415,6 @@ when "matte"
 when "version", "--version", "-v"
   puts "mj #{MJ::VERSION}"
 else
-  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|sfx|matte|webp|backdrop|bus|version]"
+  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|cyclorama|sfx|matte|webp|backdrop|bus|version]"
   exit 1
 end

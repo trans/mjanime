@@ -1,0 +1,13 @@
+# Cyclorama — extend an image believably to one side, repeatably, to roll a scene
+# out into a much larger panorama. Put this as cyclorama.yml in a folder, drop your
+# starting image beside it as seed.png, then:
+#   mj cyclorama <folder>            # one extension
+#   mj cyclorama <folder> --steps 5  # five, each off the last edge
+# Grows world.png (previous kept as world.prev.png); each tile also saved to tiles/NNN.png.
+# The seed image is never modified.
+prompt: ""            # optional: what to depict / how to continue (appended to the base instruction)
+model: "google:4@3"   # Nano Banana 2
+direction: right      # right | left
+tile_width: 1024      # px width of each new tile (height matches the current world)
+context: 0           # px of the leading edge shown as reference (0 = one tile_width window; recommended)
+seed: seed.png        # starting image filename inside this folder
