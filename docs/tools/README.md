@@ -17,6 +17,7 @@ Most image commands need `RUNWARE_API_KEY` (read from the environment — source
 | `mj sfx <in.wav\|mp3> […]` | Reference sound → procedural Web Audio recipe (JSON) | no | [sfx](sfx.md) |
 | `mj backdrop <image> [name]` | Import a full-frame image into the backdrop library | no | [diorama](diorama.md#backdrop-library) |
 | `mj webp [<prop>] [--quality N]` | Transcode library deliverables to `.webp` | no | [diorama](diorama.md#webp) |
+| `mj spend [--today\|--days N\|--all]` | Report the API cost ledger (per day / model / command) | no | [spend](spend.md) |
 | `mj bus` | Join the Arcana bus, serve the image tools | yes | [bus](bus.md) |
 | `mj version` | Print `mj <VERSION>` | no | — |
 
@@ -42,6 +43,8 @@ mj prop my-barrel             # …then run tools
   `scenes/`. See [prop library](prop.md#the-prop-library).
 - **Keys**: `RUNWARE_API_KEY` (required for generation), `OPENAI_API_KEY` (TTS over the bus). Read
   straight from `ENV` — mj does not parse `.env` itself.
+- **Cost**: every billed call prints its price and is appended to `~/.local/share/mj/spend.jsonl`
+  (`$MJ_SPEND_LOG` relocates it, `MJ_SPEND_LOG=0` disables). See [spend](spend.md).
 - **Bus**: opt out of the bus during `mj serve` with `MJ_BUS=0`. Bus URL from `ARCANA_WS_URL` /
   `ARCANA_URL`, default `ws://localhost:19118/bus`.
 

@@ -3,14 +3,16 @@ module MJ
     getter image_data : Bytes
     getter response_id : String?
     getter image_uuid : String?
+    # What the provider charged for this task, in USD (nil = none reported).
+    getter cost : Float64?
 
-    def initialize(@image_data, @response_id = nil, @image_uuid = nil)
+    def initialize(@image_data, @response_id = nil, @image_uuid = nil, @cost = nil)
     end
   end
 
   struct GenerationRequest
     getter prompt : String
-    getter seed_image : String  # Either a file path (for first frame) or a Runware UUID
+    getter seed_image : String # Either a file path (for first frame) or a Runware UUID
     getter seed_is_uuid : Bool
     getter width : Int32
     getter height : Int32

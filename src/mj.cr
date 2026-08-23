@@ -67,7 +67,7 @@ when "base"
     exit 1
   end
   spec = MJ::BaseSpec.from_yaml(File.read(spec_path))
-  spec.strength = ARGV[2].to_f if ARGV[2]?   # optional strength override for quick sweeps
+  spec.strength = ARGV[2].to_f if ARGV[2]? # optional strength override for quick sweeps
   client = MJ::RunwareClient.new(MJ::Config.runware_api_key)
   STDERR.puts "[base] #{template} -> base.png (model=#{spec.model} strength=#{spec.strength})"
   result = MJ::Base.generate(client, template, spec)
@@ -104,7 +104,7 @@ when "prop"
       exit 1
     end
     STDERR.puts "[prop] rekey #{render_path} -> prop.png (bg=#{spec.background} " \
-      "key=#{spec.key_low}..#{spec.key_high} blur=#{spec.edge_blur})"
+                "key=#{spec.key_low}..#{spec.key_high} blur=#{spec.edge_blur})"
     render = MJ::CanvasUtil.from_png_file(render_path)
     prop = MJ::Prop.key_out(render, spec)
     MJ::CanvasUtil.write_png_file(prop, prop_path)
@@ -124,7 +124,7 @@ when "prop"
   end
   client = MJ::RunwareClient.new(MJ::Config.runware_api_key)
   STDERR.puts "[prop] #{template} -> prop.png (model=#{spec.model} bg=#{spec.background} " \
-    "key=#{spec.key_low}..#{spec.key_high} blur=#{spec.edge_blur})"
+              "key=#{spec.key_low}..#{spec.key_high} blur=#{spec.edge_blur})"
   result = MJ::Prop.generate(client, template, spec)
   MJ::CanvasUtil.write_png_file(result.render, render_path)
   MJ::CanvasUtil.write_png_file(result.prop, prop_path)
@@ -173,7 +173,7 @@ when "pixelize"
   end
   client = MJ::RunwareClient.new(MJ::Config.runware_api_key)
   STDERR.puts "[pixelize] #{image} -> pixel.png (style=#{spec.style} model=#{spec.model} " \
-    "snap=#{spec.snap} bg=#{spec.background})"
+              "snap=#{spec.snap} bg=#{spec.background})"
   redraw = MJ::Pixelize.redraw(client, File.read(image).to_slice, spec)
   File.write(redraw_path, redraw)
   final = MJ::Pixelize.finish(redraw, spec)
@@ -317,7 +317,7 @@ when "webp"
   end
   if ok > 0
     STDERR.puts "[webp] #{ok} file(s) q=#{quality}: #{before // 1024}K -> #{after // 1024}K " \
-      "(saved #{(before - after) // 1024}K, #{(100 - after * 100 // before)}%)"
+                "(saved #{(before - after) // 1024}K, #{(100 - after * 100 // before)}%)"
   else
     STDERR.puts "[webp] nothing converted."
   end
@@ -335,7 +335,7 @@ when "backdrop"
   dst = File.join(MJ::Config.backdrops_dir, name + ".png")
   if File.extname(src).downcase == ".png"
     File.copy(src, dst)
-  elsif MJ::Webp.available? # convert non-PNG to PNG (the library reads dims from the PNG header)
+  elsif MJ::Webp.available?   # convert non-PNG to PNG (the library reads dims from the PNG header)
     MJ::Webp.encode(src, dst) # magick handles any->png by the .png extension
   else
     File.copy(src, dst)
@@ -353,8 +353,8 @@ when "matte"
   local_tol = 20.0
   global_tol = 70.0
   feather = 2
-  runware = ARGV.includes?("--runware")   # Tier 3: GPU-backed cloud removal via Runware
-  isnet = ARGV.includes?("--isnet")       # Tier 2: local neural matting (IS-Net via ONNX Runtime)
+  runware = ARGV.includes?("--runware") # Tier 3: GPU-backed cloud removal via Runware
+  isnet = ARGV.includes?("--isnet")     # Tier 2: local neural matting (IS-Net via ONNX Runtime)
   rw_model : String? = nil
   alpha_matting = ARGV.includes?("--alpha-matting")
   model_path = File.expand_path("~/.u2net/isnet-general-use.onnx", home: true)
@@ -410,11 +410,38 @@ when "matte"
     res = MJ::Matte.remove_bg(canvas, local_tol, global_tol, feather)
     MJ::CanvasUtil.write_png_file(res.matte, out_path)
     STDERR.puts "[matte] seed bg=#{res.bg} removed #{(res.removed * 100).round(1)}% " \
-      "(local=#{local_tol} global=#{global_tol} feather=#{feather}) -> #{out_path}"
+                "(local=#{local_tol} global=#{global_tol} feather=#{feather}) -> #{out_path}"
+  end
+when "spend"
+  # mj spend [--today|--days N|--all] [--json] — report the API cost ledger.
+  # Read-only: no Config.load! (nothing here needs a key or a project).
+  since = Time.local.at_beginning_of_day - 29.days
+  as_json = false
+  i = 1
+  while i < ARGV.size
+    case ARGV[i]
+    when "--today" then since = Time.local.at_beginning_of_day
+    when "--all"   then since = nil
+    when "--days"
+      i += 1
+      n = ARGV[i]?.try(&.to_i?) || 30
+      since = Time.local.at_beginning_of_day - (n - 1).days
+    when "--json" then as_json = true
+    else
+      STDERR.puts "Usage: mj spend [--today|--days N|--all] [--json]"
+      exit 1
+    end
+    i += 1
+  end
+
+  if as_json
+    MJ::Spend.report_json(STDOUT, since)
+  else
+    MJ::Spend.report(STDOUT, since)
   end
 when "version", "--version", "-v"
   puts "mj #{MJ::VERSION}"
 else
-  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|cyclorama|sfx|matte|webp|backdrop|bus|version]"
+  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|cyclorama|sfx|matte|webp|backdrop|spend|bus|version]"
   exit 1
 end

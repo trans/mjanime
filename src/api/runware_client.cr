@@ -150,6 +150,7 @@ module MJ
             json.field "steps", request.steps
             json.field "outputType", "URL"
             json.field "outputFormat", "PNG"
+            json.field "includeCost", true
 
             # Add ControlNet if present
             if cn = request.controlnet
@@ -173,7 +174,7 @@ module MJ
         end
       end
 
-      post_inference(task, task_uuid)
+      post_inference(task, task_uuid, "imageInference", request.model, width, height)
     end
 
     # Inpaint a region of a seed image. seed_bytes is the composite canvas,
@@ -206,6 +207,7 @@ module MJ
             json.field "CFGScale", cfg_scale
             json.field "outputType", "URL"
             json.field "outputFormat", "PNG"
+            json.field "includeCost", true
             # FLUX Fill (runware:102@1) ignores strength; omit it there.
             json.field "strength", strength unless model.starts_with?("runware:102@")
             if mm = mask_margin
@@ -215,7 +217,7 @@ module MJ
         end
       end
 
-      post_inference(body, task_uuid)
+      post_inference(body, task_uuid, "inpaint", model, width, height)
     end
 
     # Reference-image editing (Nano Banana / Gemini Flash Image, google:4@x).
@@ -238,6 +240,7 @@ module MJ
             json.field "height", height
             json.field "outputType", "URL"
             json.field "outputFormat", "PNG"
+            json.field "includeCost", true
             json.field "inputs" do
               json.object do
                 json.field "referenceImages" do
@@ -249,7 +252,7 @@ module MJ
         end
       end
 
-      post_inference(body, task_uuid)
+      post_inference(body, task_uuid, "edit", model, width, height)
     end
 
     # Background removal via Runware's imageBackgroundRemoval task (Tier 3 matting — GPU-backed,
@@ -271,6 +274,7 @@ module MJ
             json.field "model", model if model
             json.field "outputType", "URL"
             json.field "outputFormat", "PNG" # PNG to preserve the alpha channel
+            json.field "includeCost", true
             if alpha_matting
               json.field "settings" do
                 json.object do
@@ -285,11 +289,13 @@ module MJ
         end
       end
 
-      post_inference(body, task_uuid)
+      post_inference(body, task_uuid, "backgroundRemoval", model || "default")
     end
 
     # POST an imageInference task body, resolve its result, and download the image.
-    private def post_inference(body : String, task_uuid : String) : GenerationResult
+    private def post_inference(body : String, task_uuid : String, task : String,
+                               model : String, width : Int32? = nil,
+                               height : Int32? = nil) : GenerationResult
       response = HTTP::Client.post(
         "https://api.runware.ai/v1",
         headers: auth_headers,
@@ -306,7 +312,14 @@ module MJ
       raise "No result for task #{task_uuid}" unless task_result
 
       result_uuid = task_result["imageUUID"]?.try(&.as_s)
-      STDERR.puts "[runware] Result: imageUUID=#{result_uuid}"
+
+      # Runware bills per task and reports it back when asked (includeCost). Log it
+      # per-call and tally it for the run + the persistent ledger — nil means the API
+      # returned no price, which is recorded as unpriced, never as free.
+      cost = task_result["cost"]?.try(&.as_f?)
+      Spend.record(task, model, cost, width, height)
+      STDERR.puts "[runware] Result: imageUUID=#{result_uuid}" \
+                  "#{cost ? " cost=#{Spend.money(cost)} (run #{Spend.money(Spend.session_cost)})" : " cost=unreported"}"
 
       image_url = task_result["imageURL"].as_s
       image_response = HTTP::Client.get(image_url)
@@ -318,7 +331,8 @@ module MJ
       GenerationResult.new(
         image_data: image_response.body.to_slice,
         response_id: task_uuid,
-        image_uuid: result_uuid
+        image_uuid: result_uuid,
+        cost: cost
       )
     end
 

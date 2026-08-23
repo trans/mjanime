@@ -12,6 +12,11 @@ is the difference between one good roll and five wasted ones.
 | **`google:4@3`** | **Nano Banana 2** (Gemini 3.1 Flash Image) | **The default.** Restyles properly, cheaper, native ultra-wide aspects. This is what every current spec uses. |
 | `google:4@2` | Nano Banana Pro (Gemini 3 Pro Image) | When a scene needs stronger **lighting / camera** reasoning. Pricier. |
 
+**Cost** — measured 2026-08-22 via `includeCost`: `google:4@3` bills **$0.0692 per image**
+(1024×1024; Runware prepaid credits). Every call is logged to the ledger — see
+[`mj spend`](tools/spend.md). `--rekey` re-runs the keying on an existing render for free, so tune
+the cut there, not with fresh rolls.
+
 > If a restyle "won't take" (pixel art comes back looking like the photo), first check you're
 > not on `4@1`. Then check the prompt (see [under-stylization](techniques.md#the-pixel-recipe)).
 

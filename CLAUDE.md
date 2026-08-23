@@ -45,4 +45,7 @@ of work:
   mj`). Bus `ws://localhost:19118/bus` (opt out with `MJ_BUS=0`).
 - **Finished venue art is in another repo:** `~/Projects/siliconcircus.lol/archive/media/boardwalk/
   used/venues/{real,pixel-32,pixel-16,pixel-8}/`.
+- **Cost**: Runware is prepaid; every billed call prints `cost=$…` and is appended to
+  `~/.local/share/mj/spend.jsonl`. `mj spend` reports it. Nano `google:4@3` ≈ **$0.069/image**, so
+  prefer `--rekey` (free) when tuning. See [docs/tools/spend.md](docs/tools/spend.md).
 - Loose ends: `TODO.md`. Long-form investigations: `notes/`.
