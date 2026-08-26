@@ -1,0 +1,25 @@
+{
+  "type": "mj-cyclochroma",
+  "version": 1,
+  "image": "test-cave.png",
+  "audio": "test-beat.wav",
+  "recipe": {
+    "key": [
+      254,
+      43,
+      251
+    ],
+    "low": 10,
+    "high": 70,
+    "feather": 2,
+    "fade": 100,
+    "despill": true,
+    "holesOnly": true,
+    "mode": "spectrum",
+    "speed": 40,
+    "react": 100,
+    "sat": 85,
+    "bright": 60,
+    "spread": 120
+  }
+}

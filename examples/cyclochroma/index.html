@@ -1,0 +1,16 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>cyclochroma — exported player</title>
+<body style="margin:0;display:grid;place-items:center;min-height:100vh;background:#0b0d12">
+<canvas id="cv" style="width:min(90vw,560px)"></canvas>
+<script type="module">
+  // Exactly what `⬇ Player .js` gives you: the module, with the tuned RECIPE baked in.
+  import { mount } from "./cyclochroma.js";
+  const rig = mount(document.getElementById("cv"), { image: "cave.png", audio: "beat.wav" });
+  // Browsers block audio outside a user gesture, so start on click. The picture
+  // starts either way — start() never lets audio hold the visuals hostage.
+  addEventListener("click", () => rig.start(), { once: true });
+  rig.start();
+  // All four fields ship in the file; switch whenever you like:
+  //   rig.setRecipe({ mode: "radial" })
+</script>

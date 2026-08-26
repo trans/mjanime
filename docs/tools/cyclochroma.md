@@ -16,6 +16,35 @@ runs in the browser. Nothing is uploaded and nothing is written server-side.
 
 `⏺ Record WebM` captures the canvas via `MediaRecorder` and downloads it.
 
+## Export
+
+The studio *is* the player: it drives `public/js/cyclochroma.js`, and `⬇ Player .js` hands you that
+same file with your settings spliced in between its `__RECIPE_START__` / `__RECIPE_END__` markers.
+Exporting the running source rather than re-emitting a copy is what stops the player drifting from
+what you just tuned. `⬇ Recipe .json` gives the parameters alone.
+
+All four fields ship in the exported file, so mode is a runtime choice:
+
+```js
+import { mount } from "./cyclochroma.js";
+const rig = mount(canvas, { image: "cave.png", audio: "beat.mp3" });
+await rig.start();
+rig.setRecipe({ mode: "radial", react: 160 });   // retune live; re-keys only if the key changed
+```
+
+`mount(canvas, opts)` → `{ start, stop, prime, setRecipe, recipe, destroy }`. Pass `analyser` instead
+of `audio` to share an `AnalyserNode` from a graph you already own — useful when the game already has
+the music playing. `prime()` keys and draws one still frame without starting anything.
+
+**`start()` never lets audio hold the visuals hostage.** Browsers refuse to resume an `AudioContext`
+outside a user gesture, and `resume()` can stay pending forever rather than rejecting — so the render
+loop starts first and the audio is brought up fire-and-forget. Call `start()` from a click if you
+want sound on the first attempt; otherwise the field cycles silently and picks the music up later.
+
+A worked example is in [`examples/cyclochroma/`](../../examples/cyclochroma/): the exported player,
+its recipe, a keyed image, a test beat, a `demo.webm`, and an `index.html` that is the whole
+integration.
+
 ## The key
 
 Mirrors the [prop keyer](prop.md) so results match what `mj prop` would produce:
