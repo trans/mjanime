@@ -14,6 +14,7 @@ Most image commands need `RUNWARE_API_KEY` (read from the environment — source
 | `mj strip <dir> [out.png]` | Row of images → one long seamless panorama | yes | [strip](strip.md) |
 | `mj base <dir> [strength]` | Template → plain structural master (Stage 1) | yes | [base & decorate](base-and-decorate.md) |
 | `mj decorate <dir>` | Redraw a master decorated in a style/theme (Stage 2) | yes | [base & decorate](base-and-decorate.md) |
+| `/cyclochroma` (web) | Key a colour out, light the transparency with music-reactive colour | no | [cyclochroma](cyclochroma.md) |
 | `mj sfx <in.wav\|mp3> […]` | Reference sound → procedural Web Audio recipe (JSON) | no | [sfx](sfx.md) |
 | `mj backdrop <image> [name]` | Import a full-frame image into the backdrop library | no | [diorama](diorama.md#backdrop-library) |
 | `mj webp [<prop>] [--quality N]` | Transcode library deliverables to `.webp` | no | [diorama](diorama.md#webp) |

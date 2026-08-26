@@ -14,6 +14,11 @@ module MJ
         render "src/views/sfx.ecr", "src/views/layout.ecr"
       end
 
+      # -- Cyclochroma: key a colour out, light the hole up in sync with music --
+      get "/cyclochroma" do |env|
+        render "src/views/cyclochroma.ecr", "src/views/layout.ecr"
+      end
+
       # -- Sound Box: voice/SFX effect chain (robot/parrot/pirate) --
       get "/soundbox" do |env|
         render "src/views/soundbox.ecr", "src/views/layout.ecr"

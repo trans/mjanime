@@ -1,0 +1,500 @@
+<section class="cyc">
+  <h1>Cyclochroma 🌈</h1>
+  <p class="muted">Key a colour out of an image — magenta, chroma green, whatever it was shot on — with a
+  soft feathered, faded edge, then <b>light the hole up with the music</b>. The keyed region becomes a window;
+  behind it a colour field cycles in sync with what's playing. Tune the key by eye, drop in a track, hit play.</p>
+
+  <div class="cols">
+    <div class="pane">
+      <h2>1 · Image</h2>
+      <div id="imgdrop" class="drop">
+        <input type="file" id="imgfile" accept="image/*" />
+        <span class="hint">Choose or drop a PNG / WebP…</span>
+        <span id="imgloaded" class="loaded"></span>
+      </div>
+
+      <h2>2 · The key</h2>
+      <div class="row">
+        <label>Colour <input type="color" id="key" value="#ff00ff"></label>
+        <button id="pick" class="ghost">⌖ Pick from image</button>
+        <button id="autokey" class="ghost">Auto (corners)</button>
+      </div>
+      <div class="grid" id="keyctl"></div>
+      <label class="chk"><input type="checkbox" id="despill" checked> Despill — strip the key tint from soft edges</label>
+      <label class="chk"><input type="checkbox" id="holesonly"> Holes only — light just the enclosed openings, not the space around the subject</label>
+
+      <h2>3 · Music</h2>
+      <div id="auddrop" class="drop">
+        <input type="file" id="audfile" accept="audio/*" />
+        <span class="hint">Choose or drop a wav / mp3…</span>
+        <span id="audloaded" class="loaded"></span>
+      </div>
+
+      <h2>4 · The effect</h2>
+      <div class="row">
+        <label>Field <select id="mode">
+          <option value="cycle">Cycle — one hue, rotating</option>
+          <option value="spectrum">Spectrum — bars by frequency</option>
+          <option value="radial">Radial — rings from the centre</option>
+          <option value="plasma">Plasma — flowing gradient</option>
+        </select></label>
+      </div>
+      <div class="grid" id="fxctl"></div>
+
+      <div class="row actions">
+        <button id="play">▶ Play</button>
+        <button id="stop" class="ghost">■ Stop</button>
+        <button id="rec" class="accent">⏺ Record WebM</button>
+        <button id="reset" class="ghost">Reset</button>
+      </div>
+      <p class="muted small" id="status">Load an image to begin.</p>
+    </div>
+
+    <div class="pane stage">
+      <h2>Preview</h2>
+      <div class="canvaswrap" id="wrap">
+        <canvas id="cv"></canvas>
+      </div>
+      <p class="muted small">Chequerboard shows through wherever the image is transparent. With no music
+      loaded the field still cycles — silence just means no pumping.</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cyc h2 { font-size: 1rem; color: #9aa3b2; margin-top: 1.5rem; }
+  .cyc .muted { color: #7b8494; } .cyc .small { font-size: .82rem; }
+  .cyc .cols { display: grid; grid-template-columns: minmax(320px, 420px) 1fr; gap: 1.5rem; align-items: start; }
+  @media (max-width: 900px) { .cyc .cols { grid-template-columns: 1fr; } }
+  .cyc .row { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0; align-items: center; }
+  .cyc .actions { margin-top: 1rem; }
+  .cyc button { font: inherit; padding: .5rem 1rem; border: 0; border-radius: 8px;
+                background: #3a6df0; color: #fff; cursor: pointer; }
+  .cyc button.ghost { background: #2a2e38; } .cyc button.accent { background: #d9853a; }
+  .cyc button.on { background: #c4453a; }
+  .cyc button:active { transform: translateY(1px); }
+  .cyc button:disabled { opacity: .45; cursor: default; }
+  .cyc .drop { display: flex; align-items: center; gap: .8rem; padding: .9rem; border: 1px dashed #2a2e38;
+               border-radius: 8px; background: #0e1015; margin: .6rem 0; }
+  .cyc .drop.over { border-color: #3a6df0; background: #12161f; }
+  .cyc .drop .hint { color: #7b8494; font-size: .9rem; }
+  .cyc .loaded { color: #6fcf7f; margin-left: auto; font-size: .85rem; }
+  .cyc .grid { display: grid; grid-template-columns: 1fr; gap: .35rem; margin: .5rem 0; }
+  .cyc .ctl { display: grid; grid-template-columns: 7.5rem 1fr 3.2rem; gap: .6rem; align-items: center; font-size: .88rem; }
+  .cyc .ctl label { color: #9aa3b2; }
+  .cyc .ctl input[type=range] { width: 100%; }
+  .cyc .ctl output { color: #cdd3df; font-variant-numeric: tabular-nums; text-align: right; }
+  .cyc .chk { display: block; color: #9aa3b2; font-size: .88rem; margin: .35rem 0; }
+  .cyc select, .cyc input[type=color] { font: inherit; background: #0e1015; color: #cdd3df;
+      border: 1px solid #2a2e38; border-radius: 6px; padding: .3rem; }
+  .cyc input[type=color] { width: 3rem; height: 2rem; padding: 2px; }
+  .cyc .canvaswrap { border: 1px solid #2a2e38; border-radius: 10px; overflow: hidden; background:
+      repeating-conic-gradient(#1a1d24 0% 25%, #12141a 0% 50%) 50% / 22px 22px; }
+  .cyc canvas { display: block; width: 100%; height: auto; }
+  .cyc .stage h2 { margin-top: 0; }
+  .cyc.picking .canvaswrap { cursor: crosshair; outline: 2px solid #3a6df0; }
+</style>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const root = document.querySelector(".cyc");
+  const cv = $("cv"), ctx = cv.getContext("2d", { willReadFrequently: false });
+
+  // ---- controls -----------------------------------------------------------
+  // low/high mirror mj's prop keyer: distance below `low` is fully clear, above
+  // `high` fully opaque, linear between. Same numbers as prop.yml key_low/key_high.
+  const KEY = [
+    ["low",     "Clear below",  0,  120,  10, 1, "d"],
+    ["high",    "Opaque above", 1,  220,  70, 1, "d"],
+    ["feather", "Feather",      0,   24,   2, 1, "px"],
+    ["fade",    "Fade curve",  20,  300, 100, 5, "%"],
+  ];
+  const FX = [
+    ["speed",  "Cycle speed",   0, 200,  40, 1, "°/s"],
+    ["react",  "Audio drive",   0, 200, 100, 5, "%"],
+    ["sat",    "Saturation",    0, 100,  85, 1, "%"],
+    ["bright", "Brightness",   10, 100,  60, 1, "%"],
+    ["spread", "Hue spread",    0, 360, 120, 5, "°"],
+  ];
+  const P = {};
+  const build = (host, defs) => defs.forEach(([k, label, min, max, val, step, unit]) => {
+    P[k] = val;
+    const row = document.createElement("div"); row.className = "ctl";
+    row.innerHTML = `<label for="p_${k}">${label}</label>
+      <input id="p_${k}" type="range" min="${min}" max="${max}" step="${step}" value="${val}">
+      <output>${val}${unit}</output>`;
+    const inp = row.querySelector("input"), out = row.querySelector("output");
+    inp.addEventListener("input", () => {
+      P[k] = +inp.value; out.textContent = inp.value + unit;
+      if (defs === KEY) rekey();
+    });
+    host.appendChild(row);
+  });
+  build($("keyctl"), KEY);
+  build($("fxctl"), FX);
+
+  // ---- state --------------------------------------------------------------
+  let img = null;                 // source HTMLImageElement
+  let keyed = null;               // offscreen canvas: the keyed image, cached
+  let holeMask = null;            // white where an interior window is (holes-only mode)
+  let fieldCv = null;             // offscreen the field renders into when masked
+  let W = 0, H = 0;
+  let actx = null, buf = null, src = null, analyser = null, freq = null;
+  let raf = 0, t0 = 0, playing = false;
+  let picking = false;
+  let recorder = null, chunks = [];
+
+  const status = m => $("status").textContent = m;
+  const hex2rgb = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+
+  // ---- keying -------------------------------------------------------------
+  // Distance-from-key alpha ramp + generic despill + optional feather/fade, run
+  // once per parameter change and cached. Per-frame we only composite.
+  function rekey() {
+    if (!img) return;
+    const work = document.createElement("canvas");
+    work.width = W; work.height = H;
+    const w = work.getContext("2d", { willReadFrequently: true });
+    w.drawImage(img, 0, 0, W, H);
+    const id = w.getImageData(0, 0, W, H), d = id.data;
+
+    const [kr, kg, kb] = hex2rgb($("key").value);
+    const lo = P.low, hi = Math.max(P.low + 1, P.high), span = hi - lo;
+    const gamma = 100 / P.fade;              // fade curve: <1 hardens, >1 softens
+    const doDespill = $("despill").checked;
+
+    // key chroma direction, for a despill that works on any key colour
+    const km = (kr + kg + kb) / 3;
+    let dr = kr - km, dg = kg - km, db = kb - km;
+    const dn = Math.hypot(dr, dg, db) || 1;
+    dr /= dn; dg /= dn; db /= dn;
+
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i], g = d[i+1], b = d[i+2];
+      const dist = Math.hypot(r - kr, g - kg, b - kb);
+      let a = dist <= lo ? 0 : dist >= hi ? 1 : (dist - lo) / span;
+      if (a > 0 && a < 1) a = Math.pow(a, gamma);
+      if (a < 1 && doDespill) {
+        const pm = (r + g + b) / 3;
+        const proj = (r - pm) * dr + (g - pm) * dg + (b - pm) * db;
+        if (proj > 0) {
+          const k = proj * (1 - a);          // strip more spill the closer to key
+          d[i]   = Math.max(0, Math.min(255, r - k * dr));
+          d[i+1] = Math.max(0, Math.min(255, g - k * dg));
+          d[i+2] = Math.max(0, Math.min(255, b - k * db));
+        }
+      }
+      d[i+3] = Math.round(a * 255);
+    }
+    w.putImageData(id, 0, 0);
+
+    // Feather: blur the alpha edge. Cheapest correct way is a blurred redraw.
+    if (P.feather > 0) {
+      const soft = document.createElement("canvas");
+      soft.width = W; soft.height = H;
+      const s = soft.getContext("2d");
+      s.filter = `blur(${P.feather}px)`;
+      s.drawImage(work, 0, 0);
+      keyed = soft;
+    } else {
+      keyed = work;
+    }
+
+    // Holes only: confine the colour field to ENCLOSED openings. The outside stays
+    // transparent either way — a prop still has to composite into a scene — we just
+    // don't light it. Built from the feathered result so the mask matches the edge.
+    holeMask = $("holesonly").checked ? buildHoleMask(keyed) : null;
+    draw(performance.now());
+  }
+
+  // White where an interior (non-border-connected) transparent region is, clear
+  // elsewhere. Flood-fill from the border through transparent pixels — the same
+  // idea as mj matte Tier 1, used here to tell "outside" from "window".
+  function buildHoleMask(srcCv) {
+    const s = srcCv.getContext("2d", { willReadFrequently: true });
+    const d = s.getImageData(0, 0, W, H).data;
+    const seen = new Uint8Array(W * H);
+    const stack = [];
+    const push = (x, y) => {
+      if (x < 0 || y < 0 || x >= W || y >= H) return;
+      const p = y * W + x;
+      // flood through anything not FULLY opaque, so the feathered fringe around the
+      // outer silhouette is claimed by "outside" too — otherwise it lights up as a halo
+      if (seen[p] || d[p * 4 + 3] >= 250) return;
+      seen[p] = 1; stack.push(p);
+    };
+    for (let x = 0; x < W; x++) { push(x, 0); push(x, H - 1); }
+    for (let y = 0; y < H; y++) { push(0, y); push(W - 1, y); }
+    while (stack.length) {
+      const p = stack.pop(), x = p % W, y = (p - x) / W;
+      push(x + 1, y); push(x - 1, y); push(x, y + 1); push(x, y - 1);
+    }
+    const mask = document.createElement("canvas");
+    mask.width = W; mask.height = H;
+    const m = mask.getContext("2d");
+    const mid = m.createImageData(W, H), md = mid.data;
+    for (let p = 0; p < W * H; p++) {
+      if (seen[p]) continue;                      // border-connected = outside
+      const i = p * 4, a = d[i + 3];
+      if (a >= 250) continue;                     // solid image, not a window
+      md[i] = md[i+1] = md[i+2] = 255;
+      md[i+3] = 255 - a;                          // honour feathered partial alpha
+    }
+    m.putImageData(mid, 0, 0);
+    return mask;
+  }
+
+  // ---- audio --------------------------------------------------------------
+  async function loadAudio(file) {
+    actx ||= new (window.AudioContext || window.webkitAudioContext)();
+    buf = await actx.decodeAudioData(await file.arrayBuffer());
+    $("audloaded").textContent = `${file.name} · ${buf.duration.toFixed(1)}s`;
+    status("Music ready. Press play.");
+  }
+
+  function startAudio() {
+    if (!buf) return null;
+    actx.resume();
+    src = actx.createBufferSource(); src.buffer = buf; src.loop = true;
+    analyser = actx.createAnalyser();
+    analyser.fftSize = 2048; analyser.smoothingTimeConstant = 0.75;
+    freq = new Uint8Array(analyser.frequencyBinCount);
+    src.connect(analyser); analyser.connect(actx.destination);
+    src.start();
+    return src;
+  }
+
+  // three bands + overall level, all 0..1
+  function bands() {
+    if (!analyser) return { bass: 0, mid: 0, treble: 0, level: 0 };
+    analyser.getByteFrequencyData(freq);
+    const n = freq.length;
+    const avg = (a, b) => {
+      let s = 0; const from = Math.floor(n * a), to = Math.floor(n * b);
+      for (let i = from; i < to; i++) s += freq[i];
+      return s / Math.max(1, to - from) / 255;
+    };
+    const bass = avg(0, 0.06), mid = avg(0.06, 0.35), treble = avg(0.35, 1);
+    return { bass, mid, treble, level: (bass * 2 + mid + treble) / 4 };
+  }
+
+  // ---- the colour field ---------------------------------------------------
+  function field(g, tms, b) {
+    const t = tms / 1000;
+    const react = P.react / 100;
+    const hue = (t * P.speed + b.bass * 120 * react) % 360;
+    const sat = P.sat;
+    const lum = Math.min(96, P.bright * (1 + b.level * 1.6 * react));
+    const mode = $("mode").value;
+
+    if (mode === "cycle") {
+      g.fillStyle = `hsl(${hue} ${sat}% ${lum}%)`;
+      g.fillRect(0, 0, W, H);
+      return;
+    }
+
+    if (mode === "spectrum") {
+      const bars = 64, bw = W / bars;
+      g.fillStyle = `hsl(${hue} ${sat}% ${lum * 0.25}%)`;
+      g.fillRect(0, 0, W, H);
+      for (let i = 0; i < bars; i++) {
+        const v = freq ? freq[Math.floor(i / bars * freq.length * 0.7)] / 255 : 0.25 + 0.25 * Math.sin(t * 2 + i * .3);
+        const h = (hue + i / bars * P.spread) % 360;
+        g.fillStyle = `hsl(${h} ${sat}% ${Math.min(96, lum * (0.5 + v))}%)`;
+        g.fillRect(i * bw, H * (1 - v), bw + 1, H * v);
+      }
+      return;
+    }
+
+    if (mode === "radial") {
+      const cx = W / 2, cy = H / 2, R = Math.hypot(cx, cy);
+      const grad = g.createRadialGradient(cx, cy, 0, cx, cy, R);
+      const rings = 6;
+      for (let i = 0; i <= rings; i++) {
+        const p = i / rings;
+        const pulse = 1 + Math.sin(t * 3 - p * 6) * 0.35 * b.level * react;
+        const h = (hue + p * P.spread) % 360;
+        grad.addColorStop(p, `hsl(${h} ${sat}% ${Math.min(96, lum * pulse)}%)`);
+      }
+      g.fillStyle = grad; g.fillRect(0, 0, W, H);
+      return;
+    }
+
+    // plasma — cheap flowing gradient, two moving stops
+    const sweep = t * (0.15 + b.mid * react * 0.5);
+    const x1 = W * (0.5 + 0.5 * Math.cos(sweep)), y1 = H * (0.5 + 0.5 * Math.sin(sweep * 1.3));
+    const x2 = W - x1, y2 = H - y1;
+    const grad = g.createLinearGradient(x1, y1, x2, y2);
+    grad.addColorStop(0,   `hsl(${hue} ${sat}% ${lum}%)`);
+    grad.addColorStop(0.5, `hsl(${(hue + P.spread / 2) % 360} ${sat}% ${Math.min(96, lum * 1.25)}%)`);
+    grad.addColorStop(1,   `hsl(${(hue + P.spread) % 360} ${sat}% ${lum}%)`);
+    g.fillStyle = grad; g.fillRect(0, 0, W, H);
+  }
+
+  // ---- compose ------------------------------------------------------------
+  function draw(tms) {
+    if (!keyed) return;
+    const b = bands();
+    ctx.clearRect(0, 0, W, H);
+    if (holeMask) {
+      // field confined to enclosed windows; outside stays genuinely transparent
+      if (!fieldCv || fieldCv.width !== W) {
+        fieldCv = document.createElement("canvas"); fieldCv.width = W; fieldCv.height = H;
+      }
+      const fg = fieldCv.getContext("2d");
+      fg.globalCompositeOperation = "source-over";
+      fg.clearRect(0, 0, W, H);
+      field(fg, tms - t0, b);
+      fg.globalCompositeOperation = "destination-in";
+      fg.drawImage(holeMask, 0, 0);
+      ctx.drawImage(fieldCv, 0, 0);
+    } else {
+      field(ctx, tms - t0, b);        // colour field underneath …
+    }
+    ctx.drawImage(keyed, 0, 0);       // … image on top; its holes are the windows
+  }
+
+  function loop(tms) {
+    if (!playing) return;
+    draw(tms);
+    raf = requestAnimationFrame(loop);
+  }
+
+  // ---- wiring -------------------------------------------------------------
+  function setImage(file) {
+    const im = new Image();
+    im.onload = () => {
+      img = im;
+      const cap = 1280;                                  // keep per-pixel work sane
+      const sc = Math.min(1, cap / Math.max(im.width, im.height));
+      W = Math.round(im.width * sc); H = Math.round(im.height * sc);
+      cv.width = W; cv.height = H;
+      $("imgloaded").textContent = `${file.name} · ${im.width}×${im.height}`;
+      // Sample the real backdrop rather than trusting the swatch: a render's
+      // "magenta" is never exactly #ff00ff, and an untuned ramp leaves the
+      // background at partial alpha. Mirrors prop.yml auto_background: true.
+      const [r, g, b] = sampleCorners();
+      status(`Keying ${W}×${H} on sampled rgb(${r}, ${g}, ${b}). Adjust the ramp if edges need it.`);
+      rekey();
+    };
+    im.onerror = () => status("Could not read that image.");
+    im.src = URL.createObjectURL(file);
+  }
+
+  const dropzone = (zone, input, handler, kind) => {
+    input.addEventListener("change", e => e.target.files[0] && handler(e.target.files[0]));
+    ["dragenter", "dragover"].forEach(ev => zone.addEventListener(ev, e => {
+      e.preventDefault(); zone.classList.add("over");
+    }));
+    ["dragleave", "drop"].forEach(ev => zone.addEventListener(ev, e => {
+      e.preventDefault(); zone.classList.remove("over");
+    }));
+    zone.addEventListener("drop", e => {
+      const f = [...e.dataTransfer.files].find(f => f.type.startsWith(kind));
+      if (f) handler(f);
+    });
+  };
+  dropzone($("imgdrop"), $("imgfile"), setImage, "image");
+  dropzone($("auddrop"), $("audfile"), loadAudio, "audio");
+
+  $("key").addEventListener("input", rekey);
+  $("despill").addEventListener("change", rekey);
+  $("holesonly").addEventListener("change", rekey);
+
+  $("pick").addEventListener("click", () => {
+    if (!img) return status("Load an image first.");
+    picking = !picking;
+    root.classList.toggle("picking", picking);
+    status(picking ? "Click the colour in the image you want removed." : "Pick cancelled.");
+  });
+
+  cv.addEventListener("click", e => {
+    if (!picking || !img) return;
+    const r = cv.getBoundingClientRect();
+    const x = Math.floor((e.clientX - r.left) / r.width * W);
+    const y = Math.floor((e.clientY - r.top) / r.height * H);
+    const tmp = document.createElement("canvas");
+    tmp.width = W; tmp.height = H;
+    const c = tmp.getContext("2d", { willReadFrequently: true });
+    c.drawImage(img, 0, 0, W, H);
+    const p = c.getImageData(x, y, 1, 1).data;
+    $("key").value = "#" + [p[0], p[1], p[2]].map(v => v.toString(16).padStart(2, "0")).join("");
+    picking = false; root.classList.remove("picking");
+    status(`Key set to rgb(${p[0]}, ${p[1]}, ${p[2]}).`);
+    rekey();
+  });
+
+  function sampleCorners() {
+    const tmp = document.createElement("canvas");
+    tmp.width = W; tmp.height = H;
+    const c = tmp.getContext("2d", { willReadFrequently: true });
+    c.drawImage(img, 0, 0, W, H);
+    const s = Math.max(2, Math.min(W, H) >> 5);
+    let r = 0, g = 0, b = 0, n = 0;
+    [[0,0],[W-s,0],[0,H-s],[W-s,H-s]].forEach(([sx, sy]) => {
+      const d = c.getImageData(sx, sy, s, s).data;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i+1]; b += d[i+2]; n++; }
+    });
+    r = Math.round(r/n); g = Math.round(g/n); b = Math.round(b/n);
+    $("key").value = "#" + [r,g,b].map(v => v.toString(16).padStart(2, "0")).join("");
+    return [r, g, b];
+  }
+
+  $("autokey").addEventListener("click", () => {
+    if (!img) return status("Load an image first.");
+    const [r, g, b] = sampleCorners();
+    status(`Sampled the corners: rgb(${r}, ${g}, ${b}).`);
+    rekey();
+  });
+
+  $("play").addEventListener("click", () => {
+    if (!keyed) return status("Load an image first.");
+    if (playing) return;
+    if (buf) { try { src && src.stop(); } catch (_) {} startAudio(); }
+    playing = true; t0 = performance.now();
+    status(buf ? "Playing." : "Playing (no music loaded — field cycles on its own).");
+    raf = requestAnimationFrame(loop);
+  });
+
+  $("stop").addEventListener("click", () => {
+    playing = false; cancelAnimationFrame(raf);
+    try { src && src.stop(); } catch (_) {}
+    src = null; analyser = null; freq = null;
+    if (keyed) draw(performance.now());
+    status("Stopped.");
+  });
+
+  $("rec").addEventListener("click", () => {
+    if (!keyed) return status("Load an image first.");
+    if (recorder) { recorder.stop(); return; }
+    if (!playing) $("play").click();
+    chunks = [];
+    const stream = cv.captureStream(30);
+    recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+    recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
+    recorder.onstop = () => {
+      const url = URL.createObjectURL(new Blob(chunks, { type: "video/webm" }));
+      const a = document.createElement("a");
+      a.href = url; a.download = "cyclochroma.webm"; a.click();
+      URL.revokeObjectURL(url);
+      recorder = null; $("rec").textContent = "⏺ Record WebM"; $("rec").classList.remove("on");
+      status("Recording saved.");
+    };
+    recorder.start();
+    $("rec").textContent = "⏹ Stop recording"; $("rec").classList.add("on");
+    status("Recording… press again to save.");
+  });
+
+  $("reset").addEventListener("click", () => {
+    [...KEY, ...FX].forEach(([k, , , , val]) => {
+      P[k] = val;
+      const inp = $("p_" + k);
+      if (inp) { inp.value = val; inp.dispatchEvent(new Event("input")); }
+    });
+    $("key").value = "#ff00ff";
+    status("Reset.");
+    rekey();
+  });
+})();
+</script>
