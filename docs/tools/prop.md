@@ -35,6 +35,8 @@ edge_blur: 0                     # px of box-blur on the alpha edge (0 = off)
 despill: true                    # recover true F on edge pixels (strip bg tint)
 defringe: true                   # subtract residual chroma halo on thin detail
 defringe_band: 0                 # 0 = whole image; set 1-3 only if the SUBJECT contains the key hue
+despeckle: 0                     # drop stray opaque islands under N px (0=off). 64 is a good start on
+                                 # solid-edged subjects; leave OFF when real detail is tiny+scattered
 alpha_bleed: true                # flood transparent pixels w/ nearest subject colour (stops mipmap fringe)
 model: "google:4@3"             # Nano Banana 2 (NOT the deprecated google:4@1)
 width: 1024

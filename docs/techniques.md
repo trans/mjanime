@@ -90,6 +90,9 @@ and it keys just as cleanly. The algorithm (`Prop.key_out`, verified against sou
    floods every transparent pixel with the nearest subject colour (alpha stays 0) so there's
    nothing left to resurrect. Harmless in alpha-correct rendering.
 
+8. **`despeckle`** (default `0` = off) — drops stray opaque islands smaller than N px. See
+   [the background is not flat](#the-background-is-not-flat--despeckle) below for why they exist.
+
 **Layered fringe defence** = chroma bg + high `key_high` + despill + defringe + alpha_bleed.
 
 **Background choice:** black (`[0,0,0]`) keys **bright** subjects cleanly; for a **dark** subject
@@ -98,7 +101,49 @@ in your prompt too**, and add *"floats isolated, no ground / no floor / no peopl
 ground" — it adds a floor).
 
 **`--rekey`** re-runs *only* the keying step on an existing `render.png` (no API call) — the way to
-tune `key_low`/`key_high`/`blur`/`despill`/`defringe`/`bleed` against a render you like.
+tune `key_low`/`key_high`/`blur`/`despill`/`defringe`/`bleed`/`despeckle` against a render you like.
+
+### The background is not flat — despeckle
+
+**The model never gives you the key colour you asked for, and never gives you it flat.** Measured on
+an empty corner of a raw `google:4@3` render whose prompt demanded solid `#FF00FF`:
+
+```
+requested   255,   0, 255
+delivered   245,  40, 244      green swinging ±10, in visible 8–16px blocks
+distance from the requested colour: 42.6
+```
+
+Two consequences, and the first is the one that will bite you:
+
+- **That distance exceeds a typical `key_high`.** With `key_high: 40` and `auto_background: false`
+  the entire background sits mid-ramp and keys to *partial alpha*. **`auto_background: true` is not
+  a convenience, it is load-bearing** — it samples what actually arrived instead of trusting the
+  swatch. Only turn it off when the corners are genuinely not background (the bunker frame, where
+  the corners are concrete), and then expect to tune `key_low`/`key_high` by hand.
+- **The perturbation is structured, not uniform noise.** It drifts across the frame — green measured
+  38 in one corner and 57 in another on the same image — so pixels near the threshold resolve
+  inconsistently and leave crumbs, most visibly as a **dust strip along one edge**. That strip is
+  what silently inflates an alpha bounding box: for a prop pinned by bbox (every boardwalk venue) it
+  reads as extra width and a lower contact point, which is a placement bug, not a cosmetic one.
+
+**Do not fix this by raising `key_low`.** It works on solid-edged subjects and destroys feathery
+ones, because thin detail *is* small:
+
+| subject | `key_low` 4 → 16 | `despeckle: 64` |
+| --- | --- | --- |
+| tent facade | 5 → 3 islands, −0.5% subject | 5 → **2**, subject untouched |
+| winter park | 13 → 12 | 13 → **6**, subject untouched |
+| palm tree | 39 → **62** islands, −3.6% subject | 39 → **1**, subject untouched |
+
+`despeckle` labels 8-connected opaque islands and zeroes any under N px, running **after** defringe
+and **before** `alpha_bleed` (bleed floods transparent pixels with subject colour, so a speck left
+standing would seed a halo around itself and survive). In every case above the main blob area came
+out **byte-identical** — it removes dust and never subject.
+
+Start at `despeckle: 64`. Raise it if crumbs survive; **leave it off** for subjects whose real detail
+is genuinely tiny and disconnected — scattered bulbs, sparks, snow flecks, distant birds — since it
+cannot tell those from dust.
 
 **What keying can't do:** remove **cast shadows** on the bg (a dark shadow is "far from green" =
 opaque) or the floor/light-pool strip a night render adds at the base. Those need a spatial trim —

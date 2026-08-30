@@ -86,8 +86,60 @@ module MJ
         end
       end
       defringe!(dst, bg_r, bg_g, bg_b, spec.defringe_band) if spec.defringe
+      # BEFORE alpha_bleed: bleed floods transparent pixels with subject colour, so any
+      # speck still standing would seed colour around itself and survive as a halo.
+      despeckle!(dst, spec.despeckle) if spec.despeckle > 0
       bleed_alpha!(dst) if spec.alpha_bleed
       dst
+    end
+
+    # Despeckle: drop tiny opaque islands left behind by a background that is not flat.
+    # The model's "flat" key field carries a structured, block-patterned perturbation
+    # (measured ~±10 in one channel across an empty corner, and ~42 distance from the
+    # colour actually requested), so pixels near the ramp threshold resolve inconsistently
+    # and leave crumbs — most visibly as a dust strip along one edge.
+    # 8-connected labelling; any island under `min_area` px has its alpha zeroed. RGB is
+    # left alone, because alpha_bleed runs next and will overwrite it anyway.
+    private def self.despeckle!(canvas : StumpyPNG::Canvas, min_area : Int32) : Nil
+      w = canvas.width
+      h = canvas.height
+      thr = 16384_u16 # 25% alpha counts as "solid" when deciding what is an island
+      seen = Array(Bool).new(w * h, false)
+      (0...h).each do |sy|
+        (0...w).each do |sx|
+          start = sy * w + sx
+          next if seen[start]
+          next if canvas[sx, sy].a < thr
+          comp = [] of Int32
+          stack = [start]
+          seen[start] = true
+          while (p = stack.pop?)
+            comp << p
+            px = p % w
+            py = p // w
+            (-1..1).each do |dy|
+              (-1..1).each do |dx|
+                next if dx == 0 && dy == 0
+                nx = px + dx
+                ny = py + dy
+                next if nx < 0 || ny < 0 || nx >= w || ny >= h
+                n = ny * w + nx
+                next if seen[n]
+                next if canvas[nx, ny].a < thr
+                seen[n] = true
+                stack << n
+              end
+            end
+          end
+          next if comp.size >= min_area
+          comp.each do |q|
+            qx = q % w
+            qy = q // w
+            c = canvas[qx, qy]
+            canvas[qx, qy] = StumpyPNG::RGBA.new(c.r, c.g, c.b, 0_u16)
+          end
+        end
+      end
     end
 
     # Alpha bleed ("solidify" / edge-colour extend): keying zeros the ALPHA of the

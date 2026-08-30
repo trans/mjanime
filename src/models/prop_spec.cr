@@ -40,6 +40,13 @@ module MJ
     # hidden colour back in, so the key hue "reappears" as a fringe when the prop is shrunk.
     # This floods transparent pixels with the nearest subject colour (alpha stays 0) so
     # there's nothing left to resurrect. Default true; harmless in alpha-correct rendering.
+    # Drop stray opaque islands smaller than this many pixels (0 = off). The generated
+    # background is NOT flat: it carries a structured, block-patterned perturbation, so
+    # pixels straddle the alpha ramp inconsistently and leave specks and edge crumbs.
+    # OFF by default because legitimate thin detail IS small — frond tips, rope ends,
+    # individual bulbs. Safe on solid-edged subjects (tents, buildings, machinery);
+    # on feathery ones it eats the subject. See docs/techniques.md#despeckle.
+    property despeckle : Int32 = 0
     property alpha_bleed : Bool = true
     property model : String = "google:4@3"   # Nano Banana 2 (google:4@1 is deprecated/weak)
     property width : Int32 = 1024
