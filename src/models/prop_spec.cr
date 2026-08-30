@@ -40,6 +40,14 @@ module MJ
     # hidden colour back in, so the key hue "reappears" as a fringe when the prop is shrunk.
     # This floods transparent pixels with the nearest subject colour (alpha stays 0) so
     # there's nothing left to resurrect. Default true; harmless in alpha-correct rendering.
+    # Zero the alpha of the outermost N px of the frame (0 = off). The generated
+    # background is not flat (see below), and its artefacts collect at the very edge as
+    # strips that are 1-2px TALL but hundreds of px WIDE — so their area is far above any
+    # sane `despeckle` threshold and despeckle cannot touch them. Those strips are what
+    # defeats "crop to content": the bounding box is stuck at the full frame.
+    # Safe by default because every prop is prompted to leave a margin — nothing should be
+    # at the frame edge to lose. Set 0 for anything that deliberately bleeds off the edge.
+    property edge_guard : Int32 = 2
     # Drop stray opaque islands smaller than this many pixels (0 = off). The generated
     # background is NOT flat: it carries a structured, block-patterned perturbation, so
     # pixels straddle the alpha ramp inconsistently and leave specks and edge crumbs.

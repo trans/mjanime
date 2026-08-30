@@ -136,6 +136,24 @@ ones, because thin detail *is* small:
 | winter park | 13 → 12 | 13 → **6**, subject untouched |
 | palm tree | 39 → **62** islands, −3.6% subject | 39 → **1**, subject untouched |
 
+**`despeckle` alone is not enough, and this is the part that breaks "crop to content".** The
+artefacts collect hardest at the very frame edge, where they form strips that are **1–2px tall but
+hundreds of px wide**. Measured areas of 254 and 297 px — far above any sane despeckle threshold, so
+despeckle cannot touch them. One such strip pins the alpha bounding box to the whole frame, and every
+crop-to-content, auto-trim or bbox pin silently becomes a no-op:
+
+| prop | alpha bbox before | after `edge_guard: 2` |
+| --- | --- | --- |
+| laser pavilion | `1200x895+0+0` (whole frame) | `948x837+250+57` |
+| photobooth | `896x1200+0+0` (whole frame) | `755x1082+139+116` |
+| rowboat | `1024x1023+0+0` (whole frame) | `1013x893+3+129` |
+
+**`edge_guard`** (default `2`) zeroes the alpha of the outermost N px all the way round, and runs
+*before* despeckle — clearing the border also snaps long edge strips into short stubs that despeckle
+then removes for free. It is safe by default because every prop is prompted to leave a clear margin,
+so there is nothing at the border to lose. Set it to `0` only for something that deliberately bleeds
+off the edge.
+
 `despeckle` labels 8-connected opaque islands and zeroes any under N px, running **after** defringe
 and **before** `alpha_bleed` (bleed floods transparent pixels with subject colour, so a speck left
 standing would seed a halo around itself and survive). In every case above the main blob area came

@@ -86,11 +86,43 @@ module MJ
         end
       end
       defringe!(dst, bg_r, bg_g, bg_b, spec.defringe_band) if spec.defringe
+      # BEFORE despeckle: clearing the border can also break a long edge strip into
+      # short stubs, which despeckle then removes for free.
+      edge_guard!(dst, spec.edge_guard) if spec.edge_guard > 0
       # BEFORE alpha_bleed: bleed floods transparent pixels with subject colour, so any
       # speck still standing would seed colour around itself and survive as a halo.
       despeckle!(dst, spec.despeckle) if spec.despeckle > 0
       bleed_alpha!(dst) if spec.alpha_bleed
       dst
+    end
+
+    # Edge guard: zero the alpha of the outermost `n` px all the way round.
+    # The background's artefacts pile up at the frame edge as strips 1-2px tall and
+    # hundreds wide — area far above any despeckle threshold, so despeckle cannot reach
+    # them. Those strips are exactly what pins an alpha bounding box to the full frame and
+    # makes "crop to content" a no-op. Every prop is prompted to leave a clear margin, so
+    # there is nothing at the border to lose.
+    private def self.edge_guard!(canvas : StumpyPNG::Canvas, n : Int32) : Nil
+      w = canvas.width
+      h = canvas.height
+      n = n.clamp(0, [w, h].min // 2)
+      return if n == 0
+      clear = ->(x : Int32, y : Int32) do
+        c = canvas[x, y]
+        canvas[x, y] = StumpyPNG::RGBA.new(c.r, c.g, c.b, 0_u16)
+      end
+      (0...h).each do |y|
+        (0...n).each do |i|
+          clear.call(i, y)
+          clear.call(w - 1 - i, y)
+        end
+      end
+      (0...w).each do |x|
+        (0...n).each do |i|
+          clear.call(x, i)
+          clear.call(x, h - 1 - i)
+        end
+      end
     end
 
     # Despeckle: drop tiny opaque islands left behind by a background that is not flat.
