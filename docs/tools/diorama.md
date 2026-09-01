@@ -145,3 +145,43 @@ Two things to check when you make a scene walkable:
 
 Still missing: collision (you walk through headstones), and the floor is a single flat plane, so
 a scene whose ground climbs — as the source graveyard's does — loses its hill.
+
+## Imposters: walking around a flat card
+
+A card cannot be walked around — turn 90 degrees and it is a line. An **imposter** carries a set of
+painted bearings instead of one image and shows whichever matches where the viewer is standing:
+
+```json
+{ "plane": "imposter", "order": 0,
+  "srcs": ["/lib/props/hill-house-000", "…-045", "…-090", … 8 in all],
+  "x": 0, "y": 3.42, "z": -22, "scale": 13.96 }
+```
+
+Bearing is `atan2(cam.x - L.x, cam.z - L.z)` — 0 straight in front, increasing toward +X — so
+`srcs[k]` must be the subject seen from `k * (360/n)` degrees around it. Imposters always face the
+viewer; `billboard` is ignored.
+
+**The swap is the hard part.** Changing image while the subject is in plain sight is a visible pop.
+So it is *deferred*: each frame the imposter computes the bearing it wants, and only commits when
+the subject cannot be seen — either occluded, or off the edge of the screen. The viewer discovers
+the new angle after the trees clear, never during.
+
+Occlusion is a real test, not an authored guess: a ray from camera to subject against every layer
+flagged `"occluder": true`, sampling the hit UV against a 128px alpha map of that layer's texture.
+Hitting a tree card's *quad* proves nothing — most of it is empty — so what counts is whether the
+hit lands on an opaque texel.
+
+Two things this needs to work:
+
+- **Occluders on the inside of the circuit.** Trees ringed outside the path look like a forest and
+  hide nothing; the swap only ever gets its chance from scenery *between* the walker and the
+  subject. The graveyard ring uses 16 inner trees.
+- **Normalised frames.** Each bearing is generated independently and lands at its own size and
+  height in frame; swap between two of those and the subject jumps, which defeats the point.
+  `notes/graveyard/normalize.py` scales every frame to a common content height and pins every
+  content bottom to the same row. Width is left alone — a side elevation really is wider.
+
+If the viewer circles without ever losing sight of the subject, the imposter holds a stale bearing
+rather than popping. That is the intended trade. Scene `meta.imposterAlways` swaps on sight and
+`meta.imposterLog` narrates, both for debugging; with `imposterLog` on, `window.__imp()` reports
+each imposter's shown/wanted bearing and whether it is currently hidden.

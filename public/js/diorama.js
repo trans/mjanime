@@ -83,15 +83,31 @@ function tileTexture(t, L) {
   return t;
 }
 
+// An imposter carries a set of bearings rather than one image; decode them all up front so a
+// swap is a map assignment, not a network round-trip at the moment the viewer is looking away.
+function layerTexture(L) {
+  if (L.plane === "imposter") {
+    L._tex = L.srcs.map(s => art(s));
+    L._shown = 0;
+    return L._tex[0];
+  }
+  return tileTexture(art(L.src), L);
+}
+
 function rebuild() {
   while (box.children.length) { const o = box.children[0]; box.remove(o); o.geometry?.dispose?.(); o.material?.dispose?.(); }
+  OCCLUDERS.length = 0;
   for (const L of S.layers) { L.m = null; L.sh = null; }
   for (const L of S.layers) {
     L.m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
-      new THREE.MeshBasicMaterial({ map: tileTexture(art(L.src), L), transparent: true, alphaTest: 0.04, depthWrite: false, side: THREE.DoubleSide, fog: !L.meta?.nofog }));
-    if (L.plane === "floor") L.m.rotation.x = -Math.PI / 2;
+      new THREE.MeshBasicMaterial({ map: layerTexture(L), transparent: true, alphaTest: 0.04, depthWrite: false, side: THREE.DoubleSide, fog: !L.meta?.nofog }));
+    L.m.rotation.order = "YXZ";                 // Y applied OUTSIDE X: spin the flattened plane
+    if (L.plane === "floor") L.m.rotation.x = -Math.PI / 2;   // lay it flat: +Y -> -Z, so scale.y is DEPTH
+    if (L.rotY) L.m.rotation.y = L.rotY * Math.PI / 180;
     L.m.renderOrder = L.order || 0;
     box.add(L.m);
+    if (L.occluder) OCCLUDERS.push({ mesh: L.m, alpha: alphaSampler(L.m.material.map) });
+
     if (L.shadow) {
       L.sh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
         new THREE.MeshBasicMaterial({ map: SHADOW_TEX, transparent: true, depthWrite: false, opacity: 0.85 }));
@@ -112,10 +128,89 @@ function applyFog(f) {
   scene.background = c;
 }
 
+
+// ── Imposter: one object, eight painted bearings ────────────────────────────────────────────────
+// A flat card cannot be walked around -- turn 90 degrees and it is a line. An imposter carries a
+// SET of images, one per 45 degrees around the subject, and shows whichever matches where the
+// viewer is standing. The seam is the problem: swapping while the thing is in plain sight is a
+// visible pop. So the swap is DEFERRED until the subject is hidden -- occluded by scenery, or off
+// the edge of the screen -- and the viewer only ever discovers the new angle after the trees clear.
+const OCCLUDERS = [];             // meshes flagged `occluder: true`, with an alpha sampler each
+
+// Sample a texture's alpha cheaply: a tree card's quad is mostly empty, so a raycast hitting the
+// quad proves nothing. What matters is whether the hit UV lands on an opaque texel.
+function alphaSampler(tex, size = 128) {
+  const c = document.createElement("canvas"); c.width = c.height = size;
+  const g = c.getContext("2d", { willReadFrequently: true });
+  let data = null;
+  const load = () => {
+    const img = tex.image;
+    if (!img || !img.width) return;
+    g.clearRect(0, 0, size, size);
+    g.drawImage(img, 0, 0, size, size);
+    try { data = g.getImageData(0, 0, size, size).data; } catch (e) { data = null; }
+  };
+  if (tex.image && tex.image.width) load(); else tex.addEventListener?.("update", load);
+  setTimeout(load, 400); setTimeout(load, 2000);          // textures stream in
+  return (u, v) => {
+    if (!data) return 1;                                   // not decoded yet: assume solid
+    const x = Math.min(size - 1, Math.max(0, Math.floor(u * size)));
+    const y = Math.min(size - 1, Math.max(0, Math.floor((1 - v) * size)));
+    return data[(y * size + x) * 4 + 3] / 255;
+  };
+}
+
+const IMP_RAY = new THREE.Raycaster();
+const IMP_V = new THREE.Vector3();
+
+function bearingIndex(L, camera) {
+  const n = L.srcs.length;
+  const a = Math.atan2(camera.position.x - L.x, camera.position.z - L.z);   // 0 = straight in front
+  return ((Math.round(a / (2 * Math.PI / n)) % n) + n) % n;
+}
+
+function hidden(L, camera) {
+  IMP_V.set(L.x, L.y, L.z);
+  // off the edge of the screen counts as hidden -- also an invisible moment to swap in
+  const ndc = IMP_V.clone().project(camera);
+  if (ndc.z > 1 || Math.abs(ndc.x) > 1.15 || Math.abs(ndc.y) > 1.15) return true;
+  if (!OCCLUDERS.length) return false;
+  const dir = IMP_V.clone().sub(camera.position);
+  const dist = dir.length();
+  IMP_RAY.set(camera.position, dir.normalize());
+  IMP_RAY.far = dist;
+  for (const hit of IMP_RAY.intersectObjects(OCCLUDERS.map(o => o.mesh), false)) {
+    if (hit.distance >= dist) break;
+    const s = OCCLUDERS.find(o => o.mesh === hit.object);
+    if (hit.uv && s && s.alpha(hit.uv.x, hit.uv.y) > 0.35) return true;
+  }
+  return false;
+}
+
+function stepImposters(camera) {
+  for (const L of S.layers) {
+    if (L.plane !== "imposter" || !L.m) continue;
+    const want = bearingIndex(L, camera);
+    if (want === L._shown) continue;
+    const free = S.meta?.imposterAlways;                   // debug: swap on sight, to prove wiring
+    const hid = free || hidden(L, camera);
+    if (!hid) continue;                                    // in view: hold the old angle
+    if (S.meta?.imposterLog)
+      console.log(`[imposter] ${L.meta?.imposter} ${L._shown} -> ${want} (${free ? "forced" : "hidden"})`);
+    L._shown = want;
+    L.m.material.map = L._tex[want];
+    L.m.material.needsUpdate = true;
+  }
+}
+
 function faceCamera() {
   for (const L of S.layers) {
     if (!L.m) continue;
     if (L.plane === "floor") continue;
+    if (L.plane === "imposter") {                        // an imposter is a billboard by definition
+      L.m.rotation.y = Math.atan2(cam.position.x - L.m.position.x, cam.position.z - L.m.position.z);
+      continue;
+    }
     const lim = (L.billboard || 0) * Math.PI / 180;
     if (lim <= 0) { L.m.rotation.y = 0; continue; }
     const want = Math.atan2(cam.position.x - L.m.position.x, cam.position.z - L.m.position.z);
@@ -298,6 +393,8 @@ function serializeScene() {
       scale: +L.scale.toFixed(3), horizon: +(L.horizon ?? 0.5).toFixed(3), shadow: !!L.shadow,
       billboard: +(L.billboard || 0).toFixed(1), flipX: !!L.flipX,
       plane: L.plane || "card", order: L.order || 0,
+      ...(L.srcs ? {srcs: L.srcs} : {}), ...(L.rotY ? {rotY: L.rotY} : {}),
+      ...(L.occluder ? {occluder: true} : {}),
       ...(L.size ? {size: L.size} : {}), ...(L.repeat ? {repeat: L.repeat} : {}),
       meta: L.meta || {}
     }))
@@ -383,6 +480,7 @@ function tick(now) {
     cam.rotation.set(PITCH, YAW, Math.sin(t * 0.37) * 0.005);
   }
   faceCamera();
+  stepImposters(cam);
   rend.render(scene, cam);
 }
 resize(); requestAnimationFrame(tick);
