@@ -61,6 +61,14 @@ module MJ
     property height : Int32 = 1024
     # Free-form tags for the prop library manifest (index.json). Seeds the tag-based
     # metadata a future TransFS/DataDungeon backend will index on. e.g. ["pirate", "metal"].
+    # Where this prop's GROUND LINE sits, as a fraction of the keyed content's height measured
+    # UP from its bottom edge. 0.0 (the default) means the art meets the ground at its lowest
+    # opaque pixel — right for a headstone, wrong for anything drawn with a spreading base. A
+    # tree with an exposed root flare meets the soil part-way up its own silhouette; seating its
+    # lowest root tip on the floor hangs the trunk in the air. Belongs to the PROP, not to a
+    # scene, so every composition that places it gets the seating right for free.
+    property ground_line : Float64 = 0.0
+
     property tags : Array(String) = [] of String
   end
 end

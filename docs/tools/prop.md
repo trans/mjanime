@@ -44,6 +44,12 @@ alpha_bleed: true                # flood transparent pixels w/ nearest subject c
 model: "google:4@3"             # Nano Banana 2 (NOT the deprecated google:4@1)
 width: 1024
 height: 1024
+ground_line: 0.0                 # where this prop MEETS THE GROUND, as a fraction of the keyed
+                                 # content's height measured UP from its bottom edge. 0 = the
+                                 # lowest opaque pixel, right for a headstone. A tree with an
+                                 # exposed root flare meets the soil part-way up its own
+                                 # silhouette; seat it by its bottom and the trunk hangs in the
+                                 # air. Belongs to the PROP, so every scene placing it is right.
 tags: ["pirate", "metal"]        # free-form, flow into the library manifest (index.json)
 ```
 
@@ -73,7 +79,7 @@ hue reappearing as a pink/green fringe in thumbnails.
 
 Props live in a relocatable tree at `Config.props_dir` (default `~/.local/share/mj/props`;
 override with `$MJ_PROPS_DIR` or `props_dir:` in config). One folder per prop. Every build updates
-`<root>/index.json` (`PropLibrary.record`): rows of `name`, `tags`, `model`, `width`, `height`,
+`<root>/index.json` (`PropLibrary.record`): rows of `name`, `tags`, `model`, `width`, `height`, `ground_line`,
 `source_sha` (sha256 of `prop.yml` — changes when the recipe changes), `created`, `updated`, sorted
 by name. This is the tag seam for a future asset backend. The keyed `prop.png` also feeds the
 [Diorama](diorama.md) palette (as a `cut:true` entry) and gets transcoded by [`mj webp`](diorama.md#webp).
@@ -81,3 +87,18 @@ by name. This is the tag seam for a future asset backend. The keyed `prop.png` a
 ---
 Related: [techniques](../techniques.md) · [Nano Banana](../nano-banana.md) · [pixelize](pixelize.md) ·
 [matte](matte.md) · [diorama](diorama.md)
+
+## Finding a prop's ground line
+
+`notes/graveyard/groundline.py` walks the opaque width up from the bottom of the keyed content
+and reports a suggestion. The distinction it draws is between a **plinth** and a **flare**:
+
+- an obelisk's stepped base, a fence's stone kerb, a candle's ledge all bulge wider than the body,
+  but are already at full width in the first rows — they genuinely sit *on* the soil, `0.0`;
+- a root flare or a sweep of low boughs starts narrow at the very bottom and swells to a peak —
+  the soil belongs at that peak, and the tips below it sink into the earth.
+
+Measured across the graveyard set, only three of twenty needed a non-zero value: the framing tree
+(0.13), the conifer (0.11) and the candle cluster (0.05). Treat the number as a starting point and
+check it against the art — an airborne prop (bats, a hovering ghost) has no meaningful ground line
+at all and should stay at `0.0`.

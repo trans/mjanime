@@ -17,11 +17,12 @@ module MJ
       property model : String
       property width : Int32
       property height : Int32
+      property ground_line : Float64 = 0.0 # fraction up the content where the prop meets the ground
       property source_sha : String # sha256(prop.yml) — changes when the recipe changes
       property created : String     # RFC3339, preserved across rebuilds
       property updated : String     # RFC3339, bumped every build
 
-      def initialize(@name, @tags, @model, @width, @height, @source_sha, @created, @updated)
+      def initialize(@name, @tags, @model, @width, @height, @ground_line, @source_sha, @created, @updated)
       end
     end
 
@@ -76,7 +77,8 @@ module MJ
       manifest = load_manifest
       created = manifest.props.find { |e| e.name == name }.try(&.created) || now
       manifest.props.reject! { |e| e.name == name }
-      manifest.props << Entry.new(name, spec.tags, spec.model, spec.width, spec.height, sha, created, now)
+      manifest.props << Entry.new(name, spec.tags, spec.model, spec.width, spec.height,
+        spec.ground_line, sha, created, now)
       manifest.props.sort_by!(&.name)
       Dir.mkdir_p(root)
       File.write(manifest_path, manifest.to_pretty_json)

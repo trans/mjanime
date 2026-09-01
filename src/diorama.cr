@@ -36,12 +36,12 @@ module MJ
       # library; backdrops (full frames) from the backdrop library. `src` is an mj-served /lib URL.
       get "/#{SLUG}/assets.json" do |env|
         env.response.content_type = "application/json"
-        assets = [] of NamedTuple(src: String, w: Int32, h: Int32, cut: Bool, name: String)
+        assets = [] of NamedTuple(src: String, w: Int32, h: Int32, cut: Bool, name: String, ground: Float64)
         PropLibrary.load_manifest.props.each do |p|
-          assets << {src: "/lib/props/#{p.name}.png", w: p.width, h: p.height, cut: true, name: p.name}
+          assets << {src: "/lib/props/#{p.name}.png", w: p.width, h: p.height, cut: true, name: p.name, ground: p.ground_line}
         end
         BackdropLibrary.list.each do |b|
-          assets << {src: b.src, w: b.w, h: b.h, cut: false, name: b.name}
+          assets << {src: b.src, w: b.w, h: b.h, cut: false, name: b.name, ground: 0.0}
         end
         assets.to_json
       end

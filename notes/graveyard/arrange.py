@@ -91,8 +91,10 @@ FLOATING = [
     ("grave-bats",       830,  175, 34.0, 2.10, False, 45),
 ]
 
-GRASS_W, GRASS_D = 130.0, 92.0     # the floor plane, from 2 m out to 94 m
-PATH_W,  PATH_D  =   4.4, 60.0     # 4.4 m plane, path ~2.6 m of it     # the decal laid down its centre
+GRASS_W, GRASS_D = 150.0, 128.0    # floor: +30 m behind the origin out to -98 m
+GRASS_Z0 = 30.0                    # near edge, BEHIND the camera start, so walking back stays on it
+PATH_W,  PATH_D  =   4.4, 74.0     # 4.4 m plane, path ~2.6 m of it
+PATH_Z0  =  12.0     # the decal laid down its centre
 TILE_M = 8.0                       # world size of one grass tile
 
 L = []
@@ -107,23 +109,24 @@ L.append({
 })
 L.append({
     "src": "/lib/backdrops/grave-grass.png", "w": 1024, "h": 1024,
-    "x": 0.0, "y": FLOOR_Y, "z": -(2.0 + GRASS_D / 2), "scale": GRASS_D,
+    "x": 0.0, "y": FLOOR_Y, "z": GRASS_Z0 - GRASS_D / 2, "scale": GRASS_D,
     "size": [GRASS_W, GRASS_D], "repeat": [round(GRASS_W / TILE_M), round(GRASS_D / TILE_M)],
     "plane": "floor", "order": -2, "horizon": 0.5, "shadow": False,
     "billboard": 0, "flipX": False, "meta": {"role": "ground"},
 })
 L.append({
     "src": "/lib/backdrops/grave-path-decal.png", "w": 1024, "h": 2048,
-    "x": 0.0, "y": FLOOR_Y + 0.004, "z": -(2.0 + PATH_D / 2), "scale": PATH_D,
+    "x": 0.0, "y": FLOOR_Y + 0.004, "z": PATH_Z0 - PATH_D / 2, "scale": PATH_D,
     "size": [PATH_W, PATH_D], "repeat": [1, round(PATH_D / 10.0)],
     "plane": "floor", "order": -1, "horizon": 0.5, "shadow": False,
     "billboard": 0, "flipX": False, "meta": {"role": "path"},
 })
 
-BASE = {
-    # root flare peaks 12% up the silhouette and resolves to trunk by 20%; soil sits between
-    "grave-frametree": 0.15,
-}
+# Ground lines are a property of the ART, not of this scene, so they come from the prop
+# library manifest -- every composition that places these props seats them correctly.
+import json
+MANIFEST = json.load(open(os.path.expanduser("~/.local/share/mj/props/index.json")))
+BASE = {e["name"]: e.get("ground_line", 0.0) for e in MANIFEST["props"]}
 
 for p, cx, d, size, lift, flip, bb in STANDING:
     L.append(place(p, cx=cx, d=d, size=size, lift=lift, base=BASE.get(p, 0.0),
@@ -137,7 +140,7 @@ out = {
     "name": "graveyard",
     "meta": {"source": "backdrop.graveyard.spooky.fun.png", "built_by": "gy/arrange.py", "fog": FOG},
     "floorY": FLOOR_Y, "lens": LENS,
-    "cam": {"x": 1.1, "y": 0.30, "z": 1.4, "yaw": 20, "pitch": 9},
+    "cam": {"x": 16.0, "y": 1.1, "z": 26.0, "yaw": 175, "pitch": 55},
     "layers": L,
 }
 os.makedirs(SCENES, exist_ok=True)

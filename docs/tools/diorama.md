@@ -120,3 +120,28 @@ resurrect — the library went ~21M → ~1.5M (~93% smaller). Needs ImageMagick 
 
 ---
 Related: [prop](prop.md) · [strip](strip.md) · [base & decorate](base-and-decorate.md) · [world](../world.md)
+
+## The camera box: drift vs walk
+
+`cam: {x, y, z, yaw, pitch}` is a half-extent box in metres plus look limits in degrees. It means
+different things in the two modes, which is easy to miss:
+
+- **Drift** (default) uses only `x` and `y`, and clamps them to 1.2 / 0.6 regardless of what the
+  scene says. Widening the box does not make the idle parallax swing further.
+- **Walk** (`P`) uses the box as hard movement bounds and `yaw`/`pitch` as look limits.
+
+So a scene tuned for a gentle drift — the graveyard started at `1.1 x 0.30 x 1.4`, 20° of yaw —
+is not walkable, and opening it up costs the drift nothing. The graveyard now runs
+`16 x 1.1 x 26`, 175° yaw, 55° pitch.
+
+Two things to check when you make a scene walkable:
+
+- **Extend the floor behind the origin.** A ground plane that starts a couple of metres in front of
+  the camera is fine for drift and runs out from under you the moment you walk backwards. The
+  graveyard's floor spans `+30 m` to `−98 m`.
+- **There is nothing behind you.** The backdrop is a single card in front; at high `yaw` limits,
+  turning round shows the fog colour over ground. Acceptable as haze, but if a scene wants a full
+  turn it needs a second plate or a cylinder.
+
+Still missing: collision (you walk through headstones), and the floor is a single flat plane, so
+a scene whose ground climbs — as the source graveyard's does — loses its hill.
