@@ -29,7 +29,8 @@ stage.appendChild(rend.domElement);
 const loader = new THREE.TextureLoader();
 const art = src => { const t = loader.load(src); t.colorSpace = THREE.SRGBColorSpace; return t; };
 
-// The scene model — this object IS the exported file. layer: {src,w,h, x,y,z, scale, horizon, shadow, meta}
+// The scene model — this object IS the exported file.
+// layer: {src,w,h, x,y,z, scale, horizon, shadow, billboard, flipX, meta}
 const S = {
   name: "untitled", meta: {}, floorY: -1.6, lens: 62,
   cam: { x: 1.2, y: 0.35, z: 1.5, yaw: 22, pitch: 10 },
@@ -62,7 +63,7 @@ function rebuild() {
   for (const L of S.layers) { L.m = null; L.sh = null; }
   for (const L of S.layers) {
     L.m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
-      new THREE.MeshBasicMaterial({ map: art(L.src), transparent: true, alphaTest: 0.04, depthWrite: false }));
+      new THREE.MeshBasicMaterial({ map: art(L.src), transparent: true, alphaTest: 0.04, depthWrite: false, side: THREE.DoubleSide, fog: !L.meta?.nofog }));
     box.add(L.m);
     if (L.shadow) {
       L.sh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
@@ -72,16 +73,38 @@ function rebuild() {
   }
   layout(); listLayers();
 }
+// Billboarding — a layer may TURN to face the camera, clamped to ±`billboard` degrees. The cards are
+// flat, so a subject that reads wrong in profile (a crow, a gargoyle, a roughly symmetric shrub) can
+// keep looking at the viewer through the drift. 0 = a fixed pane, the original behaviour. The ground
+// shadow never turns — it stays a flat smudge under the card.
+// Depth haze — see the note in diorama-player.js. Driven by scene meta.fog = {color, density}.
+function applyFog(f) {
+  if (!f) { scene.fog = null; return; }
+  const c = new THREE.Color(f.color ?? 0x2d3750);
+  scene.fog = new THREE.FogExp2(c, f.density ?? 0.012);
+  scene.background = c;
+}
+
+function faceCamera() {
+  for (const L of S.layers) {
+    if (!L.m) continue;
+    const lim = (L.billboard || 0) * Math.PI / 180;
+    if (lim <= 0) { L.m.rotation.y = 0; continue; }
+    const want = Math.atan2(cam.position.x - L.m.position.x, cam.position.z - L.m.position.z);
+    L.m.rotation.y = clamp(want, -lim, lim);
+  }
+}
+
 function layout() {
   for (const L of S.layers) {
     if (!L.m) continue;
     const h = L.scale, w = h * L.w / L.h;
-    L.m.scale.set(w, h, 1); L.m.position.set(L.x, L.y, L.z);
+    L.m.scale.set(L.flipX ? -w : w, h, 1); L.m.position.set(L.x, L.y, L.z);
     if (L.sh) { L.sh.scale.set(w * 1.45, h * 0.15, 1); L.sh.position.set(L.x, L.y - h / 2 + h * 0.015, L.z - 0.02); }
   }
   floorGrid.position.set(0, S.floorY, -14);
   camBox.scale.set(Math.max(0.02, S.cam.x * 2), Math.max(0.02, S.cam.y * 2), Math.max(0.02, S.cam.z * 2));
-  if (sel >= 0 && S.layers[sel]?.m) { const m = S.layers[sel].m; sels.visible = !playing; sels.scale.copy(m.scale); sels.position.copy(m.position); }
+  if (sel >= 0 && S.layers[sel]?.m) { const m = S.layers[sel].m; sels.visible = !playing; sels.scale.set(Math.abs(m.scale.x), m.scale.y, 1); sels.position.copy(m.position); }
   else sels.visible = false;
 }
 function resize() {
@@ -114,7 +137,7 @@ function addLayer(src) {
   const a = MANIFEST.find(x => x.src === src); if (!a) return;
   const z = a.cut ? -6 : -16;
   const scale = a.cut ? 1.6 : viewAt(-z).h * 1.25;
-  const L = { src, w: a.w, h: a.h, x: 0, y: (a.cut ? S.floorY + scale / 2 : 0), z, scale, horizon: 0.5, shadow: !!a.cut, meta: {} };
+  const L = { src, w: a.w, h: a.h, x: 0, y: (a.cut ? S.floorY + scale / 2 : 0), z, scale, horizon: 0.5, shadow: !!a.cut, billboard: 0, flipX: false, meta: {} };
   S.layers.push(L); S.layers.sort((p, q) => p.z - q.z);
   sel = S.layers.indexOf(L); rebuild(); showSel();
 }
@@ -143,12 +166,17 @@ function showSel() {
     <div class="row"><label>scale</label><input type="range" id="ps" min="0.05" max="80" step="0.05" value="${L.scale}"><span class="val">${L.scale.toFixed(2)}</span></div>
     <div class="row"><label>horizon</label><input type="range" id="ph" min="0" max="1" step="0.005" value="${L.horizon}"><span class="val">${L.horizon.toFixed(3)}</span></div>
     <div class="row"><label>shadow</label><input type="checkbox" id="psh" ${L.shadow ? "checked" : ""}></div>
+    <div class="row"><label title="mirror the card horizontally — reuse one prop on both sides">mirror</label><input type="checkbox" id="pfx" ${L.flipX ? "checked" : ""}></div>
+    <div class="row"><label title="0 = fixed pane. Above 0, the card turns to face the camera, clamped to this many degrees.">face cam</label><input type="range" id="pb" min="0" max="90" step="1" value="${L.billboard || 0}"><span class="val">${(L.billboard || 0).toFixed(0)}°</span></div>
     <div class="two"><button id="palign" title="set y so this image's horizon sits on the line of sight">Align horizon</button>
                      <button id="pfloor" title="set y so this sits on the floor line">Drop to floor</button></div>
     <div class="two"><button id="pdel">Delete</button></div>`;
   const bind = (id, f) => { const el = $(id); if (el) el.oninput = () => { f(parseFloat(el.value)); el.nextElementSibling.textContent = parseFloat(el.value).toFixed(id === "ph" ? 3 : 2); layout(); listLayers(); }; };
   bind("px", v => L.x = v); bind("py", v => L.y = v); bind("pz", v => L.z = v); bind("ps", v => L.scale = v); bind("ph", v => L.horizon = v);
+  const pb = $("pb");
+  if (pb) pb.oninput = () => { L.billboard = parseFloat(pb.value); pb.nextElementSibling.textContent = L.billboard.toFixed(0) + "°"; layout(); };
   $("psh").onchange = e => { L.shadow = e.target.checked; rebuild(); showSel(); };
+  $("pfx").onchange = e => { L.flipX = e.target.checked; layout(); };
   $("palign").onclick = () => { L.y = L.scale * (L.horizon - 0.5); showSel(); };
   $("pfloor").onclick = () => { L.y = S.floorY + L.scale / 2; showSel(); };
   $("pdel").onclick = () => { S.layers.splice(sel, 1); sel = -1; rebuild(); showSel(); };
@@ -239,15 +267,16 @@ function serializeScene() {
     name: S.name, meta: S.meta, floorY: S.floorY, lens: S.lens, cam: S.cam,
     layers: S.layers.map(L => ({
       src: L.src, w: L.w, h: L.h, x: +L.x.toFixed(3), y: +L.y.toFixed(3), z: +L.z.toFixed(3),
-      scale: +L.scale.toFixed(3), horizon: +(L.horizon ?? 0.5).toFixed(3), shadow: !!L.shadow, meta: L.meta || {}
+      scale: +L.scale.toFixed(3), horizon: +(L.horizon ?? 0.5).toFixed(3), shadow: !!L.shadow,
+      billboard: +(L.billboard || 0).toFixed(1), flipX: !!L.flipX, meta: L.meta || {}
     }))
   };
 }
 function applyScene(j) {
   S.name = j.name || "untitled"; S.meta = j.meta || {}; S.floorY = j.floorY ?? -1.6; S.lens = j.lens || 62;
   S.cam = Object.assign({ x: 1.2, y: 0.35, z: 1.5, yaw: 22, pitch: 10 }, j.cam || {});
-  S.layers = (j.layers || []).map(L => ({ x: 0, y: 0, z: -6, scale: 1.6, horizon: 0.5, shadow: false, meta: {}, ...L }));
-  $("name").value = S.name; HFOV = S.lens * Math.PI / 180;
+  S.layers = (j.layers || []).map(L => ({ x: 0, y: 0, z: -6, scale: 1.6, horizon: 0.5, shadow: false, billboard: 0, flipX: false, meta: {}, ...L }));
+  $("name").value = S.name; HFOV = S.lens * Math.PI / 180; applyFog(S.meta?.fog);
   const map = { floor: S.floorY, lens: S.lens, cx: S.cam.x, cy: S.cam.y, cz: S.cam.z, cyaw: S.cam.yaw, cpit: S.cam.pitch };
   for (const id in map) { $(id).value = map[id]; $(id + "V").textContent = (id === "lens" || id === "cyaw" || id === "cpit") ? Math.round(map[id]) + "°" : (+map[id]).toFixed(2); }
   sel = -1; resize(); rebuild(); showSel();
@@ -322,6 +351,7 @@ function tick(now) {
     cam.position.set(clamp(x, -S.cam.x, S.cam.x), clamp(y, -S.cam.y, S.cam.y), clamp(z, -S.cam.z, S.cam.z));
     cam.rotation.set(PITCH, YAW, Math.sin(t * 0.37) * 0.005);
   }
+  faceCamera();
   rend.render(scene, cam);
 }
 resize(); requestAnimationFrame(tick);

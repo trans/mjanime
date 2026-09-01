@@ -37,18 +37,42 @@ let sway = true;                  // gentle ambient motion unless the scene disa
 function build() {
   for (const L of S.layers) {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
-      new THREE.MeshBasicMaterial({ map: art(L.src), transparent: true, alphaTest: 0.04, depthWrite: false }));
+      new THREE.MeshBasicMaterial({ map: art(L.src), transparent: true, alphaTest: 0.04, depthWrite: false, side: THREE.DoubleSide, fog: !L.meta?.nofog }));
     const h = L.scale, w = h * L.w / L.h;
-    m.scale.set(w, h, 1); m.position.set(L.x, L.y, L.z);
-    box.add(m);
+    m.scale.set(L.flipX ? -w : w, h, 1); m.position.set(L.x, L.y, L.z);
+    L.m = m; box.add(m);
     if (L.shadow) {
       const sh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
         new THREE.MeshBasicMaterial({ map: SHADOW_TEX, transparent: true, depthWrite: false, opacity: 0.85 }));
       sh.scale.set(w * 1.45, h * 0.15, 1); sh.position.set(L.x, L.y - h / 2 + h * 0.015, L.z - 0.02);
-      box.add(sh);
+      L.sh = sh; box.add(sh);
     }
   }
 }
+// Billboarding — a layer may TURN to face the camera, clamped to ±`billboard` degrees. The cards are
+// flat, so a subject that reads wrong in profile (a crow, a gargoyle, a roughly symmetric shrub) can
+// keep looking at the viewer through the drift. 0 / absent = a fixed pane, the original behaviour.
+// The ground shadow never turns — it stays a flat smudge under the card.
+function faceCamera() {
+  for (const L of S.layers) {
+    if (!L.m) continue;
+    const lim = (L.billboard || 0) * Math.PI / 180;
+    if (lim <= 0) { L.m.rotation.y = 0; continue; }
+    const want = Math.atan2(cam.position.x - L.m.position.x, cam.position.z - L.m.position.z);
+    L.m.rotation.y = clamp(want, -lim, lim);
+  }
+}
+
+// Depth haze. Aerial perspective is what makes a stack of equally-crisp cards read as distance, so
+// a scene may carry meta.fog = {color, density} and the far layers fade into the backdrop's own
+// horizon colour. The backdrop plate itself opts out with meta.nofog, or it would fog to a flat wash.
+function applyFog(f) {
+  if (!f) { scene.fog = null; return; }
+  const c = new THREE.Color(f.color ?? 0x2d3750);
+  scene.fog = new THREE.FogExp2(c, f.density ?? 0.012);
+  scene.background = c;
+}
+
 function refit() {
   cam.aspect = innerWidth / innerHeight;
   cam.fov = 2 * Math.atan(Math.tan(HFOV / 2) / cam.aspect) * 180 / Math.PI;
@@ -111,6 +135,7 @@ function step(now) {
     cam.rotation.z = sway ? Math.sin(t * 0.37) * 0.005 : 0;
     cam.lookAt(0, 0, -15);
   }
+  faceCamera();
   rend.render(scene, cam);
 }
 
@@ -125,6 +150,7 @@ fetch("/diorama/scenes/" + encodeURIComponent(sceneName))
     HFOV = (S.lens || 62) * Math.PI / 180;
     DX = clamp(S.cam.x, 0.1, 1.2); DY = clamp(S.cam.y, 0.05, 0.6);
     sway = S.meta?.ambientSway !== false;                 // on unless the scene opts out
+    applyFog(S.meta?.fog);
     document.title = "Diorama — " + (S.name || sceneName);
     build(); refit(); requestAnimationFrame(step);
   })

@@ -25,6 +25,35 @@ editor's own export shape, self-describing, with an open `meta:{}` on scenes and
 format). `SceneLibrary.safe_name` sanitises names so a scene can't escape the library root; the
 `/lib/…` routes use a `within?` path-traversal guard.
 
+### Layer fields
+
+```json
+{ "src": "/lib/props/grave-crow", "w": 1024, "h": 1024,
+  "x": 1.4, "y": 0.0, "z": -2.5, "scale": 1.1,
+  "horizon": 0.5, "shadow": false, "billboard": 80, "flipX": false, "meta": {} }
+```
+
+`scale` is the **image** height in world units (width follows from `w/h`), so a prop with
+transparent padding needs `scale` scaled up by `img_h / content_h` for its *content* to come out
+the size you meant. `z` is real depth, so a 1.1 m headstone stays `scale: 1.1` at every distance —
+the camera does the shrinking.
+
+| Field | Effect |
+| --- | --- |
+| `billboard` | Degrees the card may **turn to face the camera**, clamped to ±this. `0` (default) = a fixed pane. Cards are flat, so a subject that reads wrong in profile — a crow, a gargoyle, a roughly symmetric shrub — can keep looking at the viewer through the drift. Architecture should stay at 0. |
+| `flipX` | Mirror the card horizontally, so **one prop serves both sides** of a symmetric composition (left and right gate piers, framing trees). Materials render `DoubleSide` so a mirrored or turned card never culls. |
+
+Turning a card toward the camera makes its projection **wider**, not narrower — the far edge swings
+nearer and wins the perspective divide. Measured on one card at 29°: 198px → 210px.
+
+### Depth haze
+
+A scene may carry `meta.fog = {color, density}` (three.js `FogExp2`). Without it a stack of
+equally-crisp cards reads as flat no matter how the depths are set — aerial perspective is most of
+what says *distance*. Set `color` to the **backdrop's own horizon colour** and the far layers fade
+into the plate instead of stopping against it. The backdrop opts out with layer `meta.nofog`, or it
+fogs to a flat wash of its own colour. `density: 0.0135` puts ~33% haze at 46 m and ~75% at 86 m.
+
 Status: P0–P5 built and pushed — generate → compose → play works end-to-end. Plan + status:
 `notes/diorama-plan.md`. (Was named "Shadowbox"; renamed to Diorama — `/shadowbox` now 404s.)
 
