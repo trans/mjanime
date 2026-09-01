@@ -231,9 +231,11 @@ far more cheaply and precisely than reading screenshots.
 
 ### Turning
 
-`cam.yaw` is a limit in degrees, but **>= 360 means unlimited** — keep turning in either direction
-forever, no clamp. Anything less clamps, which is right for a fixed viewpoint and wrong for a
-circuit.
+**Walk mode has no yaw limit.** Turn as far as you like, either direction, forever. `cam.yaw` was
+only ever meant to bound the look-around from a fixed viewpoint, and applying it to a walkthrough
+produced a cap no 3D walkthrough has. A scene that genuinely wants one asks with `cam.yawLimit`
+(degrees); nothing sets it. Pitch still clamps — to `cam.pitch`, itself capped at 85 degrees, or you
+tumble over the top.
 
 If the viewer circles without ever losing sight of the subject, the imposter holds a stale bearing
 rather than popping. That is the intended trade. Scene `meta.imposterAlways` swaps on sight and

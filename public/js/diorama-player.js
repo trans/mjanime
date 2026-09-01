@@ -249,10 +249,17 @@ const kk = k => keys.has(k) ? 1 : 0;
 addEventListener("mousemove", e => {
   if (playing) {
     if (document.pointerLockElement !== rend.domElement) return;
-    // yaw >= 360 means UNLIMITED: keep turning as far as you like, in either direction, forever.
+    // Yaw is UNLIMITED in walk mode -- turn as far as you like, either way, forever. No 3D
+    // walkthrough caps how far you can spin, and `cam.yaw` was only ever meant to bound the
+    // look-around from a fixed viewpoint. A scene has to ask for a limit now (cam.yawLimit).
     YAW -= e.movementX * 0.0022;
-    if (S.cam.yaw < 360) YAW = clamp(YAW, -S.cam.yaw * Math.PI / 180, S.cam.yaw * Math.PI / 180);
-    PITCH = clamp(PITCH - e.movementY * 0.0022, -S.cam.pitch * Math.PI / 180, S.cam.pitch * Math.PI / 180);
+    if (S.cam.yawLimit > 0) {
+      const ly = S.cam.yawLimit * Math.PI / 180;
+      YAW = clamp(YAW, -ly, ly);
+    }
+    // Pitch still clamps, or you tumble over the top.
+    const lp = Math.min(S.cam.pitch ?? 85, 85) * Math.PI / 180;
+    PITCH = clamp(PITCH - e.movementY * 0.0022, -lp, lp);
   } else {
     tx = (e.clientX / innerWidth - 0.5) * 2;
     ty = -(e.clientY / innerHeight - 0.5) * 2;
