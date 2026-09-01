@@ -19,7 +19,15 @@ rend.setPixelRatio(Math.min(devicePixelRatio, 2));
 stage.appendChild(rend.domElement);
 
 const loader = new THREE.TextureLoader();
-const art = src => { const t = loader.load(src); t.colorSpace = THREE.SRGBColorSpace; return t; };
+// Anisotropy is not optional for a floor: a ground plane is viewed at grazing incidence, where
+// plain mipmapping collapses the texture into a smooth smear a few metres out.
+const MAXANISO = rend.capabilities.getMaxAnisotropy();
+const art = src => {
+  const t = loader.load(src);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = MAXANISO;
+  return t;
+};
 
 const SHADOW_TEX = (() => {
   const c = document.createElement("canvas"); c.width = c.height = 128; const g = c.getContext("2d");
@@ -34,12 +42,31 @@ let S = { floorY: -1.6, lens: 62, cam: { x: 1.2, y: 0.35, z: 1.5, yaw: 22, pitch
 let DX = 0.5, DY = 0.22;          // drift amplitude, derived from the camera box
 let sway = true;                  // gentle ambient motion unless the scene disables it
 
+// A layer is normally sized by `scale` (the image height in world units) with the width following
+// from the image aspect. A tiled floor can't work that way -- its world size and its texture aspect
+// are unrelated -- so `size: [w, d]` overrides both, and `repeat: [u, v]` tiles the texture across
+// it. Near ground needs ~200 px/m of detail; one stretched image can never supply that, a repeated
+// one can.
+function planeSize(L) {
+  if (L.size) return [L.size[0], L.size[1]];
+  const h = L.scale;
+  return [h * L.w / L.h, h];
+}
+function tileTexture(t, L) {
+  if (!L.repeat) return t;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(L.repeat[0], L.repeat[1]);
+  return t;
+}
+
 function build() {
   for (const L of S.layers) {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
-      new THREE.MeshBasicMaterial({ map: art(L.src), transparent: true, alphaTest: 0.04, depthWrite: false, side: THREE.DoubleSide, fog: !L.meta?.nofog }));
-    const h = L.scale, w = h * L.w / L.h;
+      new THREE.MeshBasicMaterial({ map: tileTexture(art(L.src), L), transparent: true, alphaTest: 0.04, depthWrite: false, side: THREE.DoubleSide, fog: !L.meta?.nofog }));
+    const [w, h] = planeSize(L);
     m.scale.set(L.flipX ? -w : w, h, 1); m.position.set(L.x, L.y, L.z);
+    if (L.plane === "floor") m.rotation.x = -Math.PI / 2;   // lay it flat: +Y -> -Z, so scale.y is DEPTH
+    m.renderOrder = L.order || 0;
     L.m = m; box.add(m);
     if (L.shadow) {
       const sh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
@@ -56,6 +83,7 @@ function build() {
 function faceCamera() {
   for (const L of S.layers) {
     if (!L.m) continue;
+    if (L.plane === "floor") continue;                   // a floor never turns
     const lim = (L.billboard || 0) * Math.PI / 180;
     if (lim <= 0) { L.m.rotation.y = 0; continue; }
     const want = Math.atan2(cam.position.x - L.m.position.x, cam.position.z - L.m.position.z);

@@ -27,7 +27,15 @@ rend.setPixelRatio(Math.min(devicePixelRatio, 2));
 stage.appendChild(rend.domElement);
 
 const loader = new THREE.TextureLoader();
-const art = src => { const t = loader.load(src); t.colorSpace = THREE.SRGBColorSpace; return t; };
+// Anisotropy is not optional for a floor: a ground plane is viewed at grazing incidence, where
+// plain mipmapping collapses the texture into a smooth smear a few metres out.
+const MAXANISO = rend.capabilities.getMaxAnisotropy();
+const art = src => {
+  const t = loader.load(src);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = MAXANISO;
+  return t;
+};
 
 // The scene model — this object IS the exported file.
 // layer: {src,w,h, x,y,z, scale, horizon, shadow, billboard, flipX, meta}
@@ -58,12 +66,31 @@ const camBox = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeome
 
 function viewAt(dist) { const h = 2 * dist * Math.tan(cam.fov * Math.PI / 360); return { w: h * cam.aspect, h }; }
 
+// A layer is normally sized by `scale` (the image height in world units) with the width following
+// from the image aspect. A tiled floor can't work that way -- its world size and its texture aspect
+// are unrelated -- so `size: [w, d]` overrides both, and `repeat: [u, v]` tiles the texture across
+// it. Near ground needs ~200 px/m of detail; one stretched image can never supply that, a repeated
+// one can.
+function planeSize(L) {
+  if (L.size) return [L.size[0], L.size[1]];
+  const h = L.scale;
+  return [h * L.w / L.h, h];
+}
+function tileTexture(t, L) {
+  if (!L.repeat) return t;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(L.repeat[0], L.repeat[1]);
+  return t;
+}
+
 function rebuild() {
   while (box.children.length) { const o = box.children[0]; box.remove(o); o.geometry?.dispose?.(); o.material?.dispose?.(); }
   for (const L of S.layers) { L.m = null; L.sh = null; }
   for (const L of S.layers) {
     L.m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
-      new THREE.MeshBasicMaterial({ map: art(L.src), transparent: true, alphaTest: 0.04, depthWrite: false, side: THREE.DoubleSide, fog: !L.meta?.nofog }));
+      new THREE.MeshBasicMaterial({ map: tileTexture(art(L.src), L), transparent: true, alphaTest: 0.04, depthWrite: false, side: THREE.DoubleSide, fog: !L.meta?.nofog }));
+    if (L.plane === "floor") L.m.rotation.x = -Math.PI / 2;
+    L.m.renderOrder = L.order || 0;
     box.add(L.m);
     if (L.shadow) {
       L.sh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
@@ -88,6 +115,7 @@ function applyFog(f) {
 function faceCamera() {
   for (const L of S.layers) {
     if (!L.m) continue;
+    if (L.plane === "floor") continue;
     const lim = (L.billboard || 0) * Math.PI / 180;
     if (lim <= 0) { L.m.rotation.y = 0; continue; }
     const want = Math.atan2(cam.position.x - L.m.position.x, cam.position.z - L.m.position.z);
@@ -98,13 +126,13 @@ function faceCamera() {
 function layout() {
   for (const L of S.layers) {
     if (!L.m) continue;
-    const h = L.scale, w = h * L.w / L.h;
+    const [w, h] = planeSize(L);
     L.m.scale.set(L.flipX ? -w : w, h, 1); L.m.position.set(L.x, L.y, L.z);
     if (L.sh) { L.sh.scale.set(w * 1.45, h * 0.15, 1); L.sh.position.set(L.x, L.y - h / 2 + h * 0.015, L.z - 0.02); }
   }
   floorGrid.position.set(0, S.floorY, -14);
   camBox.scale.set(Math.max(0.02, S.cam.x * 2), Math.max(0.02, S.cam.y * 2), Math.max(0.02, S.cam.z * 2));
-  if (sel >= 0 && S.layers[sel]?.m) { const m = S.layers[sel].m; sels.visible = !playing; sels.scale.set(Math.abs(m.scale.x), m.scale.y, 1); sels.position.copy(m.position); }
+  if (sel >= 0 && S.layers[sel]?.m) { const m = S.layers[sel].m; sels.visible = !playing; sels.scale.set(Math.abs(m.scale.x), m.scale.y, 1); sels.rotation.x = m.rotation.x; sels.position.copy(m.position); }
   else sels.visible = false;
 }
 function resize() {
@@ -268,14 +296,17 @@ function serializeScene() {
     layers: S.layers.map(L => ({
       src: L.src, w: L.w, h: L.h, x: +L.x.toFixed(3), y: +L.y.toFixed(3), z: +L.z.toFixed(3),
       scale: +L.scale.toFixed(3), horizon: +(L.horizon ?? 0.5).toFixed(3), shadow: !!L.shadow,
-      billboard: +(L.billboard || 0).toFixed(1), flipX: !!L.flipX, meta: L.meta || {}
+      billboard: +(L.billboard || 0).toFixed(1), flipX: !!L.flipX,
+      plane: L.plane || "card", order: L.order || 0,
+      ...(L.size ? {size: L.size} : {}), ...(L.repeat ? {repeat: L.repeat} : {}),
+      meta: L.meta || {}
     }))
   };
 }
 function applyScene(j) {
   S.name = j.name || "untitled"; S.meta = j.meta || {}; S.floorY = j.floorY ?? -1.6; S.lens = j.lens || 62;
   S.cam = Object.assign({ x: 1.2, y: 0.35, z: 1.5, yaw: 22, pitch: 10 }, j.cam || {});
-  S.layers = (j.layers || []).map(L => ({ x: 0, y: 0, z: -6, scale: 1.6, horizon: 0.5, shadow: false, billboard: 0, flipX: false, meta: {}, ...L }));
+  S.layers = (j.layers || []).map(L => ({ x: 0, y: 0, z: -6, scale: 1.6, horizon: 0.5, shadow: false, billboard: 0, flipX: false, plane: "card", order: 0, meta: {}, ...L }));
   $("name").value = S.name; HFOV = S.lens * Math.PI / 180; applyFog(S.meta?.fog);
   const map = { floor: S.floorY, lens: S.lens, cx: S.cam.x, cy: S.cam.y, cz: S.cam.z, cyaw: S.cam.yaw, cpit: S.cam.pitch };
   for (const id in map) { $(id).value = map[id]; $(id + "V").textContent = (id === "lens" || id === "cyaw" || id === "cpit") ? Math.round(map[id]) + "°" : (+map[id]).toFixed(2); }
