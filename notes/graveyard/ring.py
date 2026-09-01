@@ -16,7 +16,7 @@ from scene import place_at, imposter_at, polar, frame, FLOOR_Y, LENS, SCENES
 
 CX, CZ = 0.0, -22.0      # the hill
 R = 22.0                 # path radius -- the camera starts at world origin, on the ring at bearing 0
-HOUSE_H = 12.0
+HOUSE_H = 10.0           # must be shorter than the occluding wood, or the roof always shows
 
 HOUSE = [f"hill-house-{a}" for a in ("000", "045", "090", "135", "180", "225", "270", "315")]
 
@@ -74,14 +74,22 @@ L.append(imposter_at(HOUSE, x=CX, z=CZ, size=HOUSE_H, base=0.0, order=0))
 
 # ── the inner wood: these are the OCCLUDERS that hide the swap ──────────────────────────────────
 # Spread around the circuit so that wherever you walk, the hill goes behind timber every so often.
-INNER = [(35, 15.0, 8.5), (62, 13.5, 9.5), (88, 15.5, 8.0), (115, 13.0, 9.0),
-         (142, 15.0, 8.8), (168, 13.5, 9.4), (196, 15.5, 8.2), (222, 13.0, 9.6),
-         (250, 15.0, 8.6), (278, 13.5, 9.1), (305, 15.5, 8.4), (332, 13.0, 9.3),
-         (48, 11.5, 7.4), (128, 11.0, 7.8), (208, 11.5, 7.2), (288, 11.0, 7.6)]
+# Walker is pinned to r=22 +/- 2.5, so these sit 5.5-7 m away and each subtends ~30 deg -- about
+# what the 10 m house subtends at 22 m. Just enough to cover it, with real gaps to glimpse through.
+# Taller than the house on purpose: a tree the house out-tops hides nothing.
+INNER = [(28, 16.0, 15.5), (58, 15.5, 14.5), (88, 16.5, 16.0), (118, 15.5, 15.0),
+         (150, 16.0, 16.5), (180, 15.5, 14.8), (208, 16.5, 15.6), (238, 15.5, 16.2),
+         (268, 16.0, 15.0), (298, 15.5, 16.4), (328, 16.5, 14.6),
+         (44, 11.5, 9.4), (134, 11.0, 9.8), (222, 11.5, 9.2), (312, 11.0, 9.6)]
 for i, (bearing, r, h) in enumerate(INNER):
     x, z = polar(CX, CZ, bearing, r)
-    L.append(place_at("grave-frametree", x=x, z=z, size=h,
-                      flip=(i % 2 == 1), occluder=True))
+    # a clump, not a lone trunk: three abreast so the screen is wider than the house's silhouette
+    for j, (db, dr) in enumerate(((-6.5, 0.8), (0.0, 0.0), (6.5, -0.8))):
+        cx2, cz2 = polar(CX, CZ, bearing + db, r + dr)
+        L.append(place_at("grave-conifer", x=cx2, z=cz2, size=h - abs(db) * 0.12,
+                          flip=(j % 2 == 1), occluder=True))
+    x2, z2 = polar(CX, CZ, bearing + 3.0, r - 1.6)
+    L.append(place_at("grave-frametree", x=x2, z=z2, size=h * 0.62, flip=(i % 2 == 1)))
 
 # ── the outer wood: depth and enclosure, no occlusion duty ──────────────────────────────────────
 OUTER = [(b, 28 + (i % 3) * 5, 9.0 + (i % 4) * 0.9) for i, b in enumerate(range(0, 360, 15))]
@@ -149,7 +157,10 @@ out = {
              "fog": {"color": "#2f3854", "density": 0.0115}},
     "floorY": FLOOR_Y, "lens": LENS,
     # a full circuit needs a full turn; the box has to contain the whole ring, not a drift pocket
-    "cam": {"x": 30.0, "y": 1.1, "z": 50.0, "yaw": 180, "pitch": 55},
+    "cam": {"x": 30.0, "y": 1.1, "z": 50.0, "yaw": 999, "pitch": 55,
+            # yaw >= 360 = spin freely, forever. `ring` pins the walker to the path corridor,
+            # which is what makes a tree of known size reliably cover the hill.
+            "ring": {"x": CX, "z": CZ, "r": R, "w": 5.0}},
     "layers": L,
 }
 os.makedirs(SCENES, exist_ok=True)

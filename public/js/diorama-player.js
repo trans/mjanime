@@ -136,13 +136,17 @@ function bearingIndex(L, camera) {
   return ((Math.round(a / (2 * Math.PI / n)) % n) + n) % n;
 }
 
-function hidden(L, camera) {
-  IMP_V.set(L.x, L.y, L.z);
-  // off the edge of the screen counts as hidden -- also an invisible moment to swap in
-  const ndc = IMP_V.clone().project(camera);
-  if (ndc.z > 1 || Math.abs(ndc.x) > 1.15 || Math.abs(ndc.y) > 1.15) return true;
+// Sampled across the subject's silhouette, not at its centre. One trunk in front of the middle of
+// a wide house still leaves both flanks in view, and swapping then is exactly the pop this is meant
+// to avoid -- so EVERY sample must be covered before the swap is allowed.
+const IMP_SAMPLES = [[0, 0], [-0.45, 0], [0.45, 0], [0, 0.35], [-0.3, 0.3], [0.3, 0.3]];
+const IMP_RIGHT = new THREE.Vector3(), IMP_UP = new THREE.Vector3(0, 1, 0), IMP_P = new THREE.Vector3();
+
+function covered(p, camera) {
+  const ndc = IMP_P.copy(p).project(camera);
+  if (ndc.z > 1 || Math.abs(ndc.x) > 1.05 || Math.abs(ndc.y) > 1.05) return true;   // off-screen
   if (!OCCLUDERS.length) return false;
-  const dir = IMP_V.clone().sub(camera.position);
+  const dir = p.clone().sub(camera.position);
   const dist = dir.length();
   IMP_RAY.set(camera.position, dir.normalize());
   IMP_RAY.far = dist;
@@ -154,12 +158,25 @@ function hidden(L, camera) {
   return false;
 }
 
+function hidden(L, camera) {
+  const h = L.scale, w = h * L.w / L.h;
+  // the card faces the viewer, so its horizontal axis is the camera's right vector
+  IMP_RIGHT.set(camera.position.z - L.z, 0, -(camera.position.x - L.x)).normalize();
+  for (const [u, v] of IMP_SAMPLES) {
+    IMP_V.set(L.x + IMP_RIGHT.x * u * w, L.y + v * h, L.z + IMP_RIGHT.z * u * w);
+    if (!covered(IMP_V, camera)) return false;
+  }
+  return true;
+}
+
 function stepImposters(camera) {
   if (S.meta?.imposterLog && !window.__imp) window.__imp = () => ({
     cam: [+camera.position.x.toFixed(2), +camera.position.z.toFixed(2)],
     layers: S.layers.filter(l => l.plane === "imposter").map(l => ({
-      shown: l._shown, want: bearingIndex(l, camera), tex: l._tex ? l._tex.length : 0,
-      mesh: !!l.m, xz: [l.x, l.z], hidden: hidden(l, camera), occ: OCCLUDERS.length })),
+      shown: l._shown, want: bearingIndex(l, camera), hidden: hidden(l, camera),
+      onScreen: (() => { const n = IMP_P.set(l.x, l.y, l.z).project(camera);
+                         return n.z <= 1 && Math.abs(n.x) <= 1.05 && Math.abs(n.y) <= 1.05; })(),
+      occ: OCCLUDERS.length })),
   });
   for (const L of S.layers) {
     if (L.plane !== "imposter" || !L.m) continue;
@@ -217,7 +234,9 @@ const kk = k => keys.has(k) ? 1 : 0;
 addEventListener("mousemove", e => {
   if (playing) {
     if (document.pointerLockElement !== rend.domElement) return;
-    YAW = clamp(YAW - e.movementX * 0.0022, -S.cam.yaw * Math.PI / 180, S.cam.yaw * Math.PI / 180);
+    // yaw >= 360 means UNLIMITED: keep turning as far as you like, in either direction, forever.
+    YAW -= e.movementX * 0.0022;
+    if (S.cam.yaw < 360) YAW = clamp(YAW, -S.cam.yaw * Math.PI / 180, S.cam.yaw * Math.PI / 180);
     PITCH = clamp(PITCH - e.movementY * 0.0022, -S.cam.pitch * Math.PI / 180, S.cam.pitch * Math.PI / 180);
   } else {
     tx = (e.clientX / innerWidth - 0.5) * 2;
@@ -238,6 +257,20 @@ addEventListener("keydown", e => {
 });
 addEventListener("keyup", e => keys.delete(e.key.toLowerCase()));
 
+// Keeping the walker ON the path is not a nicety -- it is what makes occlusion tractable. Free
+// roaming means the subject can be viewed from any distance and any angle, so no amount of scenery
+// reliably hides it. Pinned to a corridor of known radius, a tree of known size covers a known
+// angle, and the imposter's swap can be relied on.
+function confine(x, z) {
+  const r = S.cam?.ring;
+  if (!r) return [x, z];
+  const dx = x - r.x, dz = z - r.z;
+  const d = Math.hypot(dx, dz) || 1e-6;
+  const lo = r.r - r.w / 2, hi = r.r + r.w / 2;
+  const k = d < lo ? lo / d : d > hi ? hi / d : 1;
+  return k === 1 ? [x, z] : [r.x + dx * k, r.z + dz * k];
+}
+
 const WALK = 2.4, RISE = 1.2;
 let last = performance.now();
 function step(now) {
@@ -249,9 +282,10 @@ function step(now) {
     const u = kk("r") - kk("f");
     const sp = kk("shift") ? 0.35 : 1;
     const sn = Math.sin(YAW), cs = Math.cos(YAW);
-    const x = cam.position.x + (-f * sn + s * cs) * WALK * sp * dt;
-    const z = cam.position.z + (-f * cs - s * sn) * WALK * sp * dt;
+    let x = cam.position.x + (-f * sn + s * cs) * WALK * sp * dt;
+    let z = cam.position.z + (-f * cs - s * sn) * WALK * sp * dt;
     const y = cam.position.y + u * RISE * sp * dt;
+    [x, z] = confine(x, z);
     cam.position.set(clamp(x, -S.cam.x, S.cam.x), clamp(y, -S.cam.y, S.cam.y), clamp(z, -S.cam.z, S.cam.z));
     cam.rotation.set(PITCH, YAW, sway ? Math.sin(t * 0.37) * 0.005 : 0);
   } else {

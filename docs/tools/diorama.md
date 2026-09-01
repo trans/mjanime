@@ -181,6 +181,35 @@ Two things this needs to work:
   `notes/graveyard/normalize.py` scales every frame to a common content height and pins every
   content bottom to the same row. Width is left alone — a side elevation really is wider.
 
+### What the occlusion test actually requires
+
+Three things, learned the hard way:
+
+**Sample the silhouette, not the centre.** One trunk in front of the middle of a wide house leaves
+both flanks in view; swapping then is exactly the pop this mechanism exists to avoid. Six points
+are tested across the subject's width and height, and *every* one must be covered.
+
+**A bare tree hides nothing.** The framing tree is 36% opaque inside its own bounding box — a wide
+box around a thin trunk — so rays pass straight through the gaps and the test correctly refuses.
+Occlusion duty belongs to dense foliage. The ring's occluders are conifer clumps, three abreast, so
+the screen is wider than the house's silhouette; the bare trees stay for character and are not
+flagged.
+
+**Confine the walker.** This is what makes the rest tractable. Free roaming means the subject can be
+viewed from any distance and any angle, so no amount of scenery reliably hides it. `cam.ring =
+{x, z, r, w}` pins the walker to a corridor of known radius — then a tree of known size covers a
+known angle. The graveyard's corridor is 22 m ± 2.5 m, and at that radius a 10 m house subtends
+~26 deg while a clump 6 m away subtends far more.
+
+Measured on the finished scene: a clump on the sightline reports `hidden` with the house still
+on-screen; a lone bare trunk in the same spot correctly reports *not* hidden.
+
+### Turning
+
+`cam.yaw` is a limit in degrees, but **>= 360 means unlimited** — keep turning in either direction
+forever, no clamp. Anything less clamps, which is right for a fixed viewpoint and wrong for a
+circuit.
+
 If the viewer circles without ever losing sight of the subject, the imposter holds a stale bearing
 rather than popping. That is the intended trade. Scene `meta.imposterAlways` swaps on sight and
 `meta.imposterLog` narrates, both for debugging; with `imposterLog` on, `window.__imp()` reports
