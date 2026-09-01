@@ -241,3 +241,36 @@ If the viewer circles without ever losing sight of the subject, the imposter hol
 rather than popping. That is the intended trade. Scene `meta.imposterAlways` swaps on sight and
 `meta.imposterLog` narrates, both for debugging; with `imposterLog` on, `window.__imp()` reports
 each imposter's shown/wanted bearing and whether it is currently hidden.
+
+## Sky: a dome, not a ring of cards
+
+A wrap-around sky wants `plane: "sky"` — one inside-out sphere, not backdrop cards arranged in a
+circle. Cards fail twice over: they are **chords**, so they stop abutting the moment the camera
+leaves the centre and gaps open at the joins; and no card is tall enough once the viewer can pitch
+up 70 degrees. Both vanish with a sphere.
+
+```json
+{ "plane": "sky", "order": -10, "radius": 420,
+  "src": "/lib/backdrops/grave-sky.png", "w": 1376, "h": 768,
+  "repeat": [4, 1], "horizon": 0.4792, "x": 0, "y": 0, "z": -85 }
+```
+
+`repeat[0]` is how many times the plate wraps. The tiling uses **`MirroredRepeatWrapping`** — every
+other copy is flipped, so each repeat joins its neighbour edge-to-edge and there is no seam to hide.
+
+Two things the code derives rather than trusting:
+
+- **Vertical repeat.** Wrapping N times covers `360/N` degrees of azimuth with the image's *width*,
+  while v still spans a full 180 degrees of latitude. Left at 1, the sky stretches vertically by
+  `2N·h/w` — 3.6× at N=4, which turns a painted treeline into a mountain range. It is computed as
+  `rx · w / (2h)`, and the band clamps above and below.
+- **Horizon placement.** `horizon` (the plate's own painted horizon, as a fraction from the top)
+  lands on the sphere's equator via `offset.y = (1 - horizon) - ry/2`. Measure it per plate; do not
+  reuse a figure from a different render.
+
+Pull the moon out of the plate into its own billboarded card. Mirrored tiling would flip it, and
+repeating the plate would hang one moon in every copy.
+
+**The camera's far plane must clear the dome.** It was 400 m, which silently clipped both a 420 m
+sky and the far corners of a large ground plane — the symptom is flat background colour where the
+sky should be. Now 6000.

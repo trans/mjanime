@@ -20,7 +20,7 @@ document.body.style.overflow = "hidden";
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x07060a);
 const box = new THREE.Group(); scene.add(box);
 let HFOV = 62 * Math.PI / 180;
-const cam = new THREE.PerspectiveCamera(50, 1, 0.05, 400);
+const cam = new THREE.PerspectiveCamera(50, 1, 0.05, 6000);
 cam.rotation.order = "YXZ";
 const rend = new THREE.WebGLRenderer({ antialias: true });
 rend.setPixelRatio(Math.min(devicePixelRatio, 2));

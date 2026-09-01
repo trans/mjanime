@@ -12,7 +12,7 @@ const sceneName = decodeURIComponent((location.pathname.split("/").filter(Boolea
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x07060a);
 const box = new THREE.Group(); scene.add(box);
 let HFOV = 62 * Math.PI / 180;
-const cam = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.05, 400);
+const cam = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.05, 6000);
 cam.rotation.order = "YXZ";
 const rend = new THREE.WebGLRenderer({ antialias: true });
 rend.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -70,8 +70,34 @@ function layerTexture(L) {
   return tileTexture(art(L.src), L);
 }
 
+// A wrap-around sky wants to be a DOME, not a ring of cards. Chord segments stop abutting the
+// moment the camera leaves the centre, and no card is tall enough once you can pitch up 70 deg.
+// One inside-out sphere solves both, and three.js has the flip-flop tiling built in:
+// MirroredRepeatWrapping alternates the image, so every repeat joins its neighbour edge-to-edge.
+function buildSky(L) {
+  const t = art(L.src);
+  t.wrapS = THREE.MirroredRepeatWrapping;
+  t.wrapT = THREE.ClampToEdgeWrapping;
+  // Wrapping N times covers 360/N degrees of azimuth with the image's WIDTH, but v still spans a
+  // full 180 degrees of latitude -- leave repeat.y at 1 and the sky stretches vertically by
+  // 2N*h/w (3.6x at N=4, which turns a treeline into a mountain range). Derive it so a degree of
+  // sky is the same size across as it is up, and clamp above and below the band.
+  const rx = L.repeat ? L.repeat[0] : 4;
+  const ry = rx * L.w / (2 * L.h);
+  t.repeat.set(rx, ry);
+  // land the plate's painted horizon on the equator (texture v runs bottom-up)
+  t.offset.set(0, (1 - (L.horizon ?? 0.5)) - 0.5 * ry);
+  const m = new THREE.Mesh(
+    new THREE.SphereGeometry(L.radius || 400, 48, 24),
+    new THREE.MeshBasicMaterial({ map: t, side: THREE.BackSide, fog: false, depthWrite: false }));
+  m.position.set(L.x, L.y, L.z);
+  m.renderOrder = L.order ?? -10;
+  return m;
+}
+
 function build() {
   for (const L of S.layers) {
+    if (L.plane === "sky") { L.m = buildSky(L); box.add(L.m); continue; }
     const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
       new THREE.MeshBasicMaterial({ map: layerTexture(L), transparent: true, alphaTest: 0.04, depthWrite: false, side: THREE.DoubleSide, fog: !L.meta?.nofog }));
     const [w, h] = planeSize(L);
@@ -153,7 +179,11 @@ function covered(p, camera) {
   for (const hit of IMP_RAY.intersectObjects(OCCLUDERS.map(o => o.mesh), false)) {
     if (hit.distance >= dist) break;
     const s = OCCLUDERS.find(o => o.mesh === hit.object);
-    if (hit.uv && s && s.alpha(hit.uv.x, hit.uv.y) > 0.35) return true;
+    // 0.15, not 0.5: foliage is full of small gaps, and a haze of pine needles genuinely does
+    // hide what is behind it even though few individual texels are fully opaque. Demanding a
+    // solid texel per ray made occlusion stochastic -- clumps registered or not by luck of
+    // alignment. This is still far stricter than testing the card's bounding quad.
+    if (hit.uv && s && s.alpha(hit.uv.x, hit.uv.y) > 0.15) return true;
   }
   return false;
 }
@@ -182,7 +212,13 @@ function stepImposters(camera) {
     faceCamera();                       // re-aim billboarded occluders for this viewpoint
     box.updateMatrixWorld(true);
     const n = IMP_P.set(L.x, L.y, L.z).project(camera);
-    return { hidden: hidden(L, camera), want: bearingIndex(L, camera), shown: L._shown,
+    const h = L.scale, w = h * L.w / L.h;
+    IMP_RIGHT.set(camera.position.z - L.z, 0, -(camera.position.x - L.x)).normalize();
+    const per = IMP_SAMPLES.map(([u, v]) => {
+      IMP_V.set(L.x + IMP_RIGHT.x * u * w, L.y + v * h, L.z + IMP_RIGHT.z * u * w);
+      return covered(IMP_V, camera) ? "#" : ".";
+    }).join("");
+    return { hidden: hidden(L, camera), want: bearingIndex(L, camera), shown: L._shown, samples: per,
              onScreen: n.z <= 1 && Math.abs(n.x) <= 1.05 && Math.abs(n.y) <= 1.05 };
   };
   if (S.meta?.imposterLog && !window.__imp) window.__imp = () => ({
@@ -211,7 +247,7 @@ function stepImposters(camera) {
 function faceCamera() {
   for (const L of S.layers) {
     if (!L.m) continue;
-    if (L.plane === "floor") continue;
+    if (L.plane === "floor" || L.plane === "sky") continue;
     if (L.plane === "imposter") {                        // an imposter is a billboard by definition
       L.m.rotation.y = Math.atan2(cam.position.x - L.m.position.x, cam.position.z - L.m.position.z);
       continue;
@@ -230,7 +266,9 @@ function applyFog(f) {
   if (!f) { scene.fog = null; return; }
   const c = new THREE.Color(f.color ?? 0x2d3750);
   scene.fog = new THREE.FogExp2(c, f.density ?? 0.012);
-  scene.background = c;
+  // Fog colour belongs at the HORIZON; the page behind everything is mostly ZENITH. A sky
+  // enclosure can never be tall enough for every pitch, so match what shows above it.
+  scene.background = new THREE.Color(f.background ?? f.color ?? 0x2d3750);
 }
 
 function refit() {
