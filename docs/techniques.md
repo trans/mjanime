@@ -315,3 +315,37 @@ magick f.png -alpha extract -threshold 20% -trim info:        # ✅ correct
 ---
 Related: [world](world.md) · [Nano Banana](nano-banana.md) · [`mj prop`](tools/prop.md) ·
 [`mj pixelize`](tools/pixelize.md) · [roadmap](roadmap.md)
+
+## When the subject IS the key colour
+
+A distance-from-background key is per-pixel, so it cannot tell a black backdrop from black paint on
+the subject. Measured on the graveyard gate pier, rendered on pure black:
+
+| sample | RGB | distance |
+| --- | --- | --- |
+| backdrop | (0,0,0) | 0 |
+| gargoyle body | (8,14,14) | 14 |
+| base plinth stone | (20,12,10) | 20 |
+| shaft edge in shadow | (0,0,0) | **0** |
+
+At `key_low: 4, key_high: 26` the gargoyle sat at ~40% alpha and the plinth dissolved. Dropping to
+`key_low: 1, key_high: 10` recovered every one of those — the backdrop really is 0, so the window
+only has to clear it, not clear the subject's own shadows. **On a pure-black render, key 1..10, not
+4..26.** Glowing subjects (candles, pumpkins, ghosts) are the exception: their bloom wants the wider
+ramp, and they carry no near-black interior to lose.
+
+The shaft edge at distance 0 is unrecoverable by any threshold — the information is spatial, not
+chromatic. `notes/graveyard/seal.py` closes the silhouette, floods the background in from the
+borders, and forces everything unreachable from outside to full alpha. It works, but **it will seal
+lacy detail**: on the pier it filled the real gaps between ivy leaves with opaque black. Prefer a
+correct key window; reach for sealing only when a solid-bodied subject is genuinely punctured.
+
+## A prop's ground line is not always its bottom edge
+
+Props are seated by putting the bottom of the alpha content box on the floor, which is right for a
+headstone and wrong for anything drawn with a spreading base. The graveyard's framing tree has an
+exposed root flare: its opaque width peaks 12% up the silhouette (537px) and only resolves to trunk
+width (~220px) by 20%. Seating its lowest root tip on the floor hung the whole trunk in the air.
+
+Measure the width profile, put the ground line where the flare meets soil — 15% up for that tree —
+and let the tips below sink into the earth. `place(..., base=0.15)` in `notes/graveyard/scene.py`.

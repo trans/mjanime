@@ -108,7 +108,7 @@ def layer(prop, *, cx, base=None, top=None, d=None, cy=None, h_px=None,
     }
 
 
-def place(prop, *, cx, d, size, lift=0.0, flip=False, billboard=0, shadow=False):
+def place(prop, *, cx, d, size, lift=0.0, base=0.0, flip=False, billboard=0, shadow=False):
     """A prop STANDING on the floor: x from the source column, depth and real-world height given.
 
     The ground-contact solve above is exact only over a flat plane, and the source's graveyard
@@ -121,10 +121,12 @@ def place(prop, *, cx, d, size, lift=0.0, flip=False, billboard=0, shadow=False)
     scale = size * ih / bh                      # image height that yields `size` of content
     lw = scale * iw / ih
     wx = (cx / SRC_W - 0.5) * fw
-    # Seat the CONTENT bottom on the floor. `lift` raises it onto the plate's painted hillside:
-    # the diorama floor is flat, the backdrop's ground climbs toward the horizon, so anything far
-    # enough back has to be nudged up or it reads as floating in front of the slope.
-    wy = FLOOR_Y + lift + size / 2
+    # Seat the prop's GROUND LINE on the floor. That is usually the bottom of the content box,
+    # but not always: a tree drawn with a heavy exposed root flare meets the soil part-way up its
+    # own silhouette, and seating its lowest root tip on the floor hangs the whole trunk in the
+    # air. `base` is the fraction of the content height, measured from the bottom, where the
+    # ground actually is -- so the tips below it sink into the earth where they belong.
+    wy = FLOOR_Y + lift - base * size + size / 2
     cxf = (bx + bw / 2) / iw - 0.5
     cyf = 0.5 - (by + bh / 2) / ih
     if flip:

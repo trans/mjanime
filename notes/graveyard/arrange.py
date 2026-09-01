@@ -21,12 +21,13 @@ PLATE_COVER = 1.32             # oversized so drift never reveals an edge
 FOG = {"color": "#2f3854", "density": 0.0135}   # the plate's own horizon colour
 
 # ── standing on the floor: (prop, cx, depth, metres, lift, flip, billboard) ──────────────
+# BASE overrides where a prop's ground line sits within its own art (default: the bottom).
 STANDING = [
-    ("grave-frametree",          120,   5.5,  6.8, 0.00, False,  0),
-    ("grave-frametree",         1552,   5.5,  6.8, 0.00,  True,  0),
+    ("grave-frametree",          340,   9.0,  7.5, 0.00, False,  0),
+    ("grave-frametree",         1332,   9.0,  7.5, 0.00,  True,  0),
 
-    ("grave-gate-pier",          310,   6.3,  3.2, 0.00, False,  0),
-    ("grave-gate-pier",         1195,   6.3,  3.2, 0.00,  True,  0),
+    ("grave-gate-pier",          310,   6.3,  3.2, 0.00,  True,  0),
+    ("grave-gate-pier",         1195,   6.3,  3.2, 0.00, False,  0),
 
     ("grave-pumpkins",           190,   5.0, 0.42, 0.00, False, 15),
     ("grave-pumpkin-single",    1320,   5.4, 0.38, 0.00,  True, 15),
@@ -80,13 +81,14 @@ STANDING = [
 # CORNER of a tree, trunk running off the bottom and branches arching across the top, so the
 # card has to be bigger than the view and mostly outside it.
 FLOATING = [
-    ("grave-crow",       352,  108,  5.1, 0.00, False, 80),
-    ("grave-crow",      1245,  178,  5.1, 0.00,  True, 80),
+    # crows ride the framing trees' branches, clear of the piers that would occlude them
+    ("grave-crow",       560,  145,  8.6, 0.46, False, 80),
+    ("grave-crow",      1112,  145,  8.6, 0.46,  True, 80),
 
-    ("grave-ghost",      470,  585, 13.0, 0.00, False, 60),
-    ("grave-ghost",      735,  430, 18.0, 0.00, False, 60),
-    ("grave-ghost",     1010,  445, 16.0, 0.00,  True, 60),
-    ("grave-bats",       830,  175, 34.0, 0.00, False, 45),
+    ("grave-ghost",      552,  527, 12.5, 0.95, False, 60),   # clear of the left tree's roots
+    ("grave-ghost",      735,  430, 18.0, 1.10, False, 60),
+    ("grave-ghost",     1010,  445, 16.0, 1.10,  True, 60),
+    ("grave-bats",       830,  175, 34.0, 2.10, False, 45),
 ]
 
 GRASS_W, GRASS_D = 130.0, 92.0     # the floor plane, from 2 m out to 94 m
@@ -118,8 +120,14 @@ L.append({
     "billboard": 0, "flipX": False, "meta": {"role": "path"},
 })
 
+BASE = {
+    # root flare peaks 12% up the silhouette and resolves to trunk by 20%; soil sits between
+    "grave-frametree": 0.15,
+}
+
 for p, cx, d, size, lift, flip, bb in STANDING:
-    L.append(place(p, cx=cx, d=d, size=size, lift=lift, flip=flip, billboard=bb))
+    L.append(place(p, cx=cx, d=d, size=size, lift=lift, base=BASE.get(p, 0.0),
+                   flip=flip, billboard=bb))
 for p, cx, cy, d, size, flip, bb in FLOATING:
     L.append(air(p, cx=cx, cy=cy, d=d, size=size, flip=flip, billboard=bb))
 
