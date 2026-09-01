@@ -87,7 +87,7 @@ for i, (bearing, r, h) in enumerate(INNER):
     for j, (db, dr) in enumerate(((-6.5, 0.8), (0.0, 0.0), (6.5, -0.8))):
         cx2, cz2 = polar(CX, CZ, bearing + db, r + dr)
         L.append(place_at("grave-conifer", x=cx2, z=cz2, size=h - abs(db) * 0.12,
-                          flip=(j % 2 == 1), occluder=True))
+                          flip=(j % 2 == 1), occluder=True, billboard=180))
     x2, z2 = polar(CX, CZ, bearing + 3.0, r - 1.6)
     L.append(place_at("grave-frametree", x=x2, z=z2, size=h * 0.62, flip=(i % 2 == 1)))
 
@@ -97,6 +97,19 @@ for i, (bearing, r, h) in enumerate(OUTER):
     x, z = polar(CX, CZ, bearing, r)
     prop = "grave-conifer" if i % 2 else "grave-frametree"
     L.append(place_at(prop, x=x, z=z, size=h, flip=(i % 3 == 0), billboard=20 if i % 2 else 0))
+
+# ── solid occluders parked along the trail ─────────────────────────────────────────────────────
+TRAIL = [
+    ("grave-wagon",  75, 19.0, 3.6, 30),
+    ("grave-wagon", 255, 19.2, 3.6, 30),
+    ("grave-crypt",  15, 17.0, 4.2,  0),
+    ("grave-crypt", 195, 17.2, 4.0,  0),
+    ("grave-crypt", 300, 17.0, 4.4,  0),
+]
+for prop, bearing, r, size, bb in TRAIL:
+    x, z = polar(CX, CZ, bearing, r)
+    L.append(place_at(prop, x=x, z=z, size=size, occluder=True, billboard=bb,
+                      rotY=(None if bb else bearing + 180)))
 
 # ── the old chapel, demoted to a roadside mausoleum ─────────────────────────────────────────────
 x, z = polar(CX, CZ, 205, 33)

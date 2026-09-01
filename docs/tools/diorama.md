@@ -189,11 +189,30 @@ Three things, learned the hard way:
 both flanks in view; swapping then is exactly the pop this mechanism exists to avoid. Six points
 are tested across the subject's width and height, and *every* one must be covered.
 
-**A bare tree hides nothing.** The framing tree is 36% opaque inside its own bounding box — a wide
-box around a thin trunk — so rays pass straight through the gaps and the test correctly refuses.
-Occlusion duty belongs to dense foliage. The ring's occluders are conifer clumps, three abreast, so
-the screen is wider than the house's silhouette; the bare trees stay for character and are not
-flagged.
+**Pick occluders by opacity, not by size.** What matters is the fraction of the bounding box that is
+actually opaque, because the alpha test correctly sees through everything else:
+
+| prop | opaque | as an occluder |
+| --- | --- | --- |
+| conifer | 27% | usable in clumps |
+| framing tree | 36% | **useless** — a wide box around a thin trunk |
+| crypt | 43% | good |
+| chapel | 46% | good |
+| wagon | 52% | best in the set |
+
+The framing tree measures *higher* than the conifer and hides far less: its opaque pixels are spread
+thinly across a wide box, while the conifer's are a solid mass. Read the number, then look at the
+art.
+
+**Billboard your occluders.** A card that always faces the viewer always presents its widest
+profile — exactly what something whose job is to cover should do. The ring's occluding conifers run
+`billboard: 180` (a spruce is near enough rotationally symmetric that full facing is honest); the
+wagon runs 30, since it has a definite side. Note this makes `box.updateMatrixWorld(true)` mandatory
+before the raycast — the occluders were just re-aimed this frame, and raycasting reads `matrixWorld`.
+
+**Trees are not the only cover.** A solid prop parked *on* the trail hides far more than foliage
+five metres off it, because the walker passes within a couple of metres. The wagon at 3 m fills the
+frame completely.
 
 **Confine the walker.** This is what makes the rest tractable. Free roaming means the subject can be
 viewed from any distance and any angle, so no amount of scenery reliably hides it. `cam.ring =
@@ -202,7 +221,13 @@ known angle. The graveyard's corridor is 22 m ± 2.5 m, and at that radius a 10 
 ~26 deg while a clump 6 m away subtends far more.
 
 Measured on the finished scene: a clump on the sightline reports `hidden` with the house still
-on-screen; a lone bare trunk in the same spot correctly reports *not* hidden.
+on-screen; a lone bare trunk in the same spot correctly reports *not* hidden. Sweeping the whole
+circuit at 5-degree steps, the house is fully covered for **67% of the ring** across eleven separate
+glimpse windows — see or lose it, and it has changed when it comes back.
+
+With `imposterLog` on, `window.__impCam(x, z)` drops the camera anywhere, aims it at the imposter and
+reports what the occlusion test makes of that spot. Sweeping that round the circuit measures coverage
+far more cheaply and precisely than reading screenshots.
 
 ### Turning
 

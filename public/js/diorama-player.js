@@ -170,6 +170,21 @@ function hidden(L, camera) {
 }
 
 function stepImposters(camera) {
+  box.updateMatrixWorld(true);        // occluders were just re-aimed by faceCamera()
+  // Debug: drop the camera anywhere on the map, aim it at the imposter, and report what the
+  // occlusion test makes of that spot. Sweeping this round the circuit measures coverage far more
+  // cheaply, and far more precisely, than reading screenshots.
+  if (S.meta?.imposterLog && !window.__impCam) window.__impCam = (x, z) => {
+    const L = S.layers.find(l => l.plane === "imposter");
+    camera.position.set(x, 0, z);
+    camera.lookAt(L.x, L.y, L.z);
+    camera.updateMatrixWorld(true);
+    faceCamera();                       // re-aim billboarded occluders for this viewpoint
+    box.updateMatrixWorld(true);
+    const n = IMP_P.set(L.x, L.y, L.z).project(camera);
+    return { hidden: hidden(L, camera), want: bearingIndex(L, camera), shown: L._shown,
+             onScreen: n.z <= 1 && Math.abs(n.x) <= 1.05 && Math.abs(n.y) <= 1.05 };
+  };
   if (S.meta?.imposterLog && !window.__imp) window.__imp = () => ({
     cam: [+camera.position.x.toFixed(2), +camera.position.z.toFixed(2)],
     layers: S.layers.filter(l => l.plane === "imposter").map(l => ({
