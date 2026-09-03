@@ -108,7 +108,7 @@ def layer(prop, *, cx, base=None, top=None, d=None, cy=None, h_px=None,
     }
 
 
-def place(prop, *, cx, d, size, lift=0.0, base=0.0, flip=False, billboard=0, shadow=False):
+def place(prop, *, cx, d, size, lift=0.0, flip=False, billboard=0, shadow=False):
     """A prop STANDING on the floor: x from the source column, depth and real-world height given.
 
     The ground-contact solve above is exact only over a flat plane, and the source's graveyard
@@ -121,12 +121,10 @@ def place(prop, *, cx, d, size, lift=0.0, base=0.0, flip=False, billboard=0, sha
     scale = size * ih / bh                      # image height that yields `size` of content
     lw = scale * iw / ih
     wx = (cx / SRC_W - 0.5) * fw
-    # Seat the prop's GROUND LINE on the floor. That is usually the bottom of the content box,
-    # but not always: a tree drawn with a heavy exposed root flare meets the soil part-way up its
-    # own silhouette, and seating its lowest root tip on the floor hangs the whole trunk in the
-    # air. `base` is the fraction of the content height, measured from the bottom, where the
-    # ground actually is -- so the tips below it sink into the earth where they belong.
-    wy = FLOOR_Y + lift - base * size + size / 2
+    # Seat the CONTENT bottom on the floor. `lift` raises it onto the plate's painted hillside:
+    # the diorama floor is flat, the backdrop's ground climbs toward the horizon, so anything far
+    # enough back has to be nudged up or it reads as floating in front of the slope.
+    wy = FLOOR_Y + lift + size / 2
     cxf = (bx + bw / 2) / iw - 0.5
     cyf = 0.5 - (by + bh / 2) / ih
     if flip:
@@ -157,63 +155,3 @@ def air(prop, *, cx, cy, d, size, flip=False, billboard=0):
         "scale": round(scale, 3), "horizon": 0.5, "shadow": False,
         "billboard": billboard, "flipX": flip, "meta": {"prop": prop},
     }
-
-
-# ── polar placement, for laying a scene out around a centre rather than across a photograph ──
-import math as _m
-
-
-def polar(cx, cz, bearing, r):
-    """Bearing in degrees measured from +Z toward +X -- the same convention the imposter uses."""
-    a = _m.radians(bearing)
-    return cx + r * _m.sin(a), cz + r * _m.cos(a)
-
-
-def place_at(prop, *, x, z, size, base=None, lift=0.0, flip=False, billboard=0,
-             rotY=None, occluder=False, order=0):
-    """Seat a prop at an explicit world (x, z). `base` defaults to the prop's own ground_line."""
-    iw, ih, bx, by, bw, bh = geom(prop)
-    if base is None:
-        base = GROUND_LINE.get(prop, 0.0)
-    scale = size * ih / bh
-    lw = scale * iw / ih
-    wy = FLOOR_Y + lift - base * size + size / 2
-    cxf = (bx + bw / 2) / iw - 0.5
-    cyf = 0.5 - (by + bh / 2) / ih
-    if flip:
-        cxf = -cxf
-    lay = {
-        "src": f"/lib/props/{prop}", "w": iw, "h": ih,
-        "x": round(x - cxf * lw, 3), "y": round(wy - cyf * scale, 3), "z": round(z, 3),
-        "scale": round(scale, 3), "horizon": 0.5, "shadow": False,
-        "billboard": billboard, "flipX": flip, "order": order, "meta": {"prop": prop},
-    }
-    if rotY is not None:
-        lay["rotY"] = round(rotY, 2)
-    if occluder:
-        lay["occluder"] = True
-    return lay
-
-
-def imposter_at(props, *, x, z, size, base=0.0, order=0):
-    """A set of bearings shown one at a time. Every frame must share geometry (see normalize.py),
-    so the first one's content box sizes them all."""
-    iw, ih, bx, by, bw, bh = geom(props[0])
-    scale = size * ih / bh
-    wy = FLOOR_Y - base * size + size / 2
-    cyf = 0.5 - (by + bh / 2) / ih
-    return {
-        "srcs": [f"/lib/props/{p}" for p in props], "w": iw, "h": ih,
-        "x": round(x, 3), "y": round(wy - cyf * scale, 3), "z": round(z, 3),
-        "scale": round(scale, 3), "horizon": 0.5, "shadow": False,
-        "plane": "imposter", "billboard": 0, "flipX": False, "order": order,
-        "meta": {"imposter": props[0].rsplit("-", 1)[0]},
-    }
-
-
-import json as _json
-try:
-    _mf = _json.load(open(os.path.join(PROPS, "index.json")))
-    GROUND_LINE = {e["name"]: e.get("ground_line", 0.0) for e in _mf["props"]}
-except Exception:
-    GROUND_LINE = {}

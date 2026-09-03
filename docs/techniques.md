@@ -348,4 +348,4 @@ exposed root flare: its opaque width peaks 12% up the silhouette (537px) and onl
 width (~220px) by 20%. Seating its lowest root tip on the floor hung the whole trunk in the air.
 
 Measure the width profile, put the ground line where the flare meets soil — 15% up for that tree —
-and let the tips below sink into the earth. `place(..., base=0.15)` in `notes/graveyard/scene.py`.
+and let the tips below sink into the earth. `place(..., base=0.15)` in the haunted-house project's `build/scene.py`.

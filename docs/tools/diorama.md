@@ -178,7 +178,7 @@ Two things this needs to work:
   subject. The graveyard ring uses 16 inner trees.
 - **Normalised frames.** Each bearing is generated independently and lands at its own size and
   height in frame; swap between two of those and the subject jumps, which defeats the point.
-  `notes/graveyard/normalize.py` scales every frame to a common content height and pins every
+  The haunted-house project's `build/normalize.py` scales every frame to a common content height and pins every
   content bottom to the same row. Width is left alone — a side elevation really is wider.
 
 ### What the occlusion test actually requires
