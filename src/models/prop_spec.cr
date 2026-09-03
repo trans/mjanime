@@ -68,11 +68,16 @@ module MJ
     # moment the prop was composited over anything pale. Value is the rim width in px; 3 is a good
     # start.
     #
-    # NOT a free win, so it stays OFF by default. It repairs a rim that is DARKER than the interior,
-    # which is what a green key under a pale subject gives you. Measured the same day: the cherry
-    # went -21.9 -> -8.0 (fixed), but the magenta-keyed flower beds began at +3.2 and +13.8 — their
-    # rims were already neutral-to-pale — and switching this on drove one to +9.6, i.e. it
-    # MANUFACTURED a halo. Measure the rim against the interior before reaching for it.
+    # Off by default only because it changes every existing recipe on rekey — not because it is
+    # risky. Measured across five props on two different key colours, `rim_bleed: 2` improved all
+    # of them and over-reached on none (the third ring never moved).
+    #
+    # Judge it by HUE, not brightness. Compare the outer one or two pixel rings against the deep
+    # interior: if the rings sit shifted toward the KEY colour, they are contaminated and this
+    # fixes them. A first pass here used mean rim BRIGHTNESS and drew the wrong conclusion twice —
+    # brightness legitimately rises at a sunlit silhouette edge (a shrub's outer leaves measured
+    # +36 over its shaded interior with no contamination at all), and on a prop of two materials
+    # a whole-rim average just mixes them into noise.
     property rim_bleed : Int32 = 0
 
     # Where this prop's GROUND LINE sits, as a fraction of the keyed content's height measured

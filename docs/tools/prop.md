@@ -120,16 +120,28 @@ colour outward alpha-weighted, and swaps it into the rim. Alpha is never touched
 exactly as soft as the key made it. Weighting matters: an unweighted blur drags transparent black
 inward and re-darkens the very rim being repaired.
 
-**It is off by default and should stay off unless you have measured a dark rim.** Same afternoon,
-same setting:
+**Judge it by hue, not by brightness.** Compare the outer one or two pixel rings against the deep
+interior: contaminated rings sit shifted toward the *key colour*. Measured on the barrel shrub
+(magenta key), where the interior foliage runs a pink cast of −20.8:
 
-| prop | key | rim vs interior, before | after |
-| --- | --- | --- | --- |
-| cherry tree | chroma green | **−21.9** | **−8.0** ✔ fixed |
-| flower bed (day) | magenta | +3.2 | +9.6 ✘ halo manufactured |
-| flower bed (night) | magenta | +13.8 | +9.6 |
+| ring | rim_bleed 0 | rim_bleed 2 |
+| --- | --- | --- |
+| outermost 1px | **+3.9** | −7.2 |
+| 2nd px in | **+6.2** | −19.3 |
+| 3rd px in | −18.6 | −18.6 (untouched) |
 
-A magenta key under these subjects left rims that were already neutral-to-pale; switching `rim_bleed`
-on pushed one *away* from neutral. Measure first — mean brightness of the 3px rim minus mean
-brightness of the interior. Negative means a dark outline and `rim_bleed: 3` will help; near zero or
-positive means leave it alone.
+The outer two rings swing ~40 points *away* from the interior toward magenta; `rim_bleed: 2` pulls
+them back into line and leaves the third ring alone, which is how you know it is not over-reaching.
+
+**Do not judge it by rim brightness.** An earlier pass here used mean rim brightness and reached the
+wrong conclusion twice. Brightness legitimately rises at a sunlit silhouette edge — the shrub's
+outer leaves measure **+36** against its shaded interior with no contamination whatsoever, and no
+key setting changes that because it is the actual lighting. Worse, on a prop made of two materials
+(stone kerb plus dark foliage) a whole-rim average just blends them into noise, which is how the
+flower beds were first written off as "already clean" when ring 2 was in fact sitting at +13.2
+against an interior of −14.2.
+
+It stays off by default only because switching it on changes every existing recipe the next time it
+is rekeyed. On the evidence, `rim_bleed: 2` is worth setting on any new chroma-keyed prop: it
+improved all five tested, across both magenta and chroma-green keys, and over-reached on none.
+
