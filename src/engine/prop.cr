@@ -85,6 +85,9 @@ module MJ
           end
         end
       end
+      # BEFORE edge_guard/despeckle: those trim the silhouette, and the rim repair wants the
+      # silhouette it was keyed with. AFTER defringe, which handles the semi-transparent pixels.
+      rim_bleed!(dst, spec.rim_bleed) if spec.rim_bleed > 0
       defringe!(dst, bg_r, bg_g, bg_b, spec.defringe_band) if spec.defringe
       # BEFORE despeckle: clearing the border can also break a long edge strip into
       # short stubs, which despeckle then removes for free.
@@ -102,6 +105,64 @@ module MJ
     # them. Those strips are exactly what pins an alpha bounding box to the full frame and
     # makes "crop to content" a no-op. Every prop is prompted to leave a clear margin, so
     # there is nothing at the border to lose.
+    # Repair the opaque rim left holding backdrop colour.
+    #
+    # `despill` unmattes anti-aliased pixels, but only those with partial alpha. The band a pixel or
+    # two INSIDE the silhouette is fully opaque and so is never touched, yet it is half backdrop —
+    # on a chroma-green render it comes out olive and, more damagingly, dark: measured 28 levels
+    # below the interior on cherry blossom, which reads as a drawn-on outline over any pale ground.
+    #
+    # Guessing the correction per channel does not work (the cast is a brightness problem as much as
+    # a hue one). Instead take the colour from the subject immediately deeper in: erode the solid
+    # mask to find pixels we can trust, bleed THEIR colour outward alpha-weighted (weighting matters
+    # — an unweighted blur drags the transparent black in and re-darkens the very rim we are
+    # fixing), and swap it into the rim. Alpha is never modified, so the edge stays as soft as the
+    # key made it.
+    private def self.rim_bleed!(canvas : StumpyPNG::Canvas, rim : Int32) : Nil
+      w = canvas.width
+      h = canvas.height
+      solid_at = 0.78 # alpha above this is "opaque enough to be real subject colour"
+
+      # A box mean of exactly 1.0 means every pixel in the window was solid — i.e. erosion.
+      solid = Array(Array(Float64)).new(h) { Array(Float64).new(w, 0.0) }
+      (0...h).each do |y|
+        (0...w).each do |x|
+          solid[y][x] = (canvas[x, y].a.to_f / 65535.0) >= solid_at ? 1.0 : 0.0
+        end
+      end
+      interior = box_blur(solid, w, h, rim).map { |row| row.map { |v| v > 0.9999 ? 1.0 : 0.0 } }
+
+      chan = [0, 1, 2].map do |c|
+        premul = Array(Array(Float64)).new(h) { Array(Float64).new(w, 0.0) }
+        (0...h).each do |y|
+          (0...w).each do |x|
+            px = canvas[x, y]
+            v = c == 0 ? px.r : (c == 1 ? px.g : px.b)
+            premul[y][x] = (v.to_f / 257.0) * interior[y][x]
+          end
+        end
+        box_blur(premul, w, h, rim)
+      end
+      weight = box_blur(interior, w, h, rim)
+
+      (0...h).each do |y|
+        (0...w).each do |x|
+          px = canvas[x, y]
+          next if px.a == 0
+          af = px.a.to_f / 65535.0
+          t = interior[y][x] * (af / solid_at).clamp(0.0, 1.0)
+          next if t >= 0.999 # deep inside: nothing to repair
+          wt = weight[y][x]
+          next if wt <= 1e-3 # no trusted colour within reach; leave it alone
+          rgb = [px.r, px.g, px.b].map_with_index do |orig, c|
+            bled = chan[c][y][x] / wt
+            ((bled * (1.0 - t) + (orig.to_f / 257.0) * t) * 257.0).clamp(0.0, 65535.0).to_u16
+          end
+          canvas[x, y] = StumpyPNG::RGBA.new(rgb[0], rgb[1], rgb[2], px.a)
+        end
+      end
+    end
+
     private def self.edge_guard!(canvas : StumpyPNG::Canvas, n : Int32) : Nil
       w = canvas.width
       h = canvas.height

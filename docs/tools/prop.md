@@ -44,6 +44,8 @@ alpha_bleed: true                # flood transparent pixels w/ nearest subject c
 model: "google:4@3"             # Nano Banana 2 (NOT the deprecated google:4@1)
 width: 1024
 height: 1024
+rim_bleed: 0                     # repair the contaminated RIM (px). See below — OFF by default,
+                                 # it is not a free win.
 ground_line: 0.0                 # where this prop MEETS THE GROUND, as a fraction of the keyed
                                  # content's height measured UP from its bottom edge. 0 = the
                                  # lowest opaque pixel, right for a headstone. A tree with an
@@ -102,3 +104,32 @@ Measured across the graveyard set, only three of twenty needed a non-zero value:
 (0.13), the conifer (0.11) and the candle cluster (0.05). Treat the number as a starting point and
 check it against the art — an airborne prop (bats, a hovering ghost) has no meaningful ground line
 at all and should stay at `0.0`.
+
+## `rim_bleed` — when the cut-out has a drawn-on outline
+
+`despill` unmattes anti-aliased edge pixels, but only those with **partial alpha**. The band a pixel
+or two *inside* the silhouette is usually fully opaque, so it never qualifies — and it is half
+backdrop. On a chroma-green render under pale subject matter it comes out olive, and worse, **dark**.
+Measured on cherry blossom: the rim sat **28 levels darker** than the interior, which reads as a
+hard outline the moment the prop is composited over anything light. It hides completely on a dark
+background, which is how it survives review.
+
+The fix cannot be a per-channel correction, because the fault is as much brightness as hue. Instead
+`rim_bleed: N` erodes the solid mask to find pixels whose colour can be trusted, bleeds *their*
+colour outward alpha-weighted, and swaps it into the rim. Alpha is never touched, so the edge stays
+exactly as soft as the key made it. Weighting matters: an unweighted blur drags transparent black
+inward and re-darkens the very rim being repaired.
+
+**It is off by default and should stay off unless you have measured a dark rim.** Same afternoon,
+same setting:
+
+| prop | key | rim vs interior, before | after |
+| --- | --- | --- | --- |
+| cherry tree | chroma green | **−21.9** | **−8.0** ✔ fixed |
+| flower bed (day) | magenta | +3.2 | +9.6 ✘ halo manufactured |
+| flower bed (night) | magenta | +13.8 | +9.6 |
+
+A magenta key under these subjects left rims that were already neutral-to-pale; switching `rim_bleed`
+on pushed one *away* from neutral. Measure first — mean brightness of the 3px rim minus mean
+brightness of the interior. Negative means a dark outline and `rim_bleed: 3` will help; near zero or
+positive means leave it alone.

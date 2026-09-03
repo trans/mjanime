@@ -61,6 +61,20 @@ module MJ
     property height : Int32 = 1024
     # Free-form tags for the prop library manifest (index.json). Seeds the tag-based
     # metadata a future TransFS/DataDungeon backend will index on. e.g. ["pirate", "metal"].
+    # Repair the contaminated RIM: the band of pixels just inside the silhouette that came out of
+    # the key still wearing backdrop colour. `despill` fixes anti-aliased edge pixels by unmatting,
+    # but the rim is usually FULLY OPAQUE and so never qualifies — measured on a chroma-green cherry
+    # blossom, that rim sat 28 levels DARKER than the interior and read as a hard olive outline the
+    # moment the prop was composited over anything pale. Value is the rim width in px; 3 is a good
+    # start.
+    #
+    # NOT a free win, so it stays OFF by default. It repairs a rim that is DARKER than the interior,
+    # which is what a green key under a pale subject gives you. Measured the same day: the cherry
+    # went -21.9 -> -8.0 (fixed), but the magenta-keyed flower beds began at +3.2 and +13.8 — their
+    # rims were already neutral-to-pale — and switching this on drove one to +9.6, i.e. it
+    # MANUFACTURED a halo. Measure the rim against the interior before reaching for it.
+    property rim_bleed : Int32 = 0
+
     # Where this prop's GROUND LINE sits, as a fraction of the keyed content's height measured
     # UP from its bottom edge. 0.0 (the default) means the art meets the ground at its lowest
     # opaque pixel — right for a headstone, wrong for anything drawn with a spreading base. A
