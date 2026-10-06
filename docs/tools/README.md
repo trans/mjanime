@@ -20,6 +20,7 @@ Most image commands need `RUNWARE_API_KEY` (read from the environment — source
 | `mj webp [<prop>] [--quality N]` | Transcode library deliverables to `.webp` | no | [diorama](diorama.md#webp) |
 | `mj spend [--today\|--days N\|--all]` | Report the API cost ledger (per day / model / command) | no | [spend](spend.md) |
 | `mj bus` | Join the Arcana bus, serve the image tools | yes | [bus](bus.md) |
+| `mj-arcana` | Camera + voice services on the bus (separate binary) | yes | [arcana](arcana.md) |
 | `mj version` | Print `mj <VERSION>` | no | — |
 
 ## Naming note

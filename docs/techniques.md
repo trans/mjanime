@@ -349,3 +349,54 @@ width (~220px) by 20%. Seating its lowest root tip on the floor hung the whole t
 
 Measure the width profile, put the ground line where the flare meets soil — 15% up for that tree —
 and let the tips below sink into the earth. `place(..., base=0.15)` in the haunted-house project's `build/scene.py`.
+
+## Probing a model before you trust it
+
+Three checks, all free, all catching things that are invisible once a service is running. Run them
+on any new model before it reaches a caller — or your eye.
+
+**Runware silently accepts unknown parameters.** A 200 response proves nothing. An invented field
+name (`pulid`, wrong case) is swallowed without complaint and does nothing. This is how
+`arcana-ai`'s PuLID call sat dead for months: it sent `referenceImages` + `guidanceScale` where the
+API wants `puLID: {inputImages, idWeight}`, and nothing ever errored.
+
+### 1. Does the parameter do anything?
+
+Same seed, same prompt, generate twice — once with the parameter, once without — and diff the
+pixels. ~0 means ignored. **Always include a deliberately bogus parameter as a control**, so you
+can tell "ignored" from "subtle":
+
+```
+arcana-ai's referenceImages + guidanceScale   diff  0.00   NO EFFECT
+puLID: {inputImages, idWeight}                diff 85.00   works
+bogus 'pulid' (lowercase)                     diff  0.00   NO EFFECT
+```
+
+`notes/verify_param.py` does this. Two calls, about a tenth of a cent on FLUX dev.
+
+### 2. Does it honour a reference image at all?
+
+Same test, with and without the reference. **FLUX.1 schnell returns a byte-identical image** — it
+discards references silently, so it can never hold a character however good its output looks.
+0.00 is a hard disqualifier found in two calls.
+
+### 3. What sizes does it actually take?
+
+**Send an empty `positivePrompt`.** Size validation runs *before* prompt validation, so the API
+describes its own rule and nothing generates or bills:
+
+```
+Image width must be an integer value between 128 and 2048, in multiples of '16'.
+Supported values are: '1024x1024', '1536x1024', '1024x1536'.
+```
+
+Do not infer a size list from the sizes you happened to test — mj shipped exactly that mistake, and
+a guessed five-entry list turned a 16:9 request into 4:3, a 24.7 % aspect error, on models that
+accept 16:9 perfectly well.
+
+### What none of these catch
+
+**Anatomy.** Extra limbs, fused hands, a head on backwards. No metric here sees them, and a
+three-armed figure scores *well* on detail measures because more limb means more ink. That needs
+eyes on a numbered contact sheet, counting defects across ~20 varied, deliberately limb-hostile
+poses — raised arms, two figures interacting, weapons.

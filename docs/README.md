@@ -20,6 +20,7 @@ Full CLI reference index: **[tools/README.md](tools/README.md)**.
 
 | Tool | What it does |
 | --- | --- |
+| [`mj-arcana`](tools/arcana.md) | Camera + voice services on the Arcana bus (separate binary) |
 | [`mj prop`](tools/prop.md) | Rough template → Nano render on solid bg → keyed transparent prop |
 | [`mj pixelize`](tools/pixelize.md) | AI pixel-art restyle (8/16-bit), optional transparency + snap |
 | [`mj matte`](tools/matte.md) | Background removal — procedural / IS-Net / Runware tiers |

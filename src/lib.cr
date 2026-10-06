@@ -49,7 +49,7 @@ require "./diorama"
 require "./bus_service"
 
 module MJ
-  VERSION = "0.10.0"
+  VERSION = "0.11.0"
 
   module App
     @@renderer : Renderer? = nil
