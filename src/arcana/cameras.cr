@@ -20,6 +20,13 @@ module MJ
       getter model : String
       getter cost : Float64          # USD per image, measured
       getter seconds : Float64       # typical wall-clock, measured
+      # Bump when anything that changes a camera's OUTPUT changes — the model id, the
+      # default parameters, the prompt scaffolding. Callers key caches on it, so a bump
+      # is how they learn this camera's old pictures are no longer what it would produce.
+      getter version : Int32
+      # A rank, not a measurement: ordered by Trans's eye over the model survey, ascending.
+      # Reuse can prefer a higher rank when several cached pictures match.
+      getter quality : Int32
       # Models constrain size in one of two ways, and conflating them loses real sizes.
       # `dims` is an exhaustive list (Nano, Kontext, GPT Image 1.5); `range` is
       # {min, max, step} and accepts anything in between (Klein, GPT-Image 2.5). Exactly
@@ -33,6 +40,7 @@ module MJ
       getter extra : Hash(String, JSON::Any)
 
       def initialize(@id, @label, @model, @cost, @seconds, @note,
+                     @quality : Int32, @version : Int32 = 1,
                      @dims = nil, @range = nil,
                      @extra = {} of String => JSON::Any)
         raise "camera #{@id}: set exactly one of dims or range" if @dims.nil? == @range.nil?
@@ -124,38 +132,38 @@ module MJ
       ALL = [
         Camera.new(
           id: "klein", label: "FLUX.2 Klein 9B", model: "runware:400@2",
-          cost: 0.0059, seconds: 9.6, range: KLEIN_RANGE,
+          cost: 0.0059, seconds: 9.6, quality: 1, range: KLEIN_RANGE,
           note: "The little camera that could. Unremarkable but dependable; cheapest that " \
                 "holds a character.",
           extra: steps(20, 3.5)),
         Camera.new(
           id: "flare", label: "GPT-Image 2.5 Flare", model: "openai:gpt-image@2.5-flare",
-          cost: 0.0148, seconds: 17.0, range: GPT25_RANGE,
+          cost: 0.0148, seconds: 17.0, quality: 2, range: GPT25_RANGE,
           note: "Ambitious staging, livelier compositions, but more prone to anatomy " \
                 "mistakes. Shares failure modes with Sunburst — not an independent fallback."),
         Camera.new(
           id: "sunburst", label: "GPT-Image 2.5 Sunburst", model: "openai:gpt-image@2.5-sunburst",
-          cost: 0.0139, seconds: 20.0, range: GPT25_RANGE,
+          cost: 0.0139, seconds: 20.0, quality: 2, range: GPT25_RANGE,
           note: "Flare's sibling. Fails on the same prompts Flare does."),
         Camera.new(
           id: "lite", label: "Nano Banana 2 Lite", model: "google:nano-banana@2-lite",
-          cost: 0.0340, seconds: 6.1, dims: NANO_DIMS,
+          cost: 0.0340, seconds: 6.1, quality: 3, dims: NANO_DIMS,
           note: "The fastest thing measured. Imposes its own house style and is nearly " \
                 "indifferent to how good the reference is."),
         Camera.new(
           id: "nano", label: "Nano Banana 2", model: "google:4@3",
-          cost: 0.0692, seconds: 12.5, dims: NANO_DIMS,
+          cost: 0.0692, seconds: 12.5, quality: 4, dims: NANO_DIMS,
           note: "Richest colour and staging. Google's content filter is strict AND " \
                 "probabilistic — identical prompts pass and fail minutes apart. Refusals " \
                 "are not billed, so retry is free but costs latency."),
         Camera.new(
           id: "hero", label: "GPT Image 1.5", model: "openai:4@1",
-          cost: 0.1362, seconds: 20.0, dims: HERO_DIMS,
+          cost: 0.1362, seconds: 20.0, quality: 5, dims: HERO_DIMS,
           note: "Premium. Twice Nano's price — for the shot that matters, not for every " \
                 "panel."),
         Camera.new(
           id: "kontext", label: "FLUX Kontext dev", model: "bfl:3@1",
-          cost: 0.0400, seconds: 8.7, dims: KONTEXT_DIMS,
+          cost: 0.0400, seconds: 8.7, quality: 1, dims: KONTEXT_DIMS,
           note: "Conservative to a fault: preserves the reference faithfully but barely " \
                 "restyles. Poor at transformation, good at leaving things alone."),
       ]

@@ -69,6 +69,14 @@ module MJ
         }.to_json)
       end
 
+      REFUSAL_MARKERS = ["content_policy", "content policy", "moderation", "rejected",
+                         "flagged", "safety"]
+
+      def self.refusal?(message : String) : Bool
+        m = message.downcase
+        REFUSAL_MARKERS.any? { |r| m.includes?(r) }
+      end
+
       def self.handle_speak(data : JSON::Any) : JSON::Any
         text = data["text"]?.try(&.as_s?) || raise "speak requires 'text'"
         provider = data["provider"]?.try(&.as_s?) || "openai"
@@ -106,12 +114,24 @@ module MJ
           next_text: data["next_text"]?.try(&.as_s?),
         )
 
+        begin
         if path = data["output_path"]?.try(&.as_s?)
           result = tts.synthesize(req, path)
           JSON::Any.new({
+            "status"         => JSON::Any.new("ok"),
             "output_path"    => JSON::Any.new(result.output_path),
             "provider"       => JSON::Any.new(provider),
             "model"          => JSON::Any.new(result.model),
+            "voice"          => JSON::Any.new(req.voice),
+            "format"         => JSON::Any.new(format),
+            "characters"     => JSON::Any.new(text.size.to_i64),
+            # Neither OpenAI nor ElevenLabs returns a price in the response, unlike
+            # Runware's includeCost. Rather than put a guessed rate into the caller's
+            # ledger as if it were fact, report what was billable — characters — and let
+            # the caller apply its own rate card.
+            "usd"            => JSON::Any.new(nil),
+            "usd_note"       => JSON::Any.new(
+              "not reported by the provider; bill on `characters` with your own rate"),
             "content_type"   => JSON::Any.new(result.content_type),
             "content_length" => JSON::Any.new(result.content_length),
           })
@@ -122,15 +142,36 @@ module MJ
           begin
             result = tts.synthesize(req, temp)
             JSON::Any.new({
+              "status"         => JSON::Any.new("ok"),
               "audio_base64"   => JSON::Any.new(Base64.strict_encode(File.read(temp))),
               "provider"       => JSON::Any.new(provider),
               "model"          => JSON::Any.new(result.model),
+              "voice"          => JSON::Any.new(req.voice),
+              "format"         => JSON::Any.new(format),
+              "characters"     => JSON::Any.new(text.size.to_i64),
+              "usd"            => JSON::Any.new(nil),
+              "usd_note"       => JSON::Any.new(
+                "not reported by the provider; bill on `characters` with your own rate"),
               "content_type"   => JSON::Any.new(result.content_type),
               "content_length" => JSON::Any.new(result.content_length),
             })
           ensure
             File.delete(temp) if File.exists?(temp)
           end
+        end
+        rescue ex
+          msg = ex.message || "unknown"
+          raise ex unless refusal?(msg)
+          JSON::Any.new({
+            "status"   => JSON::Any.new("refused"),
+            "provider" => JSON::Any.new(provider),
+            "usd"      => JSON::Any.new(0.0),
+            "reason"   => JSON::Any.new(msg[0, 400]),
+            "retry"    => JSON::Any.new(true),
+            "note"     => JSON::Any.new(
+              "The provider refused this text. Not billed. Never substituted with " \
+              "another provider — that would corrupt your logs."),
+          } of String => JSON::Any)
         end
       end
     end

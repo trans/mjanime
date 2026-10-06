@@ -73,6 +73,30 @@ if key = ENV["RUNWARE_API_KEY"]?
                  "prompt and a reference image, get a picture. Carries a character into new " \
                  "poses. Knows each model's supported sizes, parameter shape and failure modes.",
     kind: Arcana::Directory::Kind::Service,
+    guide: <<-GUIDE,
+      {"tool":"cameras"} lists every camera with its MEASURED usd and seconds, its
+      supported sizes, a `quality` rank (higher is better; a judgement, not a measurement)
+      and a `version` that bumps whenever anything changing its output changes — key your
+      caches on it.
+
+      {"tool":"shoot","camera":"klein","prompt":"...","reference_base64":"...",
+       "width":768,"height":1024,"format":"webp","seed":123,"output_path":"..."}
+
+      Reply always carries `status`. "ok" gives camera, version, model, width, height
+      (the size SNAPPED to — the service never resamples, so this may differ from what you
+      asked), bytes, format, usd and usd_estimated, seed when you supplied one, and either
+      image_base64 + content_type or output_path.
+
+      "refused" means the provider's content filter declined. It is UNBILLED (usd 0),
+      carries a reason, and retry:true — refusals are probabilistic, so the same prompt may
+      pass on a retry. Real errors are raised as errors; a camera is NEVER silently
+      substituted for another.
+
+      Prefer reference_base64 over reference_path: bus services do not share a filesystem.
+      Prefer format webp — 26x smaller on the wire than png. If you pass a reference, say
+      "in the same style" rather than describing the style; an over-specified style fights
+      the reference image.
+      GUIDE
     tags: ["image", "generation", "camera", "runware"],
   )
   cam_ts = Arcana::Toolset.new(client: cam_client, name: "mj:camera",
@@ -99,6 +123,27 @@ else
     description: "Text to speech — OpenAI and ElevenLabs. Ported out of the arcana server " \
                  "so the bus is not also a provider.",
     kind: Arcana::Directory::Kind::Service,
+    guide: <<-GUIDE,
+      {"tool":"voices"} lists the providers actually usable on this host (a provider only
+      appears if its key is set) and their voices.
+
+      {"tool":"speak","text":"...","provider":"openai"|"elevenlabs","voice":"...",
+       "format":"opus","instructions":"...","speed":1.0,
+       "previous_text":"...","next_text":"...","output_path":"..."}
+
+      `instructions` and `speed` are OpenAI only. `previous_text`/`next_text` are ElevenLabs
+      only and give prosody continuity across consecutive lines — worth using when a passage
+      is synthesized as several clips, or each reads as if it were the only sentence.
+
+      Reply carries `status`. "ok" gives provider, model, voice, format, characters,
+      content_type, content_length, and either audio_base64 or output_path. "refused" means
+      the provider declined the text: unbilled, with a reason and retry:true. A provider is
+      NEVER silently substituted for another.
+
+      NOTE ON COST: `usd` is null. Neither provider reports a price in the response, unlike
+      Runware's includeCost, so rather than put a guess in your ledger the reply gives
+      `characters` — bill it with your own rate card.
+      GUIDE
     tags: ["tts", "voice", "speech", "audio"],
   )
   voice_ts = Arcana::Toolset.new(client: voice_client, name: "mj:voice",

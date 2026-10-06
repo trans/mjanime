@@ -39,6 +39,39 @@ module MJ
           input_schema: SHOOT_SCHEMA) { |data| handle_shoot(rw, data) }
       end
 
+      # A provider's content filter refusing is NOT an error: it is unbilled, it is
+      # probabilistic (Nano refuses the same prompt it accepted minutes earlier), and the
+      # caller's right response is a retry or a tamer prompt — not a failure. It gets its
+      # own outcome so callers can tell the two apart.
+      # Each provider words it differently, and the error CODE is no help: OpenAI returns
+      # the same `providerBadRequest` for a refusal as for a bad parameter, so matching on
+      # the code would misfile real errors as refusals. Match the safety language instead.
+      # These were all collected from live refusals; don't add one speculatively.
+      REFUSAL_MARKERS = [
+        # Google / Nano Banana
+        "invalidProviderContent", "content moderation", "Responsible AI",
+        "flagged and rejected", "could not generate the image",
+        # OpenAI (GPT-Image 2.5 and 1.5)
+        "rejected by the safety system", "safety_violations",
+        "content_policy_violation", "safety system",
+      ]
+
+      def self.refusal?(message : String) : Bool
+        REFUSAL_MARKERS.any? { |m| message.includes?(m) }
+      end
+
+      # The provider's own refusal text is long, carries a support URL and a request id,
+      # and buries the one part a caller can act on. Pull the violated category out when
+      # OpenAI names it — a caller retrying automatically needs to know whether it tripped
+      # self-harm or violence, not read prose.
+      def self.refusal_categories(message : String) : Array(String)
+        if m = message.match(/safety_violations=\[([^\]]*)\]/)
+          m[1].split(",").map(&.strip).reject(&.empty?)
+        else
+          [] of String
+        end
+      end
+
       def self.handle_cameras : JSON::Any
         JSON.parse({
           "cameras" => Cameras.list.map do |c|
@@ -49,10 +82,16 @@ module MJ
               "usd"      => c.cost,
               "seconds"  => c.seconds,
               "sizes"    => c.sizes,
+              "quality"  => c.quality,
+              "version"  => c.version,
               "note"     => c.note,
             }
           end,
-          "note" => "Costs and timings are measured from live calls, not quoted from docs.",
+          "note" => "Costs and timings are MEASURED from live calls, not quoted from docs. " \
+                    "`quality` is a rank (higher is better), a judgement over the model survey " \
+                    "rather than a measurement — reuse may prefer a higher rank when several " \
+                    "cached pictures match. `version` bumps when anything that changes a " \
+                    "camera's output changes, so caches know its old pictures are stale.",
         }.to_json)
       end
 
@@ -83,21 +122,61 @@ module MJ
         # Runware cannot emit XCF; ask it for lossless PNG and convert locally.
         wire_fmt = fmt == "xcf" ? "png" : fmt
 
-        result = rw.edit_references([ref] of Bytes, prompt, w, h, cam.model,
-          cam.extra, wire_fmt.upcase) if ref
-        result ||= rw.edit_references([blank_canvas(w, h)], prompt, w, h, cam.model,
-          cam.extra, wire_fmt.upcase)
+        # A caller-supplied seed makes a shot reproducible, which is also what the
+        # same-seed A/B in notes/verify_param.py needs.
+        extra = cam.extra.dup
+        if seed = data["seed"]?.try(&.as_i64?)
+          extra["seed"] = JSON::Any.new(seed)
+        end
+
+        begin
+          result = rw.edit_references([ref] of Bytes, prompt, w, h, cam.model,
+            extra, wire_fmt.upcase) if ref
+          result ||= rw.edit_references([blank_canvas(w, h)], prompt, w, h, cam.model,
+            extra, wire_fmt.upcase)
+        rescue ex
+          msg = ex.message || "unknown"
+          raise ex unless refusal?(msg)
+          # Unbilled. Report it as an outcome, not a failure, and never fall back to
+          # another camera — a silent substitution would corrupt the caller's logs.
+          return JSON::Any.new({
+            "status"  => JSON::Any.new("refused"),
+            "camera"  => JSON::Any.new(cam.id),
+            "model"   => JSON::Any.new(cam.model),
+            "version" => JSON::Any.new(cam.version.to_i64),
+            "usd"     => JSON::Any.new(0.0),
+            "reason"  => JSON::Any.new(msg[0, 400]),
+            "categories" => JSON::Any.new(
+              refusal_categories(msg).map { |c| JSON::Any.new(c) }),
+            "retry"   => JSON::Any.new(true),
+            "note"    => JSON::Any.new(
+              "The provider's content filter refused. Not billed. Refusals are " \
+              "probabilistic — the same prompt may pass on a retry. A tamer prompt or a " \
+              "different camera also works."),
+          } of String => JSON::Any)
+        end
 
         img = result.image_data
         img = Xcf.convert(img) if fmt == "xcf"
         res = {
+          "status"  => JSON::Any.new("ok"),
           "camera"  => JSON::Any.new(cam.id),
+          "version" => JSON::Any.new(cam.version.to_i64),
           "model"   => JSON::Any.new(cam.model),
           "width"   => JSON::Any.new(w.to_i64),
           "height"  => JSON::Any.new(h.to_i64),
           "bytes"   => JSON::Any.new(img.size.to_i64),
-          "usd"     => JSON::Any.new(result.cost || cam.cost),
+          "format"  => JSON::Any.new(fmt),
+          # What the provider actually billed. nil means it reported no price, which is
+          # recorded as unpriced — never silently as the camera's average, which would put
+          # a guess into the caller's ledger as if it were fact.
+          "usd"     => result.cost ? JSON::Any.new(result.cost) : JSON::Any.new(nil),
+          "usd_estimated" => JSON::Any.new(result.cost ? false : true),
         } of String => JSON::Any
+        res["usd"] = JSON::Any.new(cam.cost) unless result.cost
+        if seed = data["seed"]?.try(&.as_i64?)
+          res["seed"] = JSON::Any.new(seed)
+        end
 
         if path = data["output_path"]?.try(&.as_s?)
           File.write(path, img)
