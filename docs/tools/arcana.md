@@ -174,10 +174,46 @@ consecutive lines — the thing that stops synthesized narration sounding like a
 Returns `audio_base64` unless `output_path` is given. Inline still round-trips through a temp file
 because `arcana-ai`'s `TTS::Provider` has no `synthesize_bytes` yet; its own TODO notes this.
 
-**`speak` cannot report a cost**, and says so rather than guessing. Neither OpenAI nor ElevenLabs
-returns a price in the response — there is no `includeCost` equivalent. It returns `usd: null`, a
-`usd_note`, and `characters`, the billable unit; the caller applies its own rate card. Multiplying
-by an invented rate would put a guess into someone else's ledger as if it were fact.
+### Costing a spoken line
+
+No TTS provider reports a price in the response — there is no `includeCost` equivalent — so this is
+computed, and the trap is assuming one billing unit. **The two providers do not share one.**
+
+| model | billed on | what we report |
+| --- | --- | --- |
+| `gpt-4o-mini-tts` (OpenAI default) | tokens — $0.60/1M input chars **+ $12/1M audio output tokens** | estimated from **measured duration** at $0.015/min, OpenAI's published composite |
+| `tts-1` / `tts-1-hd` | characters, $15 / $30 per 1M | **exact** — computable from the text alone |
+| ElevenLabs | characters, as credits (Flash/Turbo families are 0.5 credits/char, the rest 1.0) | `credits` always; dollars only once a plan rate is configured |
+
+`usd_exact` says which rule applied, and `usd_basis` spells it out in words. A `usd` of `null` means
+genuinely unknown — never a guess dressed as a figure, because it would land in the caller's ledger
+as fact.
+
+**Why duration and not characters for the token-billed model.** For ordinary English prose the two
+agree closely, which makes characters look like a safe proxy. It isn't — the model decides how long
+to take. Same 133-character line, measured:
+
+| variant | characters | seconds | usd |
+| --- | --- | --- | --- |
+| normal | 133 | 8.52 | 0.00213 |
+| `speed: 0.5` | 133 | 17.18 | 0.00430 |
+
+Identical text, **2.02× the duration and 2.02× the cost**. A character-based estimate reports the
+same price for both and is 100 % under on the slow one. `instructions` that ask for a slow delivery,
+and non-English text, drift the same way.
+
+ElevenLabs is the opposite case: characters there are the *real* billing unit and exact, and it is
+the dollars-per-credit that is unknowable here, because it depends on the subscription tier. Set
+`MJ_ELEVENLABS_USD_PER_1K_CHARS` to have it priced; otherwise bill on the returned `credits`.
+
+Published rates drift, so all of them are overridable: `MJ_OPENAI_TTS_USD_PER_MINUTE`,
+`MJ_ELEVENLABS_USD_PER_1K_CHARS`. Unlike the camera costs — which are *measured* from Runware's
+`includeCost` — these are quoted from published price lists and should be re-checked.
+
+**`duration_seconds`** is returned regardless, and earns its place apart from billing: a comic
+pairing a panel with a spoken line needs to know how long to hold the panel, and a lip-sync pass
+needs the length before it can retime anything. Measured with `ffprobe`; `null` where ffprobe is
+absent, since opus and mp3 both need a decoder to measure.
 
 ## Qualifying a new camera
 

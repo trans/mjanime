@@ -18,8 +18,8 @@ module MJ
       getter id : String
       getter label : String
       getter model : String
-      getter cost : Float64          # USD per image, measured
-      getter seconds : Float64       # typical wall-clock, measured
+      getter cost : Float64    # USD per image, measured
+      getter seconds : Float64 # typical wall-clock, measured
       # Bump when anything that changes a camera's OUTPUT changes — the model id, the
       # default parameters, the prompt scaffolding. Callers key caches on it, so a bump
       # is how they learn this camera's old pictures are no longer what it would produce.

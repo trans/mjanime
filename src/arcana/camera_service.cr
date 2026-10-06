@@ -76,15 +76,15 @@ module MJ
         JSON.parse({
           "cameras" => Cameras.list.map do |c|
             {
-              "id"       => c.id,
-              "label"    => c.label,
-              "model"    => c.model,
-              "usd"      => c.cost,
-              "seconds"  => c.seconds,
-              "sizes"    => c.sizes,
-              "quality"  => c.quality,
-              "version"  => c.version,
-              "note"     => c.note,
+              "id"      => c.id,
+              "label"   => c.label,
+              "model"   => c.model,
+              "usd"     => c.cost,
+              "seconds" => c.seconds,
+              "sizes"   => c.sizes,
+              "quality" => c.quality,
+              "version" => c.version,
+              "note"    => c.note,
             }
           end,
           "note" => "Costs and timings are MEASURED from live calls, not quoted from docs. " \
@@ -140,16 +140,16 @@ module MJ
           # Unbilled. Report it as an outcome, not a failure, and never fall back to
           # another camera — a silent substitution would corrupt the caller's logs.
           return JSON::Any.new({
-            "status"  => JSON::Any.new("refused"),
-            "camera"  => JSON::Any.new(cam.id),
-            "model"   => JSON::Any.new(cam.model),
-            "version" => JSON::Any.new(cam.version.to_i64),
-            "usd"     => JSON::Any.new(0.0),
-            "reason"  => JSON::Any.new(msg[0, 400]),
+            "status"     => JSON::Any.new("refused"),
+            "camera"     => JSON::Any.new(cam.id),
+            "model"      => JSON::Any.new(cam.model),
+            "version"    => JSON::Any.new(cam.version.to_i64),
+            "usd"        => JSON::Any.new(0.0),
+            "reason"     => JSON::Any.new(msg[0, 400]),
             "categories" => JSON::Any.new(
               refusal_categories(msg).map { |c| JSON::Any.new(c) }),
-            "retry"   => JSON::Any.new(true),
-            "note"    => JSON::Any.new(
+            "retry" => JSON::Any.new(true),
+            "note"  => JSON::Any.new(
               "The provider's content filter refused. Not billed. Refusals are " \
               "probabilistic — the same prompt may pass on a retry. A tamer prompt or a " \
               "different camera also works."),
@@ -170,7 +170,7 @@ module MJ
           # What the provider actually billed. nil means it reported no price, which is
           # recorded as unpriced — never silently as the camera's average, which would put
           # a guess into the caller's ledger as if it were fact.
-          "usd"     => result.cost ? JSON::Any.new(result.cost) : JSON::Any.new(nil),
+          "usd"           => result.cost ? JSON::Any.new(result.cost) : JSON::Any.new(nil),
           "usd_estimated" => JSON::Any.new(result.cost ? false : true),
         } of String => JSON::Any
         res["usd"] = JSON::Any.new(cam.cost) unless result.cost
