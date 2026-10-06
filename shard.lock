@@ -1,0 +1,42 @@
+version: 2.0
+shards:
+  arcana-ai:
+    git: https://github.com/trans/arcana-ai.git
+    version: 0.2.0
+
+  arcana-core:
+    git: https://github.com/trans/arcana-core.git
+    version: 0.11.0
+
+  backtracer:
+    git: https://github.com/sija/backtracer.cr.git
+    version: 1.2.4
+
+  db:
+    git: https://github.com/crystal-lang/crystal-db.git
+    version: 0.14.0
+
+  exception_page:
+    git: https://github.com/crystal-loot/exception_page.git
+    version: 0.5.0
+
+  kemal:
+    git: https://github.com/kemalcr/kemal.git
+    version: 1.11.0
+
+  radix:
+    git: https://github.com/luislavena/radix.git
+    version: 0.4.1
+
+  sqlite3:
+    git: https://github.com/crystal-lang/crystal-sqlite3.git
+    version: 0.23.0
+
+  stumpy_core:
+    git: https://github.com/stumpycr/stumpy_core.git
+    version: 1.9.1
+
+  stumpy_png:
+    git: https://github.com/stumpycr/stumpy_png.git
+    version: 5.0.1
+
