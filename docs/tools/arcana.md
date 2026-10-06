@@ -71,6 +71,56 @@ Snapping only decides what size to **ask for**. The service never resamples or c
 **Reference-blind models are refused, not billed.** `FLUX.1 schnell` discards a reference image
 silently and returns a byte-identical picture with or without one.
 
+## What a result carries
+
+A caller keeping a ledger and a cache needs more than pixels back.
+
+```
+{ "status":"ok", "camera":"klein", "version":1, "model":"runware:400@2",
+  "width":768, "height":1024, "bytes":86902, "format":"webp",
+  "usd":0.00416, "usd_estimated":false, "seed":4242,
+  "image_base64":"…", "content_type":"image/webp" }
+```
+
+- **`usd`** is what the provider billed, from Runware's `includeCost` — not a rate card.
+  `usd_estimated` says which: `false` is the real figure, `true` means the provider reported
+  nothing and this is the registry's average. The average is never silently substituted for a
+  reported price, so the flag is trustworthy.
+- **`version`** is the cache-invalidation handle. Bump it whenever anything that changes a
+  camera's output changes — model id, default parameters, prompt scaffolding. Callers key on
+  `(camera, version, prompt, reference)` and a bump tells them their stored pictures are stale.
+- **`width`/`height`** are the size actually produced, after snapping — not what was asked for.
+- **`quality`** (from `cameras`) ranks the cameras ascending. It is a judgement over the model
+  survey, not a measurement, and it is labelled as one.
+
+## Refusals are an outcome, not an error
+
+A content filter saying no is unbilled, probabilistic — Nano refuses prompts it accepted minutes
+earlier — and the caller's right move is a retry or a tamer prompt. So it gets its own status, and
+**never a quiet fallback to another camera**: a silent substitution would put a lie in the caller's
+ledger.
+
+```
+{ "status":"refused", "camera":"flare", "version":1, "usd":0.0,
+  "categories":["self-harm"], "retry":true, "reason":"<provider text>" }
+```
+
+**Match the safety language, never the error code.** Each provider words it differently and the
+code is actively misleading:
+
+| provider | how a refusal reads |
+| --- | --- |
+| Google | `invalidProviderContent`, "content moderation", "Responsible AI" |
+| OpenAI | "rejected by the safety system … `safety_violations=[self-harm]`" — under code `providerBadRequest`, **the same code it returns for a bad parameter** |
+
+Classifying on `providerBadRequest` would file genuine errors as refusals and tell callers to retry
+something that will never work. Verified both directions: a safety refusal classifies, and an
+`invalidImage` 400 still raises. `categories` is parsed out of OpenAI's prose so an automatic retry
+can branch on the violation without parsing English.
+
+The markers were collected from live refusals. Don't add one speculatively — an over-broad marker
+converts real failures into infinite retry loops.
+
 **Formats** — `webp` (default), `png`, `jpg`, `xcf`. Measured on one 768×1024 panel:
 
 | format | on the wire | note |
@@ -123,6 +173,11 @@ consecutive lines — the thing that stops synthesized narration sounding like a
 
 Returns `audio_base64` unless `output_path` is given. Inline still round-trips through a temp file
 because `arcana-ai`'s `TTS::Provider` has no `synthesize_bytes` yet; its own TODO notes this.
+
+**`speak` cannot report a cost**, and says so rather than guessing. Neither OpenAI nor ElevenLabs
+returns a price in the response — there is no `includeCost` equivalent. It returns `usd: null`, a
+`usd_note`, and `characters`, the billable unit; the caller applies its own rate card. Multiplying
+by an invented rate would put a guess into someone else's ledger as if it were fact.
 
 ## Qualifying a new camera
 
