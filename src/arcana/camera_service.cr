@@ -48,7 +48,7 @@ module MJ
               "model"    => c.model,
               "usd"      => c.cost,
               "seconds"  => c.seconds,
-              "sizes"    => c.dims.map { |d| "#{d[0]}x#{d[1]}" },
+              "sizes"    => c.sizes,
               "note"     => c.note,
             }
           end,
