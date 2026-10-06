@@ -223,10 +223,20 @@ module MJ
     # Reference-image editing (Nano Banana / Gemini Flash Image, google:4@x).
     # positivePrompt is a natural-language instruction; the model regenerates
     # the whole output guided by the reference images and instruction (no mask).
+    # `extra` carries per-model parameters (steps, CFGScale, seed, …). Runware SILENTLY
+    # ACCEPTS unknown fields — a misspelled parameter returns 200 and does nothing — so
+    # anything passed here must be verified with a same-seed A/B before it is trusted.
+    # See notes/verify_param.py.
+    #
+    # `format` is PNG by default because that is what every existing caller expects back.
+    # WEBP is several times smaller for the same picture, which matters when the result has
+    # to cross a process boundary as base64 rather than being written to a local file.
     def edit_references(reference_bytes : Array(Bytes), prompt : String,
-                        width : Int32, height : Int32, model : String) : GenerationResult
+                        width : Int32, height : Int32, model : String,
+                        extra : Hash(String, JSON::Any)? = nil,
+                        format : String = "PNG") : GenerationResult
       task_uuid = UUID.random.to_s
-      STDERR.puts "[runware] Edit(refs=#{reference_bytes.size}): model=#{model} #{width}x#{height}"
+      STDERR.puts "[runware] Edit(refs=#{reference_bytes.size}): model=#{model} #{width}x#{height} #{format}"
       ref_uuids = reference_bytes.map { |b| upload_image_bytes(b) }
 
       body = JSON.build do |json|
@@ -239,8 +249,9 @@ module MJ
             json.field "width", width
             json.field "height", height
             json.field "outputType", "URL"
-            json.field "outputFormat", "PNG"
+            json.field "outputFormat", format
             json.field "includeCost", true
+            extra.try &.each { |k, v| json.field k, v }
             json.field "inputs" do
               json.object do
                 json.field "referenceImages" do

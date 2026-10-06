@@ -11,6 +11,8 @@ license: MIT
 targets:
   mj:
     main: src/mj.cr
+  mj-arcana:
+    main: src/mj-arcana.cr
 
 dependencies:
   kemal:
@@ -23,3 +25,6 @@ dependencies:
   arcana-core:
     github: trans/arcana-core
     version: ~> 0.11
+  arcana-ai:
+    github: trans/arcana-ai
+    version: ~> 0.2
