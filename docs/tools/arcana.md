@@ -104,6 +104,40 @@ A caller keeping a ledger and a cache needs more than pixels back.
 - **`quality`** (from `cameras`) ranks the cameras ascending. It is a judgement over the model
   survey, not a measurement, and it is labelled as one.
 
+## Model diversity is not capacity diversity
+
+The camera list looks like four backends — Runware's own FLUX, Google, OpenAI, BFL. It is not. Every
+camera posts to **one endpoint, `api.runware.ai/v1`, on one account**; the model ids
+(`google:4@3`, `openai:4@1`, `bfl:3@1`) are strings in the request body. The models run on different
+infrastructure; **admission control does not.** Under a spike all seven queue behind the same door,
+so picking a different camera does not route around congestion.
+
+I had told a caller the opposite — that a congestion episode on one need not touch another — which
+would have had them building a cross-camera failover that fails into the same queue. `cameras` now
+reports this directly, so it cannot be inferred wrongly from the model ids:
+
+```json
+"pools": { "runware": ["klein","flare","sunburst","lite","nano","hero","kontext"] }
+```
+
+Cameras in the **same** pool share a queue. Only cameras in **different** pools are independent.
+A `Camera` names its `provider`, and `Transport` (`src/arcana/transport.cr`) is the seam a real second
+provider plugs into — `shoot` keeps its request shape and result contract, so callers see only new
+camera ids with their own measured costs.
+
+**What a second transport buys is a published ceiling, not a better average.** Runware runs a shared
+best-effort queue and publishes no limit, so there is no headroom to buy when it stalls. Direct
+provider APIs state one and raise it with spend:
+
+| | ceiling | predictable? |
+| --- | --- | --- |
+| Runware | nothing published; shared queue | no — episodic stalls, measured below |
+| Google direct | spend per rolling 10 min: T1 $10 / T2 $50 / T3 $200 (≈4.8 nano images/s) | yes, and purchasable |
+| OpenAI direct | tier-based images-per-minute, per account | yes, in the console |
+
+Runware's trade is price and a single integration. A number you can plan against and raise is worth
+more under spike than a cheaper average you cannot.
+
 ## Heavy traffic: latency, not rejection
 
 Runware enforces **no hard rate limit.** It runs a shared queue, so load shows up as latency, with

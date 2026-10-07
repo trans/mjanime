@@ -2,6 +2,7 @@ require "arcana-core"
 require "base64"
 require "json"
 require "./cameras"
+require "./transport"
 require "./xcf"
 
 module MJ
@@ -30,13 +31,19 @@ module MJ
 
       CAMERAS_SCHEMA = JSON.parse(%<{"type":"object","properties":{}}>)
 
+      # Transports are passed as a map so a camera is served by whichever one it names.
+      # Today there is exactly one; see transport.cr for why recording that still matters.
       def self.register(ts : ::Arcana::Toolset, rw : RunwareClient)
+        register(ts, {"runware" => RunwareTransport.new(rw).as(Transport)})
+      end
+
+      def self.register(ts : ::Arcana::Toolset, transports : Hash(String, Transport))
         ts.tool("cameras",
           "List the available cameras with measured cost, speed and character.",
           input_schema: CAMERAS_SCHEMA) { |_| handle_cameras }
         ts.tool("shoot",
           "Draw a picture with a chosen camera, optionally carrying a character from a reference image.",
-          input_schema: SHOOT_SCHEMA) { |data| handle_shoot(rw, data) }
+          input_schema: SHOOT_SCHEMA) { |data| handle_shoot(transports, data) }
       end
 
       # A provider's content filter refusing is NOT an error: it is unbilled, it is
@@ -94,17 +101,27 @@ module MJ
         JSON.parse({
           "cameras" => Cameras.list.map do |c|
             {
-              "id"      => c.id,
-              "label"   => c.label,
-              "model"   => c.model,
-              "usd"     => c.cost,
-              "seconds" => c.seconds,
-              "sizes"   => c.sizes,
-              "quality" => c.quality,
-              "version" => c.version,
-              "note"    => c.note,
+              "id"       => c.id,
+              "label"    => c.label,
+              "model"    => c.model,
+              "usd"      => c.cost,
+              "seconds"  => c.seconds,
+              "sizes"    => c.sizes,
+              "quality"  => c.quality,
+              "version"  => c.version,
+              "provider" => c.provider,
+              "note"     => c.note,
             }
           end,
+          # A caller planning for a spike needs this, and it is not guessable from the
+          # model ids: google:/openai:/bfl: cameras all reach their provider THROUGH
+          # Runware, so they share one queue on one account.
+          "pools"      => Cameras.pools,
+          "pools_note" => "Cameras grouped by transport. Cameras in the SAME group share one " \
+                          "endpoint, one account and one queue, so switching between them does " \
+                          "not route around congestion — a model id of google:/openai:/bfl: " \
+                          "names the MODEL, not an independent capacity pool. Only cameras in " \
+                          "DIFFERENT groups are independent.",
           "note" => "Costs and timings are MEASURED from live calls, not quoted from docs. " \
                     "`quality` is a rank (higher is better), a judgement over the model survey " \
                     "rather than a measurement — reuse may prefer a higher rank when several " \
@@ -113,10 +130,14 @@ module MJ
         }.to_json)
       end
 
-      def self.handle_shoot(rw : RunwareClient, data : JSON::Any) : JSON::Any
+      def self.handle_shoot(transports : Hash(String, Transport), data : JSON::Any) : JSON::Any
         prompt = data["prompt"]?.try(&.as_s?) || raise "shoot requires 'prompt'"
         id = data["camera"]?.try(&.as_s?) || "klein"
         cam = Cameras.find(id) || raise "unknown camera #{id.inspect} — call `cameras` for the list"
+
+        tx = transports[cam.provider]? ||
+             raise "camera #{cam.id} needs the #{cam.provider.inspect} transport, which is " \
+                   "not configured on this host"
 
         ref = reference_bytes(data)
         if ref && Cameras::REFERENCE_BLIND.includes?(cam.model)
@@ -155,9 +176,9 @@ module MJ
         end
 
         begin
-          result = rw.edit_references([ref] of Bytes, prompt, w, h, cam.model,
+          result = tx.edit([ref] of Bytes, prompt, w, h, cam.model,
             extra, wire_fmt.upcase) if ref
-          result ||= rw.edit_references([blank_canvas(w, h)], prompt, w, h, cam.model,
+          result ||= tx.edit([blank_canvas(w, h)], prompt, w, h, cam.model,
             extra, wire_fmt.upcase)
         rescue ex
           msg = ex.message || "unknown"

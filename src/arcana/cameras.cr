@@ -36,12 +36,19 @@ module MJ
       getter dims : Array(Array(Int32))?
       getter range : Tuple(Int32, Int32, Int32)?
       getter note : String
+      # Which transport serves this camera. All seven are "runware" today, and that is the
+      # point of recording it: every one of them queues behind a single endpoint on a single
+      # account, so choosing a different camera does NOT route around congestion. Model
+      # diversity is not capacity diversity. When a second transport exists, this field is
+      # what tells a caller which cameras are genuinely independent pools.
+      getter provider : String
       @[JSON::Field(ignore: true)]
       getter extra : Hash(String, JSON::Any)
 
       def initialize(@id, @label, @model, @cost, @seconds, @note,
                      @quality : Int32, @version : Int32 = 1,
                      @dims = nil, @range = nil,
+                     @provider : String = "runware",
                      @extra = {} of String => JSON::Any)
         raise "camera #{@id}: set exactly one of dims or range" if @dims.nil? == @range.nil?
       end
@@ -169,6 +176,13 @@ module MJ
       ]
 
       BY_ID = ALL.to_h { |c| {c.id, c} }
+
+      # Which cameras are independent capacity pools, grouped by transport. With one
+      # transport this is a single group of seven, which is exactly the thing worth being
+      # able to see: a spike cannot be spread across these by picking different cameras.
+      def self.pools : Hash(String, Array(String))
+        ALL.group_by(&.provider).transform_values(&.map(&.id))
+      end
 
       # Models that silently DISCARD a reference image. Sending one costs money and
       # changes nothing — FLUX.1 schnell returns a byte-identical image with and without.
