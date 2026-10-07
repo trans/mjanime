@@ -84,9 +84,9 @@ module MJ
       # a comic that pairs a panel with a spoken line needs to know how long to hold it,
       # and a lip-sync pass needs the length before it can retime anything.
       private def self.ok_result(provider : String, model : String, voice : String,
-                                 format : String, text : String, audio_path : String,
+                                 format : String, text : String,
+                                 seconds : Float64?,
                                  content_type : String?, content_length : Int64 | Int32 | Nil)
-        seconds = TtsRates.duration(audio_path)
         usd, exact, basis = TtsRates.price(provider, model, text.size, seconds)
         h = {
           "status"     => JSON::Any.new("ok"),
@@ -141,9 +141,14 @@ module MJ
             raise "unknown provider #{provider.inspect} — expected openai or elevenlabs"
           end
 
+        # Empty means "the provider's own default" — arcana-ai 0.3.0 changed these from
+        # OpenAI's defaults to "" precisely because the old ones leaked across providers:
+        # ElevenLabs was being sent model "gpt-4o-mini-tts" and voice "alloy" on every
+        # call, overriding the constructor. Never substitute one provider's default here.
         req = ::Arcana::AI::TTS::Request.new(
           text: text,
-          voice: data["voice"]?.try(&.as_s?) || "alloy",
+          voice: data["voice"]?.try(&.as_s?) || "",
+          model: data["model"]?.try(&.as_s?) || "",
           response_format: format,
           instructions: data["instructions"]?.try(&.as_s?),
           speed: data["speed"]?.try(&.as_f?),
@@ -151,26 +156,32 @@ module MJ
           next_text: data["next_text"]?.try(&.as_s?),
         )
 
+        # `Result` does not carry the voice actually used, so resolve it for the report:
+        # the caller needs to know WHICH voice spoke, not that it asked for the default.
+        effective_voice =
+          if v = data["voice"]?.try(&.as_s?)
+            v
+          elsif provider == "elevenlabs"
+            ::Arcana::AI::TTS::ElevenLabs::DEFAULT_VOICE
+          else
+            "alloy"
+          end
+
         begin
           if path = data["output_path"]?.try(&.as_s?)
             result = tts.synthesize(req, path)
-            JSON::Any.new(ok_result(provider, result.model, req.voice, format, text, path,
-              result.content_type, result.content_length).tap { |h|
+            JSON::Any.new(ok_result(provider, result.model, effective_voice, format, text,
+              TtsRates.duration(path), result.content_type, result.content_length).tap { |h|
               h["output_path"] = JSON::Any.new(result.output_path)
             })
           else
-            # arcana-ai's Provider has no synthesize_bytes yet, so inline still round-trips
-            # through a temp file. Its own TODO notes this; promote it there and this goes away.
-            temp = File.tempname("mj-tts-", ".#{format}")
-            begin
-              result = tts.synthesize(req, temp)
-              JSON::Any.new(ok_result(provider, result.model, req.voice, format, text, temp,
-                result.content_type, result.content_length).tap { |h|
-                h["audio_base64"] = JSON::Any.new(Base64.strict_encode(File.read(temp)))
-              })
-            ensure
-              File.delete(temp) if File.exists?(temp)
-            end
+            # arcana-ai 0.3.0 added the in-memory overload, so the temp file is gone.
+            # ffprobe measures duration straight off the bytes through a pipe.
+            result = tts.synthesize(req)
+            JSON::Any.new(ok_result(provider, result.model, effective_voice, format, text,
+              TtsRates.duration(result.audio, format), result.content_type, result.content_length).tap { |h|
+              h["audio_base64"] = JSON::Any.new(Base64.strict_encode(result.audio))
+            })
           end
         rescue ex
           msg = ex.message || "unknown"

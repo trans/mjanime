@@ -57,6 +57,7 @@ bus_url = ENV["ARCANA_WS_URL"]? ||
           "ws://localhost:19118/bus"
 
 clients = [] of Arcana::Client
+toolsets = [] of Arcana::Toolset
 
 STDERR.puts "#{DIM}┌──────────────────────────────────────────────────#{RESET}"
 STDERR.puts "#{DIM}│#{RESET} mj-arcana  #{DIM}│#{RESET} #{bus_url}"
@@ -102,7 +103,7 @@ if key = ENV["RUNWARE_API_KEY"]?
   cam_ts = Arcana::Toolset.new(client: cam_client, name: "mj:camera",
     description: "Image generation behind a camera abstraction.")
   MJ::Arcana::CameraService.register(cam_ts, rw)
-  cam_ts.start
+  toolsets << cam_ts
   clients << cam_client
   log "#{GREEN}●#{RESET} #{BOLD}mj:camera#{RESET} #{DIM}— #{MJ::Arcana::Cameras::ALL.size} cameras, " \
       "#{sprintf("$%.4f", MJ::Arcana::Cameras.list.first.cost)}–" \
@@ -136,20 +137,28 @@ else
       is synthesized as several clips, or each reads as if it were the only sentence.
 
       Reply carries `status`. "ok" gives provider, model, voice, format, characters,
-      content_type, content_length, and either audio_base64 or output_path. "refused" means
-      the provider declined the text: unbilled, with a reason and retry:true. A provider is
-      NEVER silently substituted for another.
+      duration_seconds, content_type, content_length, and either audio_base64 or
+      output_path. "refused" means the provider declined the text: unbilled, with a reason
+      and retry:true. A provider is NEVER silently substituted for another.
 
-      NOTE ON COST: `usd` is null. Neither provider reports a price in the response, unlike
-      Runware's includeCost, so rather than put a guess in your ledger the reply gives
-      `characters` — bill it with your own rate card.
+      COST: no TTS provider reports a price, so `usd` is computed and `usd_exact` says how.
+      The providers do not share a billing unit. gpt-4o-mini-tts bills per TOKEN and audio
+      tokens track duration, so it is estimated from measured length — do NOT estimate it
+      from characters, which is 100% under on a slow delivery. tts-1/tts-1-hd bill per
+      character and come back exact. ElevenLabs bills characters as credits (returned as
+      `credits`), but a credit's dollar value depends on the plan, so usd is null unless a
+      rate is configured here. `usd_basis` spells out which rule ran; null usd means
+      genuinely unknown, never zero.
+
+      Omit `voice` to get the provider's own default — do not pass OpenAI's "alloy" to
+      ElevenLabs, which expects a voice id.
       GUIDE
     tags: ["tts", "voice", "speech", "audio"],
   )
   voice_ts = Arcana::Toolset.new(client: voice_client, name: "mj:voice",
     description: "Text to speech.")
   MJ::Arcana::VoiceService.register(voice_ts)
-  voice_ts.start
+  toolsets << voice_ts
   clients << voice_client
   log "#{GREEN}●#{RESET} #{BOLD}mj:voice#{RESET} #{DIM}— #{voices.join(", ")}#{RESET}"
 end
@@ -168,19 +177,19 @@ Signal::INT.trap do
   exit 0
 end
 
-# Toolset#start only installs the message handler. Client#connect is what opens the socket
-# and sends the join frame that creates the directory listing — without it the service runs
-# happily and is invisible to everyone. It blocks running the WebSocket loop, so with two
-# services every client but the last needs its own fiber.
-clients[0...-1].each do |c|
+# `Toolset#run` is start + connect in one call (arcana-core 0.15.0). It exists because the
+# old pairing was a trap: `start` alone installs the message handler and nothing else, so a
+# service would run, log cheerfully, and be invisible to every caller — no error anywhere.
+# `run` blocks on the WebSocket loop, so every toolset but the last needs its own fiber.
+toolsets[0...-1].each do |ts|
   spawn do
     begin
-      c.connect
+      ts.run
     rescue ex
-      STDERR.puts "#{AMBER}●#{RESET} #{c.address} disconnected: #{ex.message}"
+      STDERR.puts "#{AMBER}●#{RESET} #{ts.address} disconnected: #{ex.message}"
     end
   end
 end
 Fiber.yield
 log "listening"
-clients.last.connect
+toolsets.last.run

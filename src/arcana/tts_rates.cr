@@ -41,7 +41,7 @@ module MJ
       # ElevenLabs bills credits per character, and the multiplier IS model-dependent:
       # the Flash and Turbo families are half price per character. This part is knowable;
       # only the dollars-per-credit is not.
-      ELEVENLABS_CREDITS_PER_CHAR = 1.0
+      ELEVENLABS_CREDITS_PER_CHAR  = 1.0
       ELEVENLABS_HALF_PRICE_MODELS = ["flash", "turbo"]
 
       def self.elevenlabs_credits_per_char(model : String) : Float64
@@ -108,14 +108,44 @@ module MJ
       end
 
       # ffprobe is the only general answer — opus, mp3, aac and flac all need a decoder to
-      # know their length, and OpenAI's default here is opus.
+      # know their length, and this service's default is opus.
+      #
+      # It needs a SEEKABLE source, so the bytes get a short-lived temp file rather than a
+      # pipe. Two things ruled the pipe out, and the first is the one that matters:
+      #
+      #   1. ffprobe cannot get a duration out of a piped Ogg stream at all — it reports
+      #      N/A, because the length lives in the last page's granule position and it
+      #      cannot seek there. mp3 pipes fine; opus, the default here, never does.
+      #   2. Piping bytes to a subprocess worked in a standalone program and returned nil
+      #      from inside the service's fiber for the same audio, where probing a path
+      #      worked in both.
+      #
+      # Careful: `ffprobe - < file` SUCCEEDS where a true pipe fails, because shell
+      # redirection hands over a seekable file descriptor. Testing that way proves nothing
+      # about piping.
+      #
+      # This is a probe-only write of ~50KB, not a round-trip of the synthesis itself —
+      # the audio still comes back in memory from arcana-ai 0.3.0 and is served from there.
+      ARGS = ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0"]
+
+      def self.duration(audio : Bytes, format : String) : Float64?
+        return nil unless Process.find_executable("ffprobe")
+        path = File.tempname("mj-probe-", ".#{format}")
+        begin
+          File.write(path, audio)
+          duration(path)
+        ensure
+          File.delete(path) if File.exists?(path)
+        end
+      end
+
       def self.duration(path : String) : Float64?
         return nil unless Process.find_executable("ffprobe")
         buf = IO::Memory.new
-        status = Process.run("ffprobe",
-          ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", path],
+        status = Process.run("ffprobe", ARGS + [path],
           output: buf, error: Process::Redirect::Close)
         return nil unless status.success?
+        # ffprobe prints "N/A" rather than failing when it cannot determine a length.
         buf.to_s.strip.to_f?
       end
     end

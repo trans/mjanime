@@ -23,12 +23,23 @@ lives in bus code wakes up thinking about Runware's parameter drift.
 `mj:voice` is the TTS service moved off the arcana server. The provider code stays in `arcana-ai`
 (a library); only the exposure moved.
 
-## ⚠️ `Toolset#start` does not register you
+## Use `Toolset#run`, not `start`
 
-`ts.start` installs a message handler and nothing else. **`Client#connect` is what opens the socket
-and sends the join frame that creates the directory listing.** Without it the service starts, logs
-cheerfully, and is invisible to every caller. `connect` blocks running the WebSocket loop, so with
-two services every client but the last needs its own fiber.
+`ts.start` installs a message handler **and nothing else** — `Client#connect` is what opens the
+socket and sends the join frame that creates the directory listing. Call only `start` and the service
+runs, logs cheerfully, and is invisible to every caller, with no error anywhere.
+
+**arcana-core 0.15.0 added `Toolset#run`**, which is start + connect in one call, in response to this
+exact trap. Use it. It still blocks on the WebSocket loop, so every toolset but the last needs its
+own fiber:
+
+```crystal
+toolsets[0...-1].each { |ts| spawn { ts.run } }
+toolsets.last.run
+```
+
+0.15.0 also warns on STDERR if a Client-transport Toolset is still unconnected 5 s after `start`
+(tunable via `connect_grace`), so the silent version of this mistake is no longer possible.
 
 ## `mj:camera`
 
@@ -171,8 +182,16 @@ differences: **ElevenLabs is offered** (it was fully implemented in `arcana-ai` 
 wired to the bus), and it accepts **`previous_text` / `next_text`** for prosody continuity across
 consecutive lines — the thing that stops synthesized narration sounding like a list of sentences.
 
-Returns `audio_base64` unless `output_path` is given. Inline still round-trips through a temp file
-because `arcana-ai`'s `TTS::Provider` has no `synthesize_bytes` yet; its own TODO notes this.
+Returns `audio_base64` unless `output_path` is given. **Omit `voice` to get the provider's own
+default** — arcana-ai 0.3.0 changed `TTS::Request`'s defaults to `""` for this reason: the old
+OpenAI-shaped defaults leaked across providers, so ElevenLabs was sent model `gpt-4o-mini-tts` and
+voice `alloy` on every call, silently overriding its constructor. That also broke costing here,
+since the ElevenLabs credit multiplier is keyed on the model: Flash and Turbo would have been
+charged at 1.0 credits/character instead of 0.5, a 2x overstatement on exactly the cheap models.
+Never substitute one provider's default for another's.
+
+Audio comes back in memory — arcana-ai 0.3.0's `synthesize(req)` overload returns `result.audio`, so
+there is no temp-file round-trip for delivery.
 
 ### Costing a spoken line
 
@@ -212,8 +231,21 @@ Published rates drift, so all of them are overridable: `MJ_OPENAI_TTS_USD_PER_MI
 
 **`duration_seconds`** is returned regardless, and earns its place apart from billing: a comic
 pairing a panel with a spoken line needs to know how long to hold the panel, and a lip-sync pass
-needs the length before it can retime anything. Measured with `ffprobe`; `null` where ffprobe is
-absent, since opus and mp3 both need a decoder to measure.
+needs the length before it can retime anything.
+
+Measured with `ffprobe`, which needs a **seekable** source — so the in-memory bytes get a
+short-lived temp file rather than a pipe. That is a ~50 KB probe-only write, not a round-trip of the
+synthesis. A pipe was tried and is wrong twice over:
+
+- ffprobe cannot get a duration out of a piped **Ogg** stream at all, reporting `N/A`, because the
+  length lives in the last page's granule position and it cannot seek there. mp3 pipes fine; opus,
+  the default here, never does.
+- Piping bytes to a subprocess worked standalone and returned nil from inside the service's fiber
+  for the same audio, where probing a path worked in both.
+
+One trap if you ever re-test this: `ffprobe - < file` **succeeds** where a true pipe fails, because
+shell redirection hands over a seekable file descriptor. Testing that way proves nothing about
+piping — use `cat file | ffprobe -`.
 
 ## Qualifying a new camera
 
