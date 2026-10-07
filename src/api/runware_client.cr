@@ -1,4 +1,5 @@
 require "http/client"
+require "uri"
 require "base64"
 require "uuid"
 
@@ -27,11 +28,7 @@ module MJ
         image:    data_uri,
       }].to_json
 
-      response = HTTP::Client.post(
-        "https://api.runware.ai/v1",
-        headers: auth_headers,
-        body: body
-      )
+      response = http_post(body)
 
       unless response.status_code == 200
         raise "Runware upload error (#{response.status_code}): #{response.body}"
@@ -58,11 +55,7 @@ module MJ
         image:    data_uri,
       }].to_json
 
-      response = HTTP::Client.post(
-        "https://api.runware.ai/v1",
-        headers: auth_headers,
-        body: body
-      )
+      response = http_post(body)
 
       unless response.status_code == 200
         raise "Runware upload error (#{response.status_code}): #{response.body}"
@@ -93,11 +86,7 @@ module MJ
 
       STDERR.puts "[runware] Preprocessing pose: image=#{image_uuid} #{width}x#{height}"
 
-      response = HTTP::Client.post(
-        "https://api.runware.ai/v1",
-        headers: auth_headers,
-        body: body
-      )
+      response = http_post(body)
 
       unless response.status_code == 200
         raise "Runware preprocess error (#{response.status_code}): #{response.body}"
@@ -307,11 +296,7 @@ module MJ
     private def post_inference(body : String, task_uuid : String, task : String,
                                model : String, width : Int32? = nil,
                                height : Int32? = nil) : GenerationResult
-      response = HTTP::Client.post(
-        "https://api.runware.ai/v1",
-        headers: auth_headers,
-        body: body
-      )
+      response = http_post(body)
 
       unless response.status_code == 200
         raise "Runware API error (#{response.status_code}): #{response.body}"
@@ -333,7 +318,7 @@ module MJ
                   "#{cost ? " cost=#{Spend.money(cost)} (run #{Spend.money(Spend.session_cost)})" : " cost=unreported"}"
 
       image_url = task_result["imageURL"].as_s
-      image_response = HTTP::Client.get(image_url)
+      image_response = http_get(image_url)
 
       unless image_response.status_code == 200
         raise "Failed to download image from #{image_url}: #{image_response.status_code}"
@@ -345,6 +330,99 @@ module MJ
         image_uuid: result_uuid,
         cost: cost
       )
+    end
+
+    # ---- transport ------------------------------------------------------------
+    #
+    # Runware does not enforce hard rate limits. It runs a shared queue, so heavy traffic
+    # shows up as LATENCY rather than rejection, with 429 only once queue capacity is
+    # exceeded. Their guidance is 2-4 concurrent requests and app-side concurrency limits.
+    #
+    # Measured here, on klein at 512x512, which is messier than that description:
+    #
+    #   n=1   wall   4.9s                       0 failures
+    #   n=2   wall 126.6s  (122-127s)           1 failure (504)
+    #   n=4   wall  17.9s  (4.6-17.9s)          0 failures
+    #   n=4   wall 136.8s  (5.1-137s)           1 failure (504)
+    #
+    # Note n=2 was worse than n=4. The stalls and failures are NOT a function of our
+    # concurrency — they are congestion episodes that come and go, so there is no safe
+    # concurrency number to pick. Plan for a p50 of a few seconds with a tail two orders of
+    # magnitude worse, and note the failures arrived as **504**, not 429.
+    #
+    # Two things follow, and the client had neither:
+    #
+    # 1. TIMEOUTS. Crystal's HTTP::Client has none by default, so a stalled connection
+    #    waits forever. A caller with a latency budget needs the request to give up.
+    # 2. RETRIES on transient status. A 504 is exactly what should be retried; raising on
+    #    it turns a blip into a failed panel.
+    #
+    # CAVEAT worth knowing before trusting retries: Runware bills per task, so a 504 that
+    # arrives AFTER the work was done means a retry pays twice. Without a retry you pay
+    # once and get nothing. Retries are therefore few and the ceiling is low; raise
+    # MJ_RUNWARE_RETRIES only if you accept that trade.
+    RETRYABLE = [408, 429, 500, 502, 503, 504]
+
+    def self.retries : Int32
+      ENV["MJ_RUNWARE_RETRIES"]?.try(&.to_i?) || 2
+    end
+
+    # Generous, because normal latency here is seconds and the tail is long — this is a
+    # backstop against an indefinite hang, not a latency budget. Callers that need a tight
+    # budget should impose it themselves.
+    def self.read_timeout : Float64
+      ENV["MJ_RUNWARE_READ_TIMEOUT"]?.try(&.to_f?) || 180.0
+    end
+
+    private def http_post(body : String) : HTTP::Client::Response
+      with_retries("POST /v1") do
+        client = HTTP::Client.new(URI.parse("https://api.runware.ai/v1"))
+        client.connect_timeout = 15.seconds
+        client.read_timeout = self.class.read_timeout.seconds
+        client.write_timeout = 60.seconds
+        begin
+          client.post("/v1", headers: auth_headers, body: body)
+        ensure
+          client.close
+        end
+      end
+    end
+
+    private def http_get(url : String) : HTTP::Client::Response
+      with_retries("GET #{url}") do
+        uri = URI.parse(url)
+        client = HTTP::Client.new(uri)
+        client.connect_timeout = 15.seconds
+        client.read_timeout = self.class.read_timeout.seconds
+        begin
+          client.get(uri.request_target)
+        ensure
+          client.close
+        end
+      end
+    end
+
+    # Retries transient status codes and transport errors with exponential backoff plus
+    # jitter. A 400 is never retried: a content refusal or a bad parameter will fail again
+    # just as fast and costs the caller latency for nothing.
+    private def with_retries(what : String, & : -> HTTP::Client::Response) : HTTP::Client::Response
+      attempt = 0
+      max = self.class.retries
+      loop do
+        begin
+          response = yield
+          return response unless RETRYABLE.includes?(response.status_code)
+          # Out of attempts: hand the error response back so the caller raises with
+          # the provider's own message rather than a retry wrapper of our own.
+          return response if attempt >= max
+          STDERR.puts "[runware] #{what} got #{response.status_code}, retrying (#{attempt + 1}/#{max})"
+        rescue ex : IO::TimeoutError | IO::Error | Socket::Error
+          raise ex if attempt >= max
+          STDERR.puts "[runware] #{what} #{ex.class}: #{ex.message}, retrying (#{attempt + 1}/#{max})"
+        end
+        attempt += 1
+        sleep((2.0 ** attempt + Random.rand).seconds)
+      end
     end
 
     private def auth_headers : HTTP::Headers

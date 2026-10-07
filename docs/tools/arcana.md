@@ -104,6 +104,49 @@ A caller keeping a ledger and a cache needs more than pixels back.
 - **`quality`** (from `cameras`) ranks the cameras ascending. It is a judgement over the model
   survey, not a measurement, and it is labelled as one.
 
+## Heavy traffic: latency, not rejection
+
+Runware enforces **no hard rate limit.** It runs a shared queue, so load shows up as latency, with
+429 only once queue capacity is exceeded. Their guidance is 2–4 concurrent requests and app-side
+concurrency limits.
+
+What we actually measured, `klein` at 512×512 through the bus:
+
+| concurrency | wall | per-request | failures |
+| --- | --- | --- | --- |
+| 1 | 4.9 s | 4.9 s | 0 |
+| 2 | 126.6 s | 122–127 s | **1 (504)** |
+| 4 | 17.9 s | 4.6–17.9 s | 0 |
+| 4 | 136.8 s | 5.1–137 s | **1 (504)** |
+
+**Read that table carefully: n=2 was worse than n=4.** The stalls and failures are *not* a function
+of our concurrency — they are congestion episodes that come and go, so there is no safe concurrency
+number to pick and no amount of client-side throttling that avoids them. Plan for a p50 of a few
+seconds and a tail roughly 25× worse. Note also that capacity exhaustion reached us as **504**, not
+the documented 429.
+
+Requests do run **concurrently** — the Toolset does not serialize them, so one slow shot does not
+block the others.
+
+The client had no defences against any of this and now has two:
+
+- **Timeouts.** Crystal's `HTTP::Client` has *none* by default, so a stalled request waits forever.
+  Now 15 s connect, 180 s read (`MJ_RUNWARE_READ_TIMEOUT`), 60 s write. The read timeout is a
+  backstop against an indefinite hang, not a latency budget — a caller with a deadline should impose
+  its own.
+- **Retries** on 408/429/500/502/503/504 and transport errors, with exponential backoff plus jitter,
+  twice by default (`MJ_RUNWARE_RETRIES`). A 400 is never retried: a refusal or a bad parameter will
+  fail again just as fast. Verified against a local always-503 server — 1 attempt + 2 retries over
+  7.3 s, then the provider's own error is handed back rather than a wrapper of ours.
+
+⚠️ **Retries can double-bill.** Runware bills per task, so a 504 arriving *after* the work completed
+means the retry pays for a second generation. Without the retry you pay once and get nothing. That is
+why the ceiling is 2 and not 10; raise `MJ_RUNWARE_RETRIES` only if you accept the trade.
+
+When the retries are exhausted the caller gets a third outcome, `status: "overloaded"` — unbilled,
+`retry: true`, and explicitly *not* a refusal, because the prompt is fine and rewording it is the
+wrong response.
+
 ## Refusals are an outcome, not an error
 
 A content filter saying no is unbilled, probabilistic — Nano refuses prompts it accepted minutes

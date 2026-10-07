@@ -64,6 +64,24 @@ module MJ
       # and buries the one part a caller can act on. Pull the violated category out when
       # OpenAI names it — a caller retrying automatically needs to know whether it tripped
       # self-harm or violence, not read prose.
+      # A third outcome, distinct from both success and refusal: Runware's queue beat us.
+      #
+      # Runware enforces no hard rate limit — it runs a shared queue, so heavy traffic shows
+      # up as latency, and capacity exhaustion arrives as 429 or, as measured here, 504.
+      # The client already retries these with backoff; this is what is left when the retries
+      # are used up. It is unbilled, it is transient, and the caller's move is to wait and
+      # try again — which is a different instruction from a refusal (reword it) and from an
+      # error (stop).
+      OVERLOAD_STATUSES = [408, 429, 500, 502, 503, 504]
+
+      def self.overloaded?(message : String) : Bool
+        if m = message.match(/Runware (?:API|upload|preprocess) error \((\d{3})\)/)
+          OVERLOAD_STATUSES.includes?(m[1].to_i)
+        else
+          false
+        end
+      end
+
       def self.refusal_categories(message : String) : Array(String)
         if m = message.match(/safety_violations=\[([^\]]*)\]/)
           m[1].split(",").map(&.strip).reject(&.empty?)
@@ -143,6 +161,24 @@ module MJ
             extra, wire_fmt.upcase)
         rescue ex
           msg = ex.message || "unknown"
+          if overloaded?(msg)
+            # Unbilled, and already retried with backoff inside the client.
+            return JSON::Any.new({
+              "status"  => JSON::Any.new("overloaded"),
+              "camera"  => JSON::Any.new(cam.id),
+              "model"   => JSON::Any.new(cam.model),
+              "version" => JSON::Any.new(cam.version.to_i64),
+              "usd"     => JSON::Any.new(0.0),
+              "reason"  => JSON::Any.new(msg[0, 400]),
+              "retry"   => JSON::Any.new(true),
+              "note"    => JSON::Any.new(
+                "Runware's queue was over capacity. Not billed, and already retried with " \
+                "exponential backoff before you saw this. Transient: wait and try again. " \
+                "Unlike a refusal, the prompt is fine — do not reword it. Latency here is " \
+                "variable by a factor of ~25 even at low concurrency, so a caller with a " \
+                "deadline should set its own budget rather than assume the typical case."),
+            } of String => JSON::Any)
+          end
           raise ex unless refusal?(msg)
           # Unbilled. Report it as an outcome, not a failure, and never fall back to
           # another camera — a silent substitution would corrupt the caller's logs.
