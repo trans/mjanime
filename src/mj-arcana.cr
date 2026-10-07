@@ -15,6 +15,7 @@ require "./api/dimensions"
 require "./api/controlnet"
 require "./api/runware_client"
 require "./engine/canvas_util"
+require "./arcana/transports/openai_direct"
 require "./arcana/camera_service"
 require "./arcana/voice_service"
 require "arcana-core"
@@ -102,7 +103,14 @@ if key = ENV["RUNWARE_API_KEY"]?
   )
   cam_ts = Arcana::Toolset.new(client: cam_client, name: "mj:camera",
     description: "Image generation behind a camera abstraction.")
-  MJ::Arcana::CameraService.register(cam_ts, rw)
+  # Transports, not just a client: a camera is served by whichever pool it names. The
+  # openai one is an INDEPENDENT queue running the same models — that is the whole value,
+  # so it registers whenever the key is present.
+  transports = {"runware" => MJ::Arcana::RunwareTransport.new(rw).as(MJ::Arcana::Transport)}
+  if openai_key = ENV["OPENAI_API_KEY"]?
+    transports["openai"] = MJ::Arcana::OpenAIDirectTransport.new(openai_key).as(MJ::Arcana::Transport)
+  end
+  MJ::Arcana::CameraService.register(cam_ts, transports)
   toolsets << cam_ts
   clients << cam_client
   log "#{GREEN}●#{RESET} #{BOLD}mj:camera#{RESET} #{DIM}— #{MJ::Arcana::Cameras::ALL.size} cameras, " \

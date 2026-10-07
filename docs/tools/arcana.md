@@ -121,9 +121,50 @@ reports this directly, so it cannot be inferred wrongly from the model ids:
 ```
 
 Cameras in the **same** pool share a queue. Only cameras in **different** pools are independent.
-A `Camera` names its `provider`, and `Transport` (`src/arcana/transport.cr`) is the seam a real second
-provider plugs into — `shoot` keeps its request shape and result contract, so callers see only new
-camera ids with their own measured costs.
+
+**There are two pools now.** The `openai` pool runs the *same models* directly against our own
+OpenAI quota, so load moved onto it is admitted at a different door:
+
+```json
+"pools": {
+  "runware": ["klein","flare","sunburst","lite","nano","hero","kontext"],
+  "openai":  ["dflare","dsunburst","dhero"]
+}
+```
+
+| direct | same model as | cost | measured | vs twin |
+| --- | --- | --- | --- | --- |
+| `dflare` | `flare` | 0.0148 | 10.6 s (n=4) | faster than 17.0 s |
+| `dsunburst` | `sunburst` | 0.0139 | 11.5 s (n=1) | faster than 20.0 s |
+| `dhero` | `hero` | 0.1362 | 33.3 s (n=2) | **slower** than 20.0 s |
+
+Same model, same picture — the only reason to choose one over its twin is which queue you want to be
+in. The 2.5 pair being faster direct is unsurprising (one less hop, no shared queue); `dhero` being
+slower is the one to remember on a premium shot. Small samples, and Runware's numbers move with its
+queue, so treat these as order-of-magnitude.
+
+**Two things had to be equalised** so that moving load between pools changes nothing but the queue:
+
+- **webp encoding.** Left alone, OpenAI direct returns *lossless* webp (`VP8L`, ~0.9 bytes/pixel)
+  where Runware returns lossy `VP8 ` at ~0.11 — the same request for 8× the bytes, which would
+  ambush a failover. The transport now sends `output_compression: 80`, giving lossy `VP8 ` at
+  0.04 B/px. Pass `output_compression: 100` in `extra` for lossless.
+- **the no-reference path.** Runware has no text-to-image route, so an unreferenced shot is edited
+  onto a flat grey canvas; OpenAI has a real `/images/generations`. That is now each transport's own
+  business rather than something the service encodes, so an empty reference list means "no
+  reference" and each provider does the right thing with it.
+
+`Transport` (`src/arcana/transport.cr`) is the seam; it documents what a new transport owes the
+service. A third pool needs only a key — Google's direct API would add one, and `GEMINI_API_KEY` is
+not set on this host.
+
+**Probing OpenAI differs from probing Runware.** Runware validates size before prompt, so an empty
+prompt makes size questions free. OpenAI validates the **prompt first**, so that trick returns a
+prompt error instead. Use a real prompt with a size you expect to be refused — but note a size that
+turns out to be *valid* will generate and bill you. What the probe found, in agreement with the
+Runware-side rules: `gpt-image-2.5-*` wants both sides divisible by 16 with the longest edge ≤ 3840
+and a minimum total *pixel budget* rather than a per-side floor; `gpt-image-1.5` takes only
+1024×1024, 1024×1536, 1536×1024.
 
 **What a second transport buys is a published ceiling, not a better average.** Runware runs a shared
 best-effort queue and publishes no limit, so there is no headroom to buy when it stalls. Direct

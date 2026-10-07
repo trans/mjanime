@@ -176,10 +176,11 @@ module MJ
         end
 
         begin
-          result = tx.edit([ref] of Bytes, prompt, w, h, cam.model,
-            extra, wire_fmt.upcase) if ref
-          result ||= tx.edit([blank_canvas(w, h)], prompt, w, h, cam.model,
-            extra, wire_fmt.upcase)
+          # An empty reference list means "no reference"; each transport decides what
+          # that requires of it, since the providers differ on whether text-to-image
+          # exists at all.
+          refs = ref ? [ref] of Bytes : [] of Bytes
+          result = tx.edit(refs, prompt, w, h, cam.model, extra, wire_fmt.upcase)
         rescue ex
           msg = ex.message || "unknown"
           if overloaded?(msg)
@@ -270,13 +271,6 @@ module MJ
           return File.read(path).to_slice
         end
         nil
-      end
-
-      # A flat canvas stands in for "no reference". Runware's img2img path always wants a
-      # seed image, and the reference-edit endpoint is the only text-to-image route we have.
-      private def self.blank_canvas(w : Int32, h : Int32) : Bytes
-        canvas = StumpyCore::Canvas.new(w, h, StumpyCore::RGBA.from_rgb8(128, 128, 128))
-        CanvasUtil.to_png_bytes(canvas)
       end
     end
   end

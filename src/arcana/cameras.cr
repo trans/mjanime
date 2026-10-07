@@ -168,6 +168,46 @@ module MJ
           cost: 0.1362, seconds: 20.0, quality: 5, dims: HERO_DIMS,
           note: "Premium. Twice Nano's price — for the shot that matters, not for every " \
                 "panel."),
+        # --- the openai pool: the SAME models, reached directly ---
+        #
+        # Not here for price or quality — `flare` and `dflare` are the same model and draw
+        # the same picture. They are here for THROUGHPUT: these are admitted against our
+        # own OpenAI quota rather than queueing behind every other Runware customer, so a
+        # congestion episode on one pool cannot stall the other. `cameras`'s `pools` says
+        # which ids are independent; a caller spreading load or failing over must cross
+        # pools, not just cameras.
+        #
+        # Costs are what OpenAI charges us directly and the seconds are measured here. The
+        # images API returns token `usage` but no price, so a result's `usd` falls back to
+        # these with usd_estimated:true — honest, where converting tokens at a rate I made
+        # up would not be.
+        #
+        # Latency is NOT simply the same as the Runware twin, so do not assume the pools
+        # are interchangeable on speed:
+        #
+        #   dflare     10.6s (n=4: 12.7, 10.0, 11.2, 8.4)   vs flare    17.0s  — faster
+        #   dsunburst  11.5s (n=1)                          vs sunburst 20.0s  — faster
+        #   dhero      33.3s (n=2: 40.0, 26.5)              vs hero     20.0s  — SLOWER
+        #
+        # Small samples, and Runware's own numbers move with its queue, so treat these as
+        # order-of-magnitude rather than precise. The 2.5 pair being faster direct is
+        # unsurprising — one less hop and no shared queue. dhero being slower is the one
+        # worth remembering if latency matters on a premium shot.
+        Camera.new(
+          id: "dflare", label: "GPT-Image 2.5 Flare (direct)", model: "gpt-image-2.5-flare",
+          cost: 0.0148, seconds: 10.6, quality: 2, range: GPT25_RANGE, provider: "openai",
+          note: "Same model as `flare`, on an independent queue. Reach for this when " \
+                "Runware is congested or when you need to spread sustained load."),
+        Camera.new(
+          id: "dsunburst", label: "GPT-Image 2.5 Sunburst (direct)",
+          model: "gpt-image-2.5-sunburst",
+          cost: 0.0139, seconds: 11.5, quality: 2, range: GPT25_RANGE, provider: "openai",
+          note: "Same model as `sunburst`, independent queue. Shares Flare's failure " \
+                "modes, so not a fallback for `dflare` either."),
+        Camera.new(
+          id: "dhero", label: "GPT Image 1.5 (direct)", model: "gpt-image-1.5",
+          cost: 0.1362, seconds: 33.3, quality: 5, dims: HERO_DIMS, provider: "openai",
+          note: "Same model as `hero`, independent queue."),
         Camera.new(
           id: "kontext", label: "FLUX Kontext dev", model: "bfl:3@1",
           cost: 0.0400, seconds: 8.7, quality: 1, dims: KONTEXT_DIMS,
