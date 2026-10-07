@@ -136,10 +136,23 @@ converts real failures into infinite retry loops.
 
 | format | on the wire | note |
 | --- | --- | --- |
-| webp | 119 KB | **26× smaller than png**; alpha-capable |
+| webp | 119 KB | **26× smaller than png**; lossy, **no alpha** — see below |
 | jpg | 238 KB | no alpha, and rings along the black outlines comic art is made of |
 | png | 3.1 MB | lossless |
 | xcf | ~919 KB | GIMP's tiled format — see below |
+
+**Runware's webp is lossy and has no alpha**, which is not obvious from asking for "webp". Reading
+the bytes of a returned 768×1024 panel: a `VP8 ` chunk rather than `VP8L`, no `VP8X` extended chunk,
+0.11 bytes/pixel. The format is alpha-capable; what this API emits is not.
+
+That is the right trade for this service, whose job is serve-and-display. It does mean webp is wrong
+as a **pipeline intermediate**: the prop machine generates on a solid background and then
+distance-keys it, and lossy chroma smears background colour across exactly the boundary the key
+decides on — it would corrupt the rim-bleed-by-hue judgement too. Ask for `png` wherever an alpha
+channel or a later key is involved. `runware_client.cr` hardcodes PNG on the background-removal
+path for this reason.
+
+We never set `outputQuality`, so the encoder runs at Runware's default.
 
 **Returns base64 by default**, not a path: bus services are filesystem-isolated. The `runware`
 service reports success writing to a `/tmp` nobody else can see. `output_path` works only where

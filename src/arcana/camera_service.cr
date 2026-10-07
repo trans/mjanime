@@ -23,7 +23,7 @@ module MJ
           "reference_path":{"type":"string","description":"Reference image path — ONLY works if the caller shares a filesystem with this service. Prefer reference_base64."},
           "width":{"type":"integer","description":"Desired width; snapped to the camera's nearest supported aspect. Default 1024."},
           "height":{"type":"integer","description":"Desired height; snapped. Default 1024."},
-          "format":{"type":"string","enum":["webp","png","jpg","xcf"],"description":"Default webp: ~26x smaller on the wire than png for the same picture, and unlike jpg it keeps hard ink edges clean and supports transparency. Use png for lossless; jpg only for photographic subjects (its ringing lands on the black outlines comic art is made of). xcf is GIMP's TILED format — far bigger, but two revisions of the same picture share ~98% of their chunks under content-defined chunking, so it is the right choice for art that will be edited repeatedly and stored in a deduplicating store. Adds ~1.4s for the GIMP conversion."},
+          "format":{"type":"string","enum":["webp","png","jpg","xcf"],"description":"Default webp: ~26x smaller on the wire than png for the same picture, and unlike jpg it keeps hard ink edges clean. Note Runware returns LOSSY webp with NO alpha channel (verified: a VP8 chunk, no VP8X) — it is the right default for serve-and-display, but do not plan on transparency or re-key a webp. Use png for lossless and for anything with an alpha channel; jpg only for photographic subjects (its ringing lands on the black outlines comic art is made of). xcf is GIMP's TILED format — far bigger, but two revisions of the same picture share ~98% of their chunks under content-defined chunking, so it is the right choice for art that will be edited repeatedly and stored in a deduplicating store. Adds ~1.4s for the GIMP conversion."},
           "output_path":{"type":"string","description":"Write the image here instead of returning base64."}
         }
       }>)
@@ -111,8 +111,15 @@ module MJ
           data["height"]?.try(&.as_i?) || 1024)
 
         # Runware accepts JPG, JPEG, PNG and WEBP (its own default is JPG). We default to
-        # webp: far smaller than png, and unlike jpg it is alpha-capable and does not ring
-        # along hard black outlines — which is most of what comic art is made of.
+        # webp: far smaller than png, and it does not ring along hard black outlines the
+        # way jpg does — which is most of what comic art is made of.
+        #
+        # What comes back is LOSSY webp with NO alpha: inspecting the bytes shows a `VP8 `
+        # chunk (not `VP8L`) and no `VP8X` extended chunk, at 0.11 bytes/pixel. That is
+        # the right trade for serve-and-display, which is what this service is for, but it
+        # rules webp out as a pipeline intermediate: the prop machine keys against a solid
+        # background, and lossy chroma smears exactly the edge the key decides on. Ask for
+        # png anywhere alpha or a later key is involved.
         fmt = (data["format"]?.try(&.as_s?) || "webp").downcase
         fmt = "jpg" if fmt == "jpeg"
         raise "format must be webp, png, jpg or xcf" unless {"webp", "png", "jpg", "xcf"}.includes?(fmt)
