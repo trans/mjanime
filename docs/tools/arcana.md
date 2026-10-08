@@ -81,9 +81,25 @@ does **not** follow price — `lite` is the fastest thing here and mid-priced.
 **Size snapping.** Models reject unsupported sizes outright rather than snapping, so this happens
 before the request goes out. Two regimes:
 
-- **Range** (`klein`, `flare`, `sunburst`): scale uniformly to fit the bounds — which preserves the
-  caller's aspect exactly — then round each side to the step. Rounding is the only drift, and it is
-  small: 1920×1080 → 1920×1088, −0.7%.
+- **Range** (`klein`, `flare`, `sunburst`, and their direct twins): scale uniformly to fit the
+  bounds — which preserves the caller's aspect exactly — then round each side to the step. Rounding
+  is the only drift, and it is small: 1920×1080 → 1920×1088, −0.7%.
+
+  GPT-Image 2.5 additionally constrains **total pixels**, and the two limits are not redundant:
+  sides may be 16–3840 but the product must sit between **655,360 and 8,294,400**. So 512×512 is
+  refused for too few pixels though both sides are legal, and 3840×3840 for too many. Runware's
+  validator states the numbers; OpenAI direct agrees (589,824 refused, 745,472 accepted), so it
+  belongs to the model, not the aggregator. The budget is applied by uniform scaling after the side
+  bounds, so aspect still survives: 512×512 → 816×816, 1024×576 → 1088×608 (0.66% drift).
+
+  Beyond roughly **22:1** the side cap and the pixel floor cannot both hold — a 3840-long side
+  leaves the short side needing to be below the step. Nothing preserves the aspect there and the API
+  refuses either way, so the short side is widened until the budget is met and the aspect drifts:
+  100×3000 → 176×3840. A squarer picture beats a rejected one.
+
+  Found the hard way: a 512×512 `dflare` shot came back "below the current minimum pixel budget"
+  after every earlier test happened to use 1024×1024 — and `flare` on the Runware pool had the same
+  latent bug, never hit only because nothing had asked it for a small image.
 - **List** (`nano`, `lite`, `kontext`, `hero`): no geometry to adjust, so select the nearest,
   weighting aspect ten times area. A wrong aspect ruins the composition; a wrong area only
   resamples. Aspect distance is compared in **log space** so portrait and landscape errors are

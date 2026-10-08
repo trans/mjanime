@@ -35,6 +35,13 @@ module MJ
       # before prompt validation.
       getter dims : Array(Array(Int32))?
       getter range : Tuple(Int32, Int32, Int32)?
+      # Some models constrain TOTAL pixels as well as each side, and the two are not
+      # redundant: GPT-Image 2.5 takes sides from 16 to 3840 but demands the product sit
+      # between 655,360 and 8,294,400. So 512x512 is refused for being too few pixels even
+      # though both sides are legal, and 3840x3840 is refused for being too many. Found the
+      # hard way — a 512x512 shot came back "below the current minimum pixel budget" after
+      # every earlier test happened to use 1024x1024.
+      getter pixels : Tuple(Int32, Int32)?
       getter note : String
       # Which transport serves this camera. All seven are "runware" today, and that is the
       # point of recording it: every one of them queues behind a single endpoint on a single
@@ -47,7 +54,7 @@ module MJ
 
       def initialize(@id, @label, @model, @cost, @seconds, @note,
                      @quality : Int32, @version : Int32 = 1,
-                     @dims = nil, @range = nil,
+                     @dims = nil, @range = nil, @pixels = nil,
                      @provider : String = "runware",
                      @extra = {} of String => JSON::Any)
         raise "camera #{@id}: set exactly one of dims or range" if @dims.nil? == @range.nil?
@@ -67,7 +74,7 @@ module MJ
       # happen before the request goes out.
       def snap(width : Int32, height : Int32) : {Int32, Int32}
         if r = range
-          snap_to_range(width, height, r)
+          snap_to_range(width, height, r, pixels)
         else
           snap_to_list(width, height, dims.not_nil!)
         end
@@ -77,8 +84,13 @@ module MJ
       # round each side to the step. Treating these as a short list (which is what an
       # earlier version did) threw away every size not on it: a 16:9 request collapsed
       # to 4:3 for no reason at all.
+      #
+      # The pixel budget is applied AFTER the side bounds and by uniform scaling, so the
+      # aspect survives it too. Rounding direction matters at a boundary: round UP when we
+      # have just scaled to reach the minimum, or the rounding can put us back under it.
       private def snap_to_range(width : Int32, height : Int32,
-                                r : Tuple(Int32, Int32, Int32)) : {Int32, Int32}
+                                r : Tuple(Int32, Int32, Int32),
+                                pix : Tuple(Int32, Int32)?) : {Int32, Int32}
         min, max, step = r
         w = width.to_f
         h = height.to_f
@@ -90,7 +102,54 @@ module MJ
         if grow > 1.0
           w *= grow; h *= grow
         end
+
+        unless pix.nil?
+          min_px, max_px = pix
+          area = w * h
+          if area < min_px
+            scale = Math.sqrt(min_px / area)
+            w *= scale; h *= scale
+            return satisfy_budget(ceil_step(w, min, max, step),
+              ceil_step(h, min, max, step), min_px, min, max, step)
+          elsif area > max_px
+            scale = Math.sqrt(max_px / area)
+            w *= scale; h *= scale
+            return {floor_step(w, min, max, step), floor_step(h, min, max, step)}
+          end
+        end
+
         {round_step(w, min, max, step), round_step(h, min, max, step)}
+      end
+
+      # Past roughly 22:1 the side cap and the pixel floor cannot both be met — holding the
+      # long side at 3840 leaves the short side needing to be under the step, so the product
+      # stays below the minimum. Nothing preserves the aspect there, and the API refuses the
+      # request either way, so widen the SHORT side until the budget is met and let the
+      # aspect drift: a slightly squarer picture beats a rejected one. The long side is
+      # already at its cap, so this is the minimum possible distortion.
+      private def satisfy_budget(w : Int32, h : Int32, min_px : Int32,
+                                 min : Int32, max : Int32, step : Int32) : {Int32, Int32}
+        ceiling = (max // step) * step
+        while w * h < min_px
+          if w <= h
+            break if w >= ceiling
+            w += step
+          else
+            break if h >= ceiling
+            h += step
+          end
+        end
+        {w, h}
+      end
+
+      private def ceil_step(v : Float64, min : Int32, max : Int32, step : Int32) : Int32
+        n = (v / step).ceil.to_i * step
+        n.clamp(((min + step - 1) // step) * step, (max // step) * step)
+      end
+
+      private def floor_step(v : Float64, min : Int32, max : Int32, step : Int32) : Int32
+        n = (v / step).floor.to_i * step
+        n.clamp(((min + step - 1) // step) * step, (max // step) * step)
       end
 
       private def round_step(v : Float64, min : Int32, max : Int32, step : Int32) : Int32
@@ -131,6 +190,11 @@ module MJ
       # Ranges, read off the API's own rejection messages: {min, max, step}.
       KLEIN_RANGE = {128, 2048, 16}
       GPT25_RANGE = {16, 3840, 16}
+      # Runware's validator states it outright: "Total pixels (width x height) must be
+      # between 655360 and 8294400." Confirmed independently against OpenAI direct, where
+      # 589,824 px is refused and 745,472 px accepted. Both pools, because it belongs to
+      # the model rather than the aggregator.
+      GPT25_PIXELS = {655_360, 8_294_400}
 
       def self.steps(n : Int32, cfg : Float64) : Hash(String, JSON::Any)
         {"steps" => JSON::Any.new(n.to_i64), "CFGScale" => JSON::Any.new(cfg)}
@@ -145,12 +209,12 @@ module MJ
           extra: steps(20, 3.5)),
         Camera.new(
           id: "flare", label: "GPT-Image 2.5 Flare", model: "openai:gpt-image@2.5-flare",
-          cost: 0.0148, seconds: 17.0, quality: 2, range: GPT25_RANGE,
+          cost: 0.0148, seconds: 17.0, quality: 2, range: GPT25_RANGE, pixels: GPT25_PIXELS,
           note: "Ambitious staging, livelier compositions, but more prone to anatomy " \
                 "mistakes. Shares failure modes with Sunburst — not an independent fallback."),
         Camera.new(
           id: "sunburst", label: "GPT-Image 2.5 Sunburst", model: "openai:gpt-image@2.5-sunburst",
-          cost: 0.0139, seconds: 20.0, quality: 2, range: GPT25_RANGE,
+          cost: 0.0139, seconds: 20.0, quality: 2, range: GPT25_RANGE, pixels: GPT25_PIXELS,
           note: "Flare's sibling. Fails on the same prompts Flare does."),
         Camera.new(
           id: "lite", label: "Nano Banana 2 Lite", model: "google:nano-banana@2-lite",
@@ -195,13 +259,13 @@ module MJ
         # worth remembering if latency matters on a premium shot.
         Camera.new(
           id: "dflare", label: "GPT-Image 2.5 Flare (direct)", model: "gpt-image-2.5-flare",
-          cost: 0.0148, seconds: 10.6, quality: 2, range: GPT25_RANGE, provider: "openai",
+          cost: 0.0148, seconds: 10.6, quality: 2, range: GPT25_RANGE, pixels: GPT25_PIXELS, provider: "openai",
           note: "Same model as `flare`, on an independent queue. Reach for this when " \
                 "Runware is congested or when you need to spread sustained load."),
         Camera.new(
           id: "dsunburst", label: "GPT-Image 2.5 Sunburst (direct)",
           model: "gpt-image-2.5-sunburst",
-          cost: 0.0139, seconds: 11.5, quality: 2, range: GPT25_RANGE, provider: "openai",
+          cost: 0.0139, seconds: 11.5, quality: 2, range: GPT25_RANGE, pixels: GPT25_PIXELS, provider: "openai",
           note: "Same model as `sunburst`, independent queue. Shares Flare's failure " \
                 "modes, so not a fallback for `dflare` either."),
         Camera.new(

@@ -22,30 +22,82 @@ just uninstall-service    # leaves ~/.config/mj/env alone — it holds your keys
 `install-service` substitutes the checkout path into the unit, so the shipped file carries
 `@MJ_DIR@` rather than one machine's layout and this works from any clone.
 
-## ⚠️ The unit cannot read `.env`
+## Where the keys live
 
-**`.env` is bash.** Its lines are `export RUNWARE_API_KEY=…`, and systemd's
-`EnvironmentFile=` does not understand `export`. It logs
+**One place, machine-wide: `~/.config/environment.d/*.conf`.** The systemd *user manager*
+reads those at startup and every user unit inherits them, so provider credentials are not
+copied per project and not rotated in N places.
+
+```ini
+# ~/.config/environment.d/50-provider-keys.conf   (mode 600)
+ANTHROPIC_API_KEY=…
+OPENAI_API_KEY=…
+RUNWARE_API_KEY=…
+GEMINI_API_KEY=…
+```
+
+After editing, the manager must re-read it. No logout needed:
+
+```sh
+systemctl --user daemon-reexec          # manager re-reads environment.d; units keep running
+systemctl --user restart mj-arcana      # the unit picks up the new value
+just keys                               # confirm
+```
+
+`just keys` exists because this is confusing in a specific way:
 
 ```
-Ignoring invalid environment assignment 'export RUNWARE_API_KEY=…'
+KEY                      SYSTEMD    SHELL
+ANTHROPIC_API_KEY        yes        yes
+OPENAI_API_KEY           yes        yes
+RUNWARE_API_KEY          yes        -
+GEMINI_API_KEY           -          -
 ```
 
-and continues with the variable **unset**. Verified, not assumed: a probe unit reading a
-file with both forms saw the plain `BAZ` and reported `FOO=[UNSET]`.
+The **SYSTEMD** column is what the service sees. The two columns are genuinely independent,
+and a key can be in either without the other.
 
-That failure is quiet and particularly nasty here, because **both services are key-gated.**
-With no keys `mj-arcana` starts, reports itself healthy, logs cheerfully — and registers
-*nothing*. `systemctl status` shows `active (running)` while the bus directory has no
-`mj:camera` and no `mj:voice`. Exactly the shape of the `Toolset#start` trap: a service
-that runs and is invisible.
+### Two ways a key that "is set" is invisible to systemd
 
-So `just systemd-env` translates `.env` into `~/.config/mj/env`, stripping `export` and
-keeping only `KEY=value` lines, at mode 600 and outside the repo. Re-run it after changing
-a key, then `systemctl --user restart mj-arcana`.
+Both verified here, not assumed — and both fail in the same quiet shape.
 
-`EnvironmentFile=` is deliberately **not** prefixed with `-`: a missing env file should
-fail loudly rather than start a service that can do nothing.
+1. **A bash `.env` cannot be an `EnvironmentFile`.** Its lines are `export KEY=value`, and
+   systemd logs `Ignoring invalid environment assignment 'export KEY=…'` and continues with
+   the variable **unset**. A probe unit reading a file with both forms saw the plain
+   assignment and reported the exported one as `UNSET`.
+2. **fish universal variables (`set -Ux`) are invisible to systemd.** They live in
+   `~/.config/fish/fish_variables` and reach your *shell*, not the user manager. If keys
+   appear in the manager environment at all it is because something once ran
+   `systemctl --user import-environment` — a snapshot, so a key added later is simply
+   absent. That is exactly why `RUNWARE_API_KEY` was missing here while `ANTHROPIC` and
+   `OPENAI` were present.
+
+Why it matters more than it looks: **both mj services are key-gated.** Missing *all* keys
+exits non-zero and is obvious, but a missing *one* leaves the other running — so
+`systemctl status` reads `active (running)` while `mj:camera` is quietly absent from the bus
+directory. `just install-service` therefore prints the key table and shouts if
+`RUNWARE_API_KEY` is not visible.
+
+### Keeping fish and systemd in step
+
+`environment.d` is the canonical store; have fish read it rather than holding its own copy,
+so there is one file to rotate. In `~/.config/fish/conf.d/provider-keys.fish`:
+
+```fish
+for line in (string match -rv '^\s*(#|$)' < ~/.config/environment.d/50-provider-keys.conf)
+    set -gx (string split -m1 = $line)
+end
+```
+
+Then remove the duplicates with `set -Ue ANTHROPIC_API_KEY` (and so on), or they will shadow
+the file and you will be back to two sources.
+
+### `~/.config/mj/env` is not for keys
+
+`just systemd-env` writes only `MJ_*` variables there — project-local tuning
+(`MJ_RUNWARE_RETRIES`, `MJ_RUNWARE_READ_TIMEOUT`, `MJ_OPENAI_TTS_USD_PER_MINUTE`,
+`MJ_ELEVENLABS_USD_PER_1K_CHARS`). The unit's `EnvironmentFile=` is `-` prefixed, so it is
+optional.
 
 ## What the sandbox allows, and why
 

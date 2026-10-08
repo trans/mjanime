@@ -67,16 +67,30 @@ clean:
 
 # --- deployment -----------------------------------------------------------------
 
-# systemd cannot read .env itself: it is bash, and `export KEY=value` is silently ignored,
-# which would leave every key unset — and since both mj services are key-gated, the unit
-# would start, log happily, and register nothing. So translate it. Holds API keys, hence
-# mode 600 and never inside the repo.
-# Generate ~/.config/mj/env from .env (strips `export`, mode 600)
+# Which provider keys can the systemd user manager actually see? A key set only in fish
+# (`set -Ux`) is invisible to systemd user units, so a service can fail with a key that
+# works perfectly in your shell. This shows the gap.
+# Compare provider keys visible to systemd vs your shell
+keys:
+    @printf '%-24s %-10s %-10s\n' KEY SYSTEMD SHELL
+    @for k in ANTHROPIC_API_KEY OPENAI_API_KEY RUNWARE_API_KEY ELEVENLABS_API_KEY GEMINI_API_KEY GOOGLE_API_KEY; do \
+        if systemctl --user show-environment 2>/dev/null | grep -q "^$k="; then sd=yes; else sd="-"; fi; \
+        if env | grep -q "^$k="; then sh=yes; else sh="-"; fi; \
+        printf '%-24s %-10s %-10s\n' "$k" "$sd" "$sh"; \
+    done
+    @echo ""
+    @echo "systemd column is what mj-arcana.service sees. Keys belong in"
+    @echo "~/.config/environment.d/*.conf (mode 600), then: systemctl --user daemon-reexec"
+    @echo "and restart the unit. See deploy/README.md."
+
+# Project-local tuning only (retries, timeouts, rates) — NOT credentials, which belong in
+# ~/.config/environment.d so every project shares one copy.
+# Generate ~/.config/mj/env from MJ_* vars in .env (mode 600)
 systemd-env:
     @mkdir -p ~/.config/mj
-    @sed -E 's/^[[:space:]]*export[[:space:]]+//' .env | grep -E '^[A-Za-z_][A-Za-z0-9_]*=' > ~/.config/mj/env
+    @sed -E 's/^[[:space:]]*export[[:space:]]+//' .env | grep -E '^MJ_[A-Za-z0-9_]*=' > ~/.config/mj/env || true
     @chmod 600 ~/.config/mj/env
-    @echo "wrote ~/.config/mj/env ($(grep -c . ~/.config/mj/env) vars, mode 600)"
+    @echo "wrote ~/.config/mj/env ($(grep -c . ~/.config/mj/env 2>/dev/null || echo 0) project vars, mode 600)"
 
 # Install mj-arcana as a systemd user service, pointing at this checkout.
 install-service: build systemd-env
@@ -86,6 +100,10 @@ install-service: build systemd-env
     systemctl --user enable --now mj-arcana.service
     @sleep 2
     systemctl --user --no-pager --lines=0 status mj-arcana.service
+    @echo ""
+    @just keys
+    @systemctl --user show-environment | grep -q '^RUNWARE_API_KEY=' || \
+        echo "!! RUNWARE_API_KEY is not visible to systemd, so mj:camera did NOT register." 
 
 # Remove the service (leaves ~/.config/mj/env alone — it holds your keys).
 uninstall-service:
