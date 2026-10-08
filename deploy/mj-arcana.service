@@ -1,0 +1,61 @@
+[Unit]
+Description=mj-arcana — mj's camera and voice services on the Arcana bus
+Documentation=file://@MJ_DIR@/docs/tools/arcana.md
+After=network.target
+
+# The bus (arcana) is not listed as a dependency on purpose: it is not a user unit on
+# every host, and mj-arcana does not need it to EXIST at boot — if the bus is down the
+# connect fails, the unit restarts, and it joins whenever the bus appears. Restart=always
+# plus RestartSec=2 is the whole retry policy.
+
+[Service]
+Type=simple
+WorkingDirectory=@MJ_DIR@
+ExecStart=@MJ_DIR@/bin/mj-arcana
+
+# NOT the project's .env. That file is bash — `export KEY=value` — and systemd cannot
+# parse it: it logs "Ignoring invalid environment assignment 'export KEY=value'" and
+# carries on with the variable UNSET. That failure is quiet and nasty here, because both
+# services are key-gated: with no keys mj-arcana starts, logs happily, registers NOTHING,
+# and is simply absent from the bus directory. `just install-service` generates this file
+# from .env with the `export ` stripped, mode 600.
+#
+# Deliberately NOT prefixed with `-`: a missing env file should fail loudly rather than
+# start a service that cannot do anything.
+EnvironmentFile=%h/.config/mj/env
+
+Restart=always
+RestartSec=2
+
+# --- sandbox -----------------------------------------------------------------
+# It needs very little: the bus over loopback, the provider APIs over TLS, and one
+# append-only ledger.
+NoNewPrivileges=true
+# Covers the short-lived temp files: the GIMP scratch dir for `format: "xcf"` and the
+# probe file ffprobe measures audio duration from.
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+
+# Every billed call is appended to the spend ledger ($XDG_DATA_HOME/mj/spend.jsonl), so
+# this is the one place it must be able to write. Without it, every generation fails
+# AFTER the provider has already charged you.
+ReadWritePaths=%h/.local/share/mj
+
+# `format: "xcf"` shells out to gimp-console, which insists on writing its own config and
+# cache. The `-` prefix tolerates their absence, so a host without GIMP still starts.
+ReadWritePaths=-%h/.config/GIMP
+ReadWritePaths=-%h/.cache/GIMP
+
+# NOTE on `output_path`: under ProtectHome=read-only a caller asking shoot/speak to write
+# into the home directory gets a permission error. That is the right default — bus
+# services are filesystem-isolated and base64 is the portable answer — but if you do want
+# a drop directory, add it here explicitly, e.g.
+#   ReadWritePaths=%h/Pictures/Intake
+
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=default.target

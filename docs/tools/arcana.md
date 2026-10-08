@@ -12,6 +12,19 @@ Each service registers only if its key is present: `RUNWARE_API_KEY` for `mj:cam
 `OPENAI_API_KEY` and/or `ELEVENLABS_API_KEY` for `mj:voice`. Bus URL comes from `ARCANA_WS_URL` /
 `ARCANA_URL`, default `ws://localhost:19118/bus`.
 
+## Running it as a service
+
+```
+just install-service      # systemd user unit; builds, installs, enables, starts
+just logs
+```
+
+Unit and rationale in [`deploy/`](../../deploy/README.md). One trap worth repeating here:
+**the unit cannot read `.env`** — that file is bash, and systemd silently ignores
+`export KEY=value`, leaving the key unset. Since both services are key-gated, the result is
+a unit that reports `active (running)` and registers *nothing*. `just systemd-env`
+translates it into `~/.config/mj/env` at mode 600.
+
 ## Why this is separate from arcana
 
 Arcana supplies the communication infrastructure; owners supply the services. A bus that also ships

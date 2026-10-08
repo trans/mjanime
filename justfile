@@ -64,3 +64,36 @@ test:
 # Clean build artifacts
 clean:
     rm -rf bin lib .shards src/native/mjonnx.o
+
+# --- deployment -----------------------------------------------------------------
+
+# systemd cannot read .env itself: it is bash, and `export KEY=value` is silently ignored,
+# which would leave every key unset — and since both mj services are key-gated, the unit
+# would start, log happily, and register nothing. So translate it. Holds API keys, hence
+# mode 600 and never inside the repo.
+# Generate ~/.config/mj/env from .env (strips `export`, mode 600)
+systemd-env:
+    @mkdir -p ~/.config/mj
+    @sed -E 's/^[[:space:]]*export[[:space:]]+//' .env | grep -E '^[A-Za-z_][A-Za-z0-9_]*=' > ~/.config/mj/env
+    @chmod 600 ~/.config/mj/env
+    @echo "wrote ~/.config/mj/env ($(grep -c . ~/.config/mj/env) vars, mode 600)"
+
+# Install mj-arcana as a systemd user service, pointing at this checkout.
+install-service: build systemd-env
+    @mkdir -p ~/.config/systemd/user
+    @sed 's|@MJ_DIR@|{{justfile_directory()}}|g' deploy/mj-arcana.service > ~/.config/systemd/user/mj-arcana.service
+    systemctl --user daemon-reload
+    systemctl --user enable --now mj-arcana.service
+    @sleep 2
+    systemctl --user --no-pager --lines=0 status mj-arcana.service
+
+# Remove the service (leaves ~/.config/mj/env alone — it holds your keys).
+uninstall-service:
+    -systemctl --user disable --now mj-arcana.service
+    -rm -f ~/.config/systemd/user/mj-arcana.service
+    systemctl --user daemon-reload
+    @echo "removed mj-arcana.service"
+
+# Tail the service log
+logs:
+    journalctl --user -u mj-arcana.service -f

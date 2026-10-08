@@ -16,7 +16,7 @@ The mj wiki — how the tools work, the techniques that actually work, and the w
 
 ## Tools
 
-Full CLI reference index: **[tools/README.md](tools/README.md)**.
+Full CLI reference index: **[tools/README.md](tools/README.md)**. Running the long-lived services under systemd: **[deploy/](../deploy/README.md)**.
 
 | Tool | What it does |
 | --- | --- |
