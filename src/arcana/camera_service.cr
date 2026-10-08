@@ -192,6 +192,7 @@ module MJ
             return JSON::Any.new({
               "status"  => JSON::Any.new("overloaded"),
               "camera"  => JSON::Any.new(cam.id),
+              "pool"    => JSON::Any.new(cam.provider),
               "model"   => JSON::Any.new(cam.model),
               "version" => JSON::Any.new(cam.version.to_i64),
               "usd"     => JSON::Any.new(0.0),
@@ -211,6 +212,7 @@ module MJ
           return JSON::Any.new({
             "status"     => JSON::Any.new("refused"),
             "camera"     => JSON::Any.new(cam.id),
+            "pool"       => JSON::Any.new(cam.provider),
             "model"      => JSON::Any.new(cam.model),
             "version"    => JSON::Any.new(cam.version.to_i64),
             "usd"        => JSON::Any.new(0.0),
@@ -228,8 +230,13 @@ module MJ
         img = result.image_data
         img = Xcf.convert(img) if fmt == "xcf"
         res = {
-          "status"  => JSON::Any.new("ok"),
-          "camera"  => JSON::Any.new(cam.id),
+          "status" => JSON::Any.new("ok"),
+          "camera" => JSON::Any.new(cam.id),
+          # Which capacity pool actually served this. Needed in the RESULT and not only in
+          # the `cameras` listing: a caller analysing a log of ten thousand generations
+          # should not have to join back to a listing to learn which queue it was in, and
+          # that is exactly the analysis that tells it where to send load next.
+          "pool"    => JSON::Any.new(cam.provider),
           "version" => JSON::Any.new(cam.version.to_i64),
           "model"   => JSON::Any.new(cam.model),
           "width"   => JSON::Any.new(w.to_i64),
