@@ -1,8 +1,9 @@
 # CLAUDE.md — mj (media jockey)
 
 mj is a Crystal + Runware AI image/audio studio producing art for **Silicon Circus**, a boardwalk
-game. Binary/module/bus = `mj` / `MJ` / `mj` (renamed from *minanime*; local dir still
-`~/Projects/minanime`, full name `mjanime`). Old `examples/*.yml` / `notes/*.md` saying `minanime
+game. Binary/module/bus = `mj` / `MJ` / `mj`; the project is **mjanime**, at
+`~/Projects/mjanime` (renamed from *minanime* on 2026-10-08; a `minanime` symlink is kept as a
+compatibility shim and can go once nothing trips). Old `examples/*.yml` / `notes/*.md` saying `minanime
 <cmd>` mean `mj <cmd>`.
 
 ## Read the docs — they hold the hard-won lessons

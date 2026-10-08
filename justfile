@@ -115,8 +115,9 @@ install-service: build env-pull
     systemctl --user --no-pager --lines=0 status mj-arcana.service
     @echo ""
     @just keys
-    @systemctl --user show-environment | grep -q '^RUNWARE_API_KEY=' || \
-        echo "!! RUNWARE_API_KEY is not visible to systemd, so mj:camera did NOT register." 
+    @pid=$(systemctl --user show -p MainPID --value mj-arcana.service); \
+     tr '\0' '\n' < /proc/$pid/environ 2>/dev/null | grep -q '^RUNWARE_API_KEY=' || \
+        echo "!! RUNWARE_API_KEY did not reach the service, so mj:camera is NOT registered." 
 
 # Remove the service (leaves keys in environment.d and ~/.config/mj/env untouched).
 uninstall-service:
