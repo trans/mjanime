@@ -67,42 +67,46 @@ clean:
 
 # --- deployment -----------------------------------------------------------------
 
-# Where do the provider keys actually reach? FILE is the shared credential file the unit
-# reads; SERVICE is the live environment of the running process, which is the ground truth;
-# SHELL is your interactive shell. A key set only in fish (`set -Ux`) shows up in SHELL
-# alone and is invisible to the service.
-# Show which provider keys reach the file, the running service, and your shell
+# Where do mj's credentials actually reach? STORE is the encrypted cyclops store (the
+# system of record, same as the cloud servers); SERVICE is the live environment of the
+# running process, read from /proc, which is ground truth; SHELL is your interactive shell.
+# A key set only in fish (`set -Ux`) shows up in SHELL alone and is invisible to the unit.
+# Show which credentials reach the cyclops store, the running service, and your shell
 keys:
     #!/usr/bin/env bash
-    f=~/.config/secrets/providers.conf
+    db=~/.config/cyclops/secrets.db
     pid=$(systemctl --user show -p MainPID --value mj-arcana.service 2>/dev/null)
-    printf '%-24s %-8s %-9s %-7s\n' KEY FILE SERVICE SHELL
+    stored=$(sqlite3 "$db" "SELECT key FROM secrets WHERE project='mj' AND environment='local';" 2>/dev/null)
+    printf '%-24s %-8s %-9s %-7s\n' KEY STORE SERVICE SHELL
     for k in ANTHROPIC_API_KEY OPENAI_API_KEY RUNWARE_API_KEY ELEVENLABS_API_KEY GEMINI_API_KEY GOOGLE_API_KEY; do
-      inf='-'; [ -r "$f" ] && grep -q "^$k=" "$f" && inf=yes
+      st='-'; grep -qx "$k" <<< "$stored" && st=yes
       svc='-'
       if [ -n "$pid" ] && [ "$pid" != 0 ] && [ -r "/proc/$pid/environ" ]; then
         tr '\0' '\n' < "/proc/$pid/environ" | grep -q "^$k=" && svc=yes
-      elif [ -z "$pid" ] || [ "$pid" = 0 ]; then
+      else
         svc='(down)'
       fi
       sh='-'; [ -n "${!k}" ] && sh=yes
-      printf '%-24s %-8s %-9s %-7s\n' "$k" "$inf" "$svc" "$sh"
+      printf '%-24s %-8s %-9s %-7s\n' "$k" "$st" "$svc" "$sh"
     done
     echo ""
-    echo "SERVICE is what mj-arcana actually sees. Keys live in $f (mode 600);"
-    echo "after editing just restart the unit — EnvironmentFile is re-read on start."
+    echo "STORE = cyclops mj/local (encrypted). Change a value with:"
+    echo "  cyclops-env set mj local KEY value   &&   just env-pull"
 
-# Project-local tuning only (retries, timeouts, rates) — NOT credentials, which belong in
-# ~/.config/environment.d so every project shares one copy.
-# Generate ~/.config/mj/env from MJ_* vars in .env (mode 600)
-systemd-env:
+# Render mj's env from the cyclops store — the same mechanism the cloud servers use, so
+# local and prod differ only in the environment name (`local` vs `production`) and in how
+# the file is delivered (redirect here, ssh push there). Secrets live encrypted in
+# ~/.config/cyclops/secrets.db, scoped service x environment.
+# Pull mj's env from the cyclops store and restart the service
+env-pull:
     @mkdir -p ~/.config/mj
-    @sed -E 's/^[[:space:]]*export[[:space:]]+//' .env | grep -E '^MJ_[A-Za-z0-9_]*=' > ~/.config/mj/env || true
+    @~/Projects/cyclops/bin/cyclops-env export mj local --format=systemd > ~/.config/mj/env
     @chmod 600 ~/.config/mj/env
-    @echo "wrote ~/.config/mj/env ($(grep -c . ~/.config/mj/env 2>/dev/null || echo 0) project vars, mode 600)"
+    @echo "wrote ~/.config/mj/env ($(grep -c . ~/.config/mj/env) vars) from cyclops mj/local"
+    -@systemctl --user restart mj-arcana.service 2>/dev/null && echo "restarted mj-arcana"
 
 # Install mj-arcana as a systemd user service, pointing at this checkout.
-install-service: build systemd-env
+install-service: build env-pull
     @mkdir -p ~/.config/systemd/user
     @sed 's|@MJ_DIR@|{{justfile_directory()}}|g' deploy/mj-arcana.service > ~/.config/systemd/user/mj-arcana.service
     systemctl --user daemon-reload

@@ -22,59 +22,37 @@ just uninstall-service    # leaves your keys and project overrides in place
 `install-service` substitutes the checkout path into the unit, so the shipped file carries
 `@MJ_DIR@` rather than one machine's layout and this works from any clone.
 
-## Where the keys live
+## Where the keys live: the cyclops store
 
-**One file, shared by every service that needs it: `~/.config/secrets/providers.conf`**,
-mode 600 in a 700 directory, plain `KEY=value`. The unit names it with `EnvironmentFile=`.
-
-```ini
-ANTHROPIC_API_KEY=…
-OPENAI_API_KEY=…
-RUNWARE_API_KEY=…
-GEMINI_API_KEY=…
-```
-
-Add a key, then just restart — `EnvironmentFile` is re-read at each unit start, so there is
-no `daemon-reexec` dance:
+**Same mechanism as the cloud servers.** `cyclops-env` keeps secrets in an encrypted SQLite
+store (`~/.config/cyclops/secrets.db`, AES-256-CBC, master key at 0600), scoped by
+**service × environment**. It renders a systemd-format file; the unit reads it with
+`EnvironmentFile=`. Locally the environment is `local`; on a droplet it is `production` and
+cyclops pushes the file over ssh. One store, one CLI, one unit shape.
 
 ```sh
-systemctl --user restart mj-arcana
-just keys
+just env-pull                              # export mj/local -> ~/.config/mj/env, restart
+cyclops-env set mj local KEY value         # change a value
+cyclops-env export mj local                # see what would be written (systemd format)
+just keys                                  # STORE / SERVICE / SHELL
 ```
 
-### Why not `~/.config/environment.d/`
+`just keys` reads **SERVICE** from the running process's own `/proc/<pid>/environ`, so it is
+ground truth rather than an inference about what the unit *ought* to see.
 
-It is the obvious answer and it is too broad. The systemd *user manager* passes that
-environment to **every** user unit, so provider keys land in processes that have no
-business holding them. Measured on this host, before the cleanup, `OPENAI_API_KEY` and
-`ANTHROPIC_API_KEY` were in the environment of roughly **sixty** processes: the whole GNOME
-session, `pipewire`, bluetooth's `obexd`, the xdg desktop portals, `speech-dispatcher`,
-`localsearch` (a file indexer), `gnome-software`. None of them consume an AI key.
+### Why this beats a shared plaintext file
 
-`EnvironmentFile=` reaches only the units that ask for it, and keeps the keys out of
-`systemctl --user show-environment` entirely.
+Service × environment scoping is least privilege for free. mj's file holds exactly
+`RUNWARE_API_KEY` and `OPENAI_API_KEY`. The shared-file arrangement that preceded it also
+handed mj `ANTHROPIC_API_KEY`, which mj never uses — visible in `just keys` as
+`ANTHROPIC_API_KEY  -  -  yes`: in your shell, and correctly absent from the service.
 
-If keys are already in the manager environment from an old
-`systemctl --user import-environment`, removing a file does not clear them:
-
-```sh
-systemctl --user unset-environment ANTHROPIC_API_KEY OPENAI_API_KEY RUNWARE_API_KEY
-```
-
-That stops *new* units inheriting them; processes already running keep their copy until
-restarted. Note that anything re-running `import-environment` will put them back.
-
-### `just keys` — three columns, because they differ
-
-```
-KEY                      FILE     SERVICE   SHELL
-ANTHROPIC_API_KEY        yes      yes       yes
-RUNWARE_API_KEY          yes      yes       yes
-GEMINI_API_KEY           -        -         -
-```
-
-**SERVICE** is read from the running process's own environment (`/proc/<pid>/environ`), so
-it is ground truth rather than an inference about what the unit *should* see.
+The scoping also handles a problem a flat file cannot. Across this machine's projects, five
+variables hold **different values** — `OPENAI_API_KEY`, `STRIPE_SECRET_KEY`,
+`STRIPE_WEBHOOK_SECRET`, `SUPABASE_JWT_SECRET`, `RESEND_API_KEY` — because `wow` and
+`likely` have their own accounts. Flatten those into one file and a project silently starts
+billing through another project's Stripe. Per-service scopes make that structurally
+impossible.
 
 ### Three ways a key that "is set" is invisible to the service
 
@@ -82,59 +60,34 @@ All verified here, and all failing in the same quiet shape.
 
 1. **A bash `.env` cannot be an `EnvironmentFile`.** Its lines are `export KEY=value`;
    systemd logs `Ignoring invalid environment assignment` and leaves the variable **unset**.
-   A probe unit reading a file with both forms saw the plain assignment and reported the
-   exported one as `UNSET`.
-2. **fish universal variables (`set -Ux`) never reach systemd.** They live in
-   `~/.config/fish/fish_variables` and reach your *shell* only.
-3. **`environment.d` added after the manager started** is absent until
-   `systemctl --user daemon-reexec`.
+2. **fish universal variables (`set -Ux`) never reach systemd** — they are in
+   `~/.config/fish/fish_variables` and reach your *shell* only. (That file is created
+   `0644`, world-readable; worth a `chmod 600` whatever lives in it.)
+3. **`~/.config/environment.d/` works but is far too broad.** The user manager passes it to
+   *every* user unit: measured on this host, provider keys were in the environment of
+   roughly **sixty** processes — the whole GNOME session, `pipewire`, bluetooth's `obexd`,
+   the xdg portals, `localsearch`, `gnome-software`. Clear stale ones with
+   `systemctl --user unset-environment KEY` (that stops *new* units inheriting; running
+   processes keep their copy until restarted).
 
 Why this bites harder than it looks: **both mj services are key-gated.** Missing *all* keys
 exits non-zero and is obvious; missing *one* leaves the other running, so `systemctl status`
 reads `active (running)` while `mj:camera` is quietly absent from the bus directory.
-`just install-service` therefore prints the key table and shouts if `RUNWARE_API_KEY` is not
-visible.
 
-### The shell reads the same file
+### Still open, for cyclops
 
-`~/.config/fish/conf.d/provider-keys.fish` loads that one file, so the shell and the
-services never disagree:
-
-```fish
-set -l __keyfile ~/.config/secrets/providers.conf
-if test -r $__keyfile
-    for __line in (cat $__keyfile)
-        string match -qr '^\s*(#|$)' -- $__line; and continue
-        set -gx (string split -m1 = -- $__line)
-    end
-end
-```
-
-Keep no `set -Ux` copies — a universal shadows the file and you are back to two things to
-rotate. Erase them with `set -Ue ANTHROPIC_API_KEY`. Beware when checking:
-`fish --no-config` still **inherits the parent environment**, so it does not prove a key
-came from a universal. Scrub first:
-
-```sh
-env -u ANTHROPIC_API_KEY fish --no-config -c 'echo $ANTHROPIC_API_KEY'
-```
-
-`fish_variables` is created world-readable (`0644`) — worth a `chmod 600` whatever else you
-store in it.
-
-### Stricter, if you want it
-
-`EnvironmentFile` still puts secrets in the process environment, visible via
-`/proc/<pid>/environ` to the same user. systemd's `LoadCredential=` / `ImportCredential=`
-passes a secret to one named unit without it appearing in the environment at all. That
-needs the program to read `$CREDENTIALS_DIRECTORY`, so it is a code change, not just a unit
-change — noted rather than done.
-
-### `~/.config/mj/env` is not for keys
-
-`just systemd-env` writes only `MJ_*` variables there — project-local tuning
-(`MJ_RUNWARE_RETRIES`, `MJ_RUNWARE_READ_TIMEOUT`, `MJ_OPENAI_TTS_USD_PER_MINUTE`,
-`MJ_ELEVENLABS_USD_PER_1K_CHARS`). That `EnvironmentFile=` is `-` prefixed and optional.
+- **`cyclops-env push` is ssh-only** (`config` requires `--host`), so local use needs the
+  `export >` redirect that `just env-pull` does. A no-host target that writes locally and
+  runs `systemctl --user restart` would make local and remote literally the same command.
+- **Environment naming is inconsistent** in the existing store — `wow` has both `prod` and
+  `production`, `onboard` has `_default`/`dev`/`production`, and `arcana` uses the
+  environment slot for deploy targets (`likely`, `siliconcircus`). Worth settling before
+  `local` becomes a standard everywhere.
+- **Shells have no scope.** Services are per-project, but an interactive shell wants a
+  general set; there is no `shared` concept. A `workstation` project scope would do it.
+- **Stricter still:** `EnvironmentFile` leaves secrets in `/proc/<pid>/environ`.
+  systemd's `LoadCredential=` avoids that, but needs the program to read
+  `$CREDENTIALS_DIRECTORY` — a code change, noted rather than done.
 
 ## What the sandbox allows, and why
 
