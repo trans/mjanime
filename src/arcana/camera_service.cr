@@ -126,7 +126,11 @@ module MJ
                     "`quality` is a rank (higher is better), a judgement over the model survey " \
                     "rather than a measurement — reuse may prefer a higher rank when several " \
                     "cached pictures match. `version` bumps when anything that changes a " \
-                    "camera's output changes, so caches know its old pictures are stale.",
+                    "camera's output changes. It is a FRESHNESS RANK, not an expiry: a bump " \
+                    "means a newer request would draw this subject slightly better, never that " \
+                    "the stored picture is wrong. A camera change shifts fidelity, not subject " \
+                    "or style, so a store should keep what it has and PREFER the higher version " \
+                    "where it holds several — regeneration is a choice, never an obligation.",
         }.to_json)
       end
 

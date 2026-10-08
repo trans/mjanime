@@ -21,8 +21,16 @@ module MJ
       getter cost : Float64    # USD per image, measured
       getter seconds : Float64 # typical wall-clock, measured
       # Bump when anything that changes a camera's OUTPUT changes — the model id, the
-      # default parameters, the prompt scaffolding. Callers key caches on it, so a bump
-      # is how they learn this camera's old pictures are no longer what it would produce.
+      # default parameters, the prompt scaffolding.
+      #
+      # It is a FRESHNESS RANK, not an expiry date, and the difference matters to anyone
+      # storing results. A camera change moves fidelity; it does not move subject or style
+      # far enough to make an existing picture wrong. So the consuming store (DataDungeon,
+      # for infocomic) keeps serving what it has and merely PREFERS the higher version when
+      # several stored images match a request. Nothing here ever asks a caller to discard or
+      # regenerate, which is also why bumping must stay rare and deliberate: a library
+      # generated once and reused across players is the expensive thing, and a version bump
+      # should never read as an instruction to rebuild it.
       getter version : Int32
       # A rank, not a measurement: ordered by Trans's eye over the model survey, ascending.
       # Reuse can prefer a higher rank when several cached pictures match.

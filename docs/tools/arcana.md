@@ -128,7 +128,14 @@ A caller keeping a ledger and a cache needs more than pixels back.
   reported price, so the flag is trustworthy.
 - **`version`** is the cache-invalidation handle. Bump it whenever anything that changes a
   camera's output changes — model id, default parameters, prompt scaffolding. Callers key on
-  `(camera, version, prompt, reference)` and a bump tells them their stored pictures are stale.
+  `(camera, version, prompt, reference)`.
+
+  **It is a freshness rank, not an expiry.** A bump means a fresh request would render the subject
+  a little better; it never means a stored picture is wrong, because a camera change moves fidelity
+  rather than subject or style. So a store keeps what it has and merely *prefers* the higher version
+  where it holds several candidates — the same way it can prefer a higher `quality`. Regeneration is
+  always a choice. That is also why bumps stay rare and deliberate: a library generated once and
+  reused across players is the expensive asset, and a bump must never read as "rebuild it".
 - **`width`/`height`** are the size actually produced, after snapping — not what was asked for.
 - **`quality`** (from `cameras`) ranks the cameras ascending. It is a judgement over the model
   survey, not a measurement, and it is labelled as one.
