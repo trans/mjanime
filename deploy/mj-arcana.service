@@ -13,23 +13,26 @@ Type=simple
 WorkingDirectory=@MJ_DIR@
 ExecStart=@MJ_DIR@/bin/mj-arcana
 
-# Keys come from the systemd USER MANAGER environment, not from a file in this repo. They
-# are machine-wide credentials shared by every project, so a copy per service means
-# rotating them in N places and forgetting one. Put them in ~/.config/environment.d/*.conf
-# (plain KEY=value, mode 600): the user manager reads those at startup and every user unit
-# inherits them. deploy/README.md has the setup and the fish bridge.
+# Credentials come from ONE machine-wide file, shared by every service that needs them, so
+# there is a single copy to rotate. Plain KEY=value, mode 600.
 #
-# Two traps, both verified rather than assumed:
-#   - systemd CANNOT read a bash .env. `export KEY=value` is logged as "Ignoring invalid
-#     environment assignment" and the variable is left UNSET.
-#   - fish universal variables (`set -Ux`) are invisible to systemd. A key that works in
-#     your shell can be absent here for that reason alone. `just keys` shows the gap.
+# Deliberately NOT ~/.config/environment.d: the user manager passes that to EVERY user unit
+# — curio, and every GNOME/dbus service on the session — which would put provider keys in
+# the environment of dozens of unrelated processes. EnvironmentFile reaches only the units
+# that ask for it, keeps them out of `systemctl --user show-environment`, and is re-read at
+# each unit start, so adding a key needs only a restart, not a daemon-reexec.
 #
-# This file is for PROJECT-LOCAL tuning only — MJ_RUNWARE_RETRIES,
-# MJ_RUNWARE_READ_TIMEOUT, MJ_OPENAI_TTS_USD_PER_MINUTE,
-# MJ_ELEVENLABS_USD_PER_1K_CHARS — never credentials. `-` prefixed because it is genuinely
-# optional: absent keys already fail loudly, since mj-arcana exits non-zero when no service
-# could start.
+# Three ways a key that "is set" is invisible here, all verified:
+#   - a bash .env cannot be an EnvironmentFile: `export KEY=value` is logged as "Ignoring
+#     invalid environment assignment" and the variable is left UNSET.
+#   - fish universal variables (`set -Ux`) never reach systemd at all.
+#   - a key added to environment.d after the manager started is absent until daemon-reexec.
+# `just keys` shows what this unit can actually see.
+EnvironmentFile=%h/.config/secrets/providers.conf
+
+# Project-local tuning only, never credentials: MJ_RUNWARE_RETRIES,
+# MJ_RUNWARE_READ_TIMEOUT, MJ_OPENAI_TTS_USD_PER_MINUTE, MJ_ELEVENLABS_USD_PER_1K_CHARS.
+# `-` prefixed, so it is genuinely optional.
 EnvironmentFile=-%h/.config/mj/env
 
 Restart=always

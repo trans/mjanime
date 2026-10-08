@@ -24,80 +24,117 @@ just uninstall-service    # leaves your keys and project overrides in place
 
 ## Where the keys live
 
-**One place, machine-wide: `~/.config/environment.d/*.conf`.** The systemd *user manager*
-reads those at startup and every user unit inherits them, so provider credentials are not
-copied per project and not rotated in N places.
+**One file, shared by every service that needs it: `~/.config/secrets/providers.conf`**,
+mode 600 in a 700 directory, plain `KEY=value`. The unit names it with `EnvironmentFile=`.
 
 ```ini
-# ~/.config/environment.d/50-provider-keys.conf   (mode 600)
 ANTHROPIC_API_KEY=…
 OPENAI_API_KEY=…
 RUNWARE_API_KEY=…
 GEMINI_API_KEY=…
 ```
 
-After editing, the manager must re-read it. No logout needed:
+Add a key, then just restart — `EnvironmentFile` is re-read at each unit start, so there is
+no `daemon-reexec` dance:
 
 ```sh
-systemctl --user daemon-reexec          # manager re-reads environment.d; units keep running
-systemctl --user restart mj-arcana      # the unit picks up the new value
-just keys                               # confirm
+systemctl --user restart mj-arcana
+just keys
 ```
 
-`just keys` exists because this is confusing in a specific way:
+### Why not `~/.config/environment.d/`
+
+It is the obvious answer and it is too broad. The systemd *user manager* passes that
+environment to **every** user unit, so provider keys land in processes that have no
+business holding them. Measured on this host, before the cleanup, `OPENAI_API_KEY` and
+`ANTHROPIC_API_KEY` were in the environment of roughly **sixty** processes: the whole GNOME
+session, `pipewire`, bluetooth's `obexd`, the xdg desktop portals, `speech-dispatcher`,
+`localsearch` (a file indexer), `gnome-software`. None of them consume an AI key.
+
+`EnvironmentFile=` reaches only the units that ask for it, and keeps the keys out of
+`systemctl --user show-environment` entirely.
+
+If keys are already in the manager environment from an old
+`systemctl --user import-environment`, removing a file does not clear them:
+
+```sh
+systemctl --user unset-environment ANTHROPIC_API_KEY OPENAI_API_KEY RUNWARE_API_KEY
+```
+
+That stops *new* units inheriting them; processes already running keep their copy until
+restarted. Note that anything re-running `import-environment` will put them back.
+
+### `just keys` — three columns, because they differ
 
 ```
-KEY                      SYSTEMD    SHELL
-ANTHROPIC_API_KEY        yes        yes
-OPENAI_API_KEY           yes        yes
-RUNWARE_API_KEY          yes        -
-GEMINI_API_KEY           -          -
+KEY                      FILE     SERVICE   SHELL
+ANTHROPIC_API_KEY        yes      yes       yes
+RUNWARE_API_KEY          yes      yes       yes
+GEMINI_API_KEY           -        -         -
 ```
 
-The **SYSTEMD** column is what the service sees. The two columns are genuinely independent,
-and a key can be in either without the other.
+**SERVICE** is read from the running process's own environment (`/proc/<pid>/environ`), so
+it is ground truth rather than an inference about what the unit *should* see.
 
-### Two ways a key that "is set" is invisible to systemd
+### Three ways a key that "is set" is invisible to the service
 
-Both verified here, not assumed — and both fail in the same quiet shape.
+All verified here, and all failing in the same quiet shape.
 
-1. **A bash `.env` cannot be an `EnvironmentFile`.** Its lines are `export KEY=value`, and
-   systemd logs `Ignoring invalid environment assignment 'export KEY=…'` and continues with
-   the variable **unset**. A probe unit reading a file with both forms saw the plain
-   assignment and reported the exported one as `UNSET`.
-2. **fish universal variables (`set -Ux`) are invisible to systemd.** They live in
-   `~/.config/fish/fish_variables` and reach your *shell*, not the user manager. If keys
-   appear in the manager environment at all it is because something once ran
-   `systemctl --user import-environment` — a snapshot, so a key added later is simply
-   absent. That is exactly why `RUNWARE_API_KEY` was missing here while `ANTHROPIC` and
-   `OPENAI` were present.
+1. **A bash `.env` cannot be an `EnvironmentFile`.** Its lines are `export KEY=value`;
+   systemd logs `Ignoring invalid environment assignment` and leaves the variable **unset**.
+   A probe unit reading a file with both forms saw the plain assignment and reported the
+   exported one as `UNSET`.
+2. **fish universal variables (`set -Ux`) never reach systemd.** They live in
+   `~/.config/fish/fish_variables` and reach your *shell* only.
+3. **`environment.d` added after the manager started** is absent until
+   `systemctl --user daemon-reexec`.
 
-Why it matters more than it looks: **both mj services are key-gated.** Missing *all* keys
-exits non-zero and is obvious, but a missing *one* leaves the other running — so
-`systemctl status` reads `active (running)` while `mj:camera` is quietly absent from the bus
-directory. `just install-service` therefore prints the key table and shouts if
-`RUNWARE_API_KEY` is not visible.
+Why this bites harder than it looks: **both mj services are key-gated.** Missing *all* keys
+exits non-zero and is obvious; missing *one* leaves the other running, so `systemctl status`
+reads `active (running)` while `mj:camera` is quietly absent from the bus directory.
+`just install-service` therefore prints the key table and shouts if `RUNWARE_API_KEY` is not
+visible.
 
-### Keeping fish and systemd in step
+### The shell reads the same file
 
-`environment.d` is the canonical store; have fish read it rather than holding its own copy,
-so there is one file to rotate. In `~/.config/fish/conf.d/provider-keys.fish`:
+`~/.config/fish/conf.d/provider-keys.fish` loads that one file, so the shell and the
+services never disagree:
 
 ```fish
-for line in (string match -rv '^\s*(#|$)' < ~/.config/environment.d/50-provider-keys.conf)
-    set -gx (string split -m1 = $line)
+set -l __keyfile ~/.config/secrets/providers.conf
+if test -r $__keyfile
+    for __line in (cat $__keyfile)
+        string match -qr '^\s*(#|$)' -- $__line; and continue
+        set -gx (string split -m1 = -- $__line)
+    end
 end
 ```
 
-Then remove the duplicates with `set -Ue ANTHROPIC_API_KEY` (and so on), or they will shadow
-the file and you will be back to two sources.
+Keep no `set -Ux` copies — a universal shadows the file and you are back to two things to
+rotate. Erase them with `set -Ue ANTHROPIC_API_KEY`. Beware when checking:
+`fish --no-config` still **inherits the parent environment**, so it does not prove a key
+came from a universal. Scrub first:
+
+```sh
+env -u ANTHROPIC_API_KEY fish --no-config -c 'echo $ANTHROPIC_API_KEY'
+```
+
+`fish_variables` is created world-readable (`0644`) — worth a `chmod 600` whatever else you
+store in it.
+
+### Stricter, if you want it
+
+`EnvironmentFile` still puts secrets in the process environment, visible via
+`/proc/<pid>/environ` to the same user. systemd's `LoadCredential=` / `ImportCredential=`
+passes a secret to one named unit without it appearing in the environment at all. That
+needs the program to read `$CREDENTIALS_DIRECTORY`, so it is a code change, not just a unit
+change — noted rather than done.
 
 ### `~/.config/mj/env` is not for keys
 
 `just systemd-env` writes only `MJ_*` variables there — project-local tuning
 (`MJ_RUNWARE_RETRIES`, `MJ_RUNWARE_READ_TIMEOUT`, `MJ_OPENAI_TTS_USD_PER_MINUTE`,
-`MJ_ELEVENLABS_USD_PER_1K_CHARS`). The unit's `EnvironmentFile=` is `-` prefixed, so it is
-optional.
+`MJ_ELEVENLABS_USD_PER_1K_CHARS`). That `EnvironmentFile=` is `-` prefixed and optional.
 
 ## What the sandbox allows, and why
 

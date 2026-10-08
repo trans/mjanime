@@ -67,21 +67,30 @@ clean:
 
 # --- deployment -----------------------------------------------------------------
 
-# Which provider keys can the systemd user manager actually see? A key set only in fish
-# (`set -Ux`) is invisible to systemd user units, so a service can fail with a key that
-# works perfectly in your shell. This shows the gap.
-# Compare provider keys visible to systemd vs your shell
+# Where do the provider keys actually reach? FILE is the shared credential file the unit
+# reads; SERVICE is the live environment of the running process, which is the ground truth;
+# SHELL is your interactive shell. A key set only in fish (`set -Ux`) shows up in SHELL
+# alone and is invisible to the service.
+# Show which provider keys reach the file, the running service, and your shell
 keys:
-    @printf '%-24s %-10s %-10s\n' KEY SYSTEMD SHELL
-    @for k in ANTHROPIC_API_KEY OPENAI_API_KEY RUNWARE_API_KEY ELEVENLABS_API_KEY GEMINI_API_KEY GOOGLE_API_KEY; do \
-        if systemctl --user show-environment 2>/dev/null | grep -q "^$k="; then sd=yes; else sd="-"; fi; \
-        if env | grep -q "^$k="; then sh=yes; else sh="-"; fi; \
-        printf '%-24s %-10s %-10s\n' "$k" "$sd" "$sh"; \
+    #!/usr/bin/env bash
+    f=~/.config/secrets/providers.conf
+    pid=$(systemctl --user show -p MainPID --value mj-arcana.service 2>/dev/null)
+    printf '%-24s %-8s %-9s %-7s\n' KEY FILE SERVICE SHELL
+    for k in ANTHROPIC_API_KEY OPENAI_API_KEY RUNWARE_API_KEY ELEVENLABS_API_KEY GEMINI_API_KEY GOOGLE_API_KEY; do
+      inf='-'; [ -r "$f" ] && grep -q "^$k=" "$f" && inf=yes
+      svc='-'
+      if [ -n "$pid" ] && [ "$pid" != 0 ] && [ -r "/proc/$pid/environ" ]; then
+        tr '\0' '\n' < "/proc/$pid/environ" | grep -q "^$k=" && svc=yes
+      elif [ -z "$pid" ] || [ "$pid" = 0 ]; then
+        svc='(down)'
+      fi
+      sh='-'; [ -n "${!k}" ] && sh=yes
+      printf '%-24s %-8s %-9s %-7s\n' "$k" "$inf" "$svc" "$sh"
     done
-    @echo ""
-    @echo "systemd column is what mj-arcana.service sees. Keys belong in"
-    @echo "~/.config/environment.d/*.conf (mode 600), then: systemctl --user daemon-reexec"
-    @echo "and restart the unit. See deploy/README.md."
+    echo ""
+    echo "SERVICE is what mj-arcana actually sees. Keys live in $f (mode 600);"
+    echo "after editing just restart the unit — EnvironmentFile is re-read on start."
 
 # Project-local tuning only (retries, timeouts, rates) — NOT credentials, which belong in
 # ~/.config/environment.d so every project shares one copy.
