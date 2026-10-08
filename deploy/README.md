@@ -16,7 +16,7 @@ other Silicon Circus services use (`curio`, `camelot`): user units under
 ```sh
 just install-service      # builds, writes the env file, installs, enables, starts
 just logs                 # journalctl -f
-just uninstall-service    # leaves ~/.config/mj/env alone — it holds your keys
+just uninstall-service    # leaves your keys and project overrides in place
 ```
 
 `install-service` substitutes the checkout path into the unit, so the shipped file carries
