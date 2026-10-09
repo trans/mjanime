@@ -1,5 +1,6 @@
 require "http/client"
 require "uri"
+require "./retry"
 require "base64"
 require "uuid"
 
@@ -361,7 +362,6 @@ module MJ
     # arrives AFTER the work was done means a retry pays twice. Without a retry you pay
     # once and get nothing. Retries are therefore few and the ceiling is low; raise
     # MJ_RUNWARE_RETRIES only if you accept that trade.
-    RETRYABLE = [408, 429, 500, 502, 503, 504]
 
     def self.retries : Int32
       ENV["MJ_RUNWARE_RETRIES"]?.try(&.to_i?) || 2
@@ -411,17 +411,22 @@ module MJ
       loop do
         begin
           response = yield
-          return response unless RETRYABLE.includes?(response.status_code)
-          # Out of attempts: hand the error response back so the caller raises with
-          # the provider's own message rather than a retry wrapper of our own.
+          # Retry.retryable? answers both questions: is the status transient, AND does the
+          # body say it is permanent anyway — an exhausted quota is a 429 that never clears.
+          # The status alone is not the signal.
+          return response unless Retry.retryable?(response.status_code, response.body)
           return response if attempt >= max
-          STDERR.puts "[runware] #{what} got #{response.status_code}, retrying (#{attempt + 1}/#{max})"
+          delay = Retry.delay(attempt + 1, response)
+          STDERR.puts "[runware] #{what} got #{response.status_code}, retrying in #{delay.total_seconds.round(1)}s (#{attempt + 1}/#{max})"
+          attempt += 1
+          sleep delay
         rescue ex : IO::TimeoutError | IO::Error | Socket::Error
           raise ex if attempt >= max
-          STDERR.puts "[runware] #{what} #{ex.class}: #{ex.message}, retrying (#{attempt + 1}/#{max})"
+          delay = Retry.backoff(attempt + 1)
+          STDERR.puts "[runware] #{what} #{ex.class}: #{ex.message}, retrying in #{delay.total_seconds.round(1)}s (#{attempt + 1}/#{max})"
+          attempt += 1
+          sleep delay
         end
-        attempt += 1
-        sleep((2.0 ** attempt + Random.rand).seconds)
       end
     end
 

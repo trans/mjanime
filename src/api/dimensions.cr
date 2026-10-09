@@ -26,11 +26,11 @@ module MJ
   # ⚠ 1344×768 and 1536×672 are REJECTED — use 1376×768 and 1548×672 / 1584×672.
   # (Reference INPUT images can be any size; only the requested OUTPUT w/h are fixed.)
   NANO_DIMENSIONS = [
-    {1024, 1024},                # 1:1
-    {1376, 768}, {768, 1376},    # 16:9 / 9:16
-    {1548, 672}, {1584, 672},    # 21:9 (wide panorama)
-    {1200, 896}, {896, 1200},    # ~4:3 / 3:4
-    {1264, 848}, {848, 1264},    # ~3:2 / 2:3
+    {1024, 1024},             # 1:1
+    {1376, 768}, {768, 1376}, # 16:9 / 9:16
+    {1548, 672}, {1584, 672}, # 21:9 (wide panorama)
+    {1200, 896}, {896, 1200}, # ~4:3 / 3:4
+    {1264, 848}, {848, 1264}, # ~3:2 / 2:3
   ]
 
   # Nearest supported Nano output size to the requested aspect ratio.

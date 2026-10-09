@@ -1,7 +1,7 @@
 module MJ
   struct ControlNetParam
     getter model : String
-    getter guide_image : String  # UUID or data URI
+    getter guide_image : String # UUID or data URI
     getter weight : Float64
     getter start_step : Int32
     getter end_step : Int32

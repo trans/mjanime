@@ -1,4 +1,5 @@
 require "../transport"
+require "../../api/retry"
 require "http/client"
 require "http/formdata"
 require "json"
@@ -37,7 +38,6 @@ module MJ
       # Mirrors the Runware client's policy, because every transport owes the service its
       # own resilience: Crystal's HTTP::Client has no default timeouts, so a transport
       # without them can hang a caller indefinitely.
-      RETRYABLE = [408, 429, 500, 502, 503, 504]
 
       # Left to itself this API returns LOSSLESS webp (a VP8L chunk, ~0.9 bytes/pixel),
       # where Runware returns lossy VP8 at ~0.11. Same request, 8x the bytes — which would
@@ -203,19 +203,25 @@ module MJ
         loop do
           begin
             response = yield
-            return response unless RETRYABLE.includes?(response.status_code)
+            # OpenAI returns 429 both for rate limiting and for `insufficient_quota`, which
+            # means the account is out of credit. Retrying the latter is pure latency for a
+            # guaranteed failure, so the body decides, not the status.
+            return response unless MJ::Retry.retryable?(response.status_code, response.body)
             return response if attempt >= @retries
-            STDERR.puts "[openai] #{what} got #{response.status_code}, retrying (#{attempt + 1}/#{@retries})"
+            delay = MJ::Retry.delay(attempt + 1, response)
+            STDERR.puts "[openai] #{what} got #{response.status_code}, retrying in #{delay.total_seconds.round(1)}s (#{attempt + 1}/#{@retries})"
+            attempt += 1
+            sleep delay
           rescue ex : IO::TimeoutError | IO::Error | Socket::Error
             raise ex if attempt >= @retries
-            STDERR.puts "[openai] #{what} #{ex.class}: #{ex.message}, retrying (#{attempt + 1}/#{@retries})"
+            delay = MJ::Retry.backoff(attempt + 1)
+            STDERR.puts "[openai] #{what} #{ex.class}: #{ex.message}, retrying in #{delay.total_seconds.round(1)}s (#{attempt + 1}/#{@retries})"
+            attempt += 1
+            sleep delay
           end
-          attempt += 1
-          sleep((2.0 ** attempt + Random.rand).seconds)
         end
       end
 
-      # The reference may arrive as anything the caller had to hand, and this API wants a
       # truthful content type per part.
       private def sniff(bytes : Bytes) : {String, String}
         return {"png", "image/png"} if bytes.size > 8 && bytes[1] == 0x50 && bytes[2] == 0x4E
