@@ -122,8 +122,11 @@ module MJ
           builder.field("prompt", prompt)
           builder.field("size", size)
           builder.field("output_format", fmt)
-          # Preserving the reference subject is the whole job here.
-          builder.field("input_fidelity", "high")
+          # input_fidelity is NOT sent by default: support is per model AND per endpoint.
+          # gpt-image-1.5 accepts it on /edits; the 2.5 family rejects it there with "does
+          # not support the 'input_fidelity' parameter" even though /generations knows the
+          # field. So it lives in the camera's `extra` — see cameras.cr — which is where
+          # per-model parameter knowledge belongs.
           if compressible?(fmt) && !(extra.try(&.has_key?("output_compression")))
             builder.field("output_compression", @compression.to_s)
           end

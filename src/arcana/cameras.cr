@@ -280,7 +280,15 @@ module MJ
         Camera.new(
           id: "dhero", label: "GPT Image 1.5 (direct)", model: "gpt-image-1.5",
           cost: 0.1362, seconds: 33.3, quality: 5, dims: HERO_DIMS, provider: "openai",
-          note: "Same model as `hero`, independent queue."),
+          # The ONLY direct camera that takes input_fidelity on /images/edits, which is
+          # what holds a reference subject faithfully. The 2.5 pair refuses it there —
+          # verified, and the refusal is confusing: a bogus value makes the API answer
+          # "Supported values are: 'high' and 'low'", then `high` answers "does not support
+          # the 'input_fidelity' parameter". Probing with an invalid value therefore LIES
+          # about support; only a valid value tells the truth.
+          extra: {"input_fidelity" => JSON::Any.new("high")},
+          note: "Same model as `hero`, independent queue. The only direct camera that " \
+                "accepts input_fidelity, so the best of the three at holding a reference."),
         Camera.new(
           id: "kontext", label: "FLUX Kontext dev", model: "bfl:3@1",
           cost: 0.0400, seconds: 8.7, quality: 1, dims: KONTEXT_DIMS,
