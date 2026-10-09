@@ -5,8 +5,16 @@ module MJ
     getter image_uuid : String?
     # What the provider charged for this task, in USD (nil = none reported).
     getter cost : Float64?
+    # Whether `cost` was BILLED by the provider or merely computed by us.
+    #
+    # Runware reports a real figure via includeCost, so false. Google reports token counts
+    # and no price, so its transport multiplies tokens by a PUBLISHED rate and sets this
+    # true. The distinction has to travel with the number: a computed figure that arrives
+    # flagged as billed is exactly how a guess ends up in someone else's ledger as fact.
+    getter cost_estimated : Bool
 
-    def initialize(@image_data, @response_id = nil, @image_uuid = nil, @cost = nil)
+    def initialize(@image_data, @response_id = nil, @image_uuid = nil, @cost = nil,
+                   @cost_estimated : Bool = false)
     end
   end
 

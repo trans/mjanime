@@ -16,6 +16,7 @@ require "./api/controlnet"
 require "./api/runware_client"
 require "./engine/canvas_util"
 require "./arcana/transports/openai_direct"
+require "./arcana/transports/google_direct"
 require "./arcana/camera_service"
 require "./arcana/voice_service"
 require "arcana-core"
@@ -109,6 +110,9 @@ if key = ENV["RUNWARE_API_KEY"]?
   transports = {"runware" => MJ::Arcana::RunwareTransport.new(rw).as(MJ::Arcana::Transport)}
   if openai_key = ENV["OPENAI_API_KEY"]?
     transports["openai"] = MJ::Arcana::OpenAIDirectTransport.new(openai_key).as(MJ::Arcana::Transport)
+  end
+  if google_key = ENV["GEMINI_API_KEY"]? || ENV["GOOGLE_API_KEY"]?
+    transports["google"] = MJ::Arcana::GoogleDirectTransport.new(google_key).as(MJ::Arcana::Transport)
   end
   MJ::Arcana::CameraService.register(cam_ts, transports)
   toolsets << cam_ts

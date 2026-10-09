@@ -196,6 +196,16 @@ module MJ
       # GPT Image 1.5 publishes a very short list.
       HERO_DIMS = [[1024, 1024], [1536, 1024], [1024, 1536]]
 
+      # Gemini's direct API takes an aspect RATIO, not pixel dimensions, and these are the
+      # sizes its 14 legal ratios actually produce — measured one call at a time, not read
+      # off a page. Eight match the Nano sizes probed through Runware exactly, which is good
+      # evidence the set belongs to the model rather than the aggregator. Two do not exist
+      # through Runware at all (928x1152, 1152x928), and four are extreme panoramas:
+      # 8:1 gives 2928x352 in a single generation, at the same token cost as a square.
+      GOOGLE_DIMS = [[1024, 1024], [512, 2064], [352, 2928], [848, 1264], [1264, 848],
+                     [896, 1200], [2064, 512], [1200, 896], [928, 1152], [1152, 928],
+                     [2928, 352], [768, 1376], [1376, 768], [1584, 672]]
+
       # Ranges, read off the API's own rejection messages: {min, max, step}.
       KLEIN_RANGE = {128, 2048, 16}
       GPT25_RANGE = {16, 3840, 16}
@@ -289,6 +299,35 @@ module MJ
           extra: {"input_fidelity" => JSON::Any.new("high")},
           note: "Same model as `hero`, independent queue. The only direct camera that " \
                 "accepts input_fidelity, so the best of the three at holding a reference."),
+        # --- the google pool: a third independent queue, and the fastest of the three ---
+        #
+        # Same models as `nano` and `lite`, admitted against our own Google quota. Unlike
+        # the OpenAI pool these are also markedly FASTER — lite measured ~2.8s direct
+        # against 6.1s through Runware — which makes them the best choice for anything a
+        # player might notice waiting for.
+        #
+        # Costs are COMPUTED per call from the image output tokens Google reports (a flat
+        # 1120 for a 1K image, whatever the aspect) times the published rate, so the
+        # figures below are what to expect rather than what any single call billed. Google
+        # states no price in the response, so results still carry usd_estimated: true.
+        #
+        # Worth knowing: direct is barely cheaper than through Runware ($0.0672 against
+        # $0.0692 for nano), so do not move here for price. Move here for the separate
+        # queue and the latency. The real saving is the BATCH endpoint, which halves the
+        # rate and which every one of these models supports — the right home for a stock
+        # library, where nothing is waiting.
+        Camera.new(
+          id: "dnano", label: "Nano Banana 2 (direct)", model: "gemini-3.1-flash-image",
+          cost: 0.0672, seconds: 12.5, quality: 4, dims: GOOGLE_DIMS, provider: "google",
+          note: "Same model as `nano`, independent queue, cost computed from reported " \
+                "tokens. Google's content filter is strict AND probabilistic — identical " \
+                "prompts pass and fail minutes apart, and refusals are unbilled."),
+        Camera.new(
+          id: "dlite", label: "Nano Banana 2 Lite (direct)",
+          model: "gemini-3.1-flash-lite-image",
+          cost: 0.0336, seconds: 2.8, quality: 3, dims: GOOGLE_DIMS, provider: "google",
+          note: "The fastest camera here by a wide margin — ~2.8s measured, against 6.1s " \
+                "for the same model through Runware. First choice for a live path."),
         Camera.new(
           id: "kontext", label: "FLUX Kontext dev", model: "bfl:3@1",
           cost: 0.0400, seconds: 8.7, quality: 1, dims: KONTEXT_DIMS,

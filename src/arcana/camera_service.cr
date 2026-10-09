@@ -4,6 +4,7 @@ require "json"
 require "./cameras"
 require "./transport"
 require "./xcf"
+require "./convert"
 
 module MJ
   module Arcana
@@ -230,7 +231,14 @@ module MJ
         end
 
         img = result.image_data
+        # Providers do not agree on what they return: Google ignores the format request
+        # entirely and always sends JPEG. Re-encode rather than relabel, so moving load
+        # between pools changes the queue and nothing else — a caller storing by extension
+        # would otherwise write a .webp file holding a JPEG.
+        img = Convert.ensure(img, wire_fmt) unless fmt == "xcf"
         img = Xcf.convert(img) if fmt == "xcf"
+        # Report the format of the BYTES, not of the request.
+        actual_fmt = fmt == "xcf" ? "xcf" : ImageSniff.extension(img)
         res = {
           "status" => JSON::Any.new("ok"),
           "camera" => JSON::Any.new(cam.id),
@@ -252,8 +260,11 @@ module MJ
           # What the provider actually billed. nil means it reported no price, which is
           # recorded as unpriced — never silently as the camera's average, which would put
           # a guess into the caller's ledger as if it were fact.
-          "usd"           => result.cost ? JSON::Any.new(result.cost) : JSON::Any.new(nil),
-          "usd_estimated" => JSON::Any.new(result.cost ? false : true),
+          "usd" => result.cost ? JSON::Any.new(result.cost) : JSON::Any.new(nil),
+          # true when the figure was computed rather than billed — either because the
+          # provider reported no price at all (we fall back to the registry average) or
+          # because the transport derived it from tokens and a published rate.
+          "usd_estimated" => JSON::Any.new(result.cost.nil? || result.cost_estimated),
         } of String => JSON::Any
         res["usd"] = JSON::Any.new(cam.cost) unless result.cost
         if seed = data["seed"]?.try(&.as_i64?)
@@ -266,7 +277,7 @@ module MJ
         else
           res["image_base64"] = JSON::Any.new(Base64.strict_encode(img))
           res["content_type"] = JSON::Any.new(
-            case fmt
+            case actual_fmt
             when "webp" then "image/webp"
             when "jpg"  then "image/jpeg"
             when "xcf"  then "image/x-xcf"
