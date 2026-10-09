@@ -20,17 +20,18 @@ module MJ
       getter model : String
       getter cost : Float64    # USD per image, measured
       getter seconds : Float64 # typical wall-clock, measured
-      # Bump when anything that changes a camera's OUTPUT changes — the model id, the
-      # default parameters, the prompt scaffolding.
+      # A PROVENANCE marker, not a quality signal: it records that this camera's
+      # configuration differed, and implies nothing whatever about whether the result is
+      # better. `quality` is the only ordering signal here. That separation is deliberate —
+      # a bump can be a forced model substitution that is merely different, so a consumer
+      # preferring "newer" on this field would sometimes prefer worse.
       #
-      # It is a FRESHNESS RANK, not an expiry date, and the difference matters to anyone
-      # storing results. A camera change moves fidelity; it does not move subject or style
-      # far enough to make an existing picture wrong. So the consuming store (DataDungeon,
-      # for infocomic) keeps serving what it has and merely PREFERS the higher version when
-      # several stored images match a request. Nothing here ever asks a caller to discard or
-      # regenerate, which is also why bumping must stay rare and deliberate: a library
-      # generated once and reused across players is the expensive thing, and a version bump
-      # should never read as an instruction to rebuild it.
+      # Know its limit before relying on it: **it only moves when WE change something** —
+      # the model id, the default parameters, the prompt scaffolding. If Google silently
+      # improves a model behind the same id, this stays where it is while the pictures
+      # change. It cannot answer "did the provider upgrade?", and nothing on this side
+      # reliably can. `generated_at` on each result is the field that survives that, because
+      # it is a fact about the picture rather than a claim about the config.
       getter version : Int32
       # A rank, not a measurement: ordered by Trans's eye over the model survey, ascending.
       # Reuse can prefer a higher rank when several cached pictures match.

@@ -126,16 +126,22 @@ A caller keeping a ledger and a cache needs more than pixels back.
   `usd_estimated` says which: `false` is the real figure, `true` means the provider reported
   nothing and this is the registry's average. The average is never silently substituted for a
   reported price, so the flag is trustworthy.
-- **`version`** is the cache-invalidation handle. Bump it whenever anything that changes a
-  camera's output changes — model id, default parameters, prompt scaffolding. Callers key on
-  `(camera, version, prompt, reference)`.
+- **`version`** is **provenance, not a quality signal.** It records that a camera's configuration
+  differed — model id, default parameters, prompt scaffolding — and implies nothing about better or
+  worse, so **do not prefer on it**. A bump can be a forced model substitution that is merely
+  different, and a consumer preferring "newer" would then sometimes prefer worse. `quality` is the
+  only ordering signal.
 
-  **It is a freshness rank, not an expiry.** A bump means a fresh request would render the subject
-  a little better; it never means a stored picture is wrong, because a camera change moves fidelity
-  rather than subject or style. So a store keeps what it has and merely *prefers* the higher version
-  where it holds several candidates — the same way it can prefer a higher `quality`. Regeneration is
-  always a choice. That is also why bumps stay rare and deliberate: a library generated once and
-  reused across players is the expensive asset, and a bump must never read as "rebuild it".
+  Know its limit: **it only moves when we change something.** If a provider silently improves a
+  model behind an unchanged id, this stays where it is while the pictures change. It cannot answer
+  "did Google upgrade?" and nothing on this side reliably can.
+- **`generated_at`** (UTC, RFC 3339) is when the picture was actually drawn. This is the field that
+  survives provider-side drift, because it is a fact about the picture rather than a claim about the
+  config — and it needs no bump discipline from us to stay true. If you want "newer", this is the
+  field, not `version`.
+- **`pool`** is which capacity pool served the request, on every outcome. On `refused` and
+  `overloaded` it is the useful one: a caller deciding where to retry wants to know which queue just
+  turned it away.
 - **`width`/`height`** are the size actually produced, after snapping — not what was asked for.
 - **`quality`** (from `cameras`) ranks the cameras ascending. It is a judgement over the model
   survey, not a measurement, and it is labelled as one.

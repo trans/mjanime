@@ -126,11 +126,13 @@ module MJ
                     "`quality` is a rank (higher is better), a judgement over the model survey " \
                     "rather than a measurement — reuse may prefer a higher rank when several " \
                     "cached pictures match. `version` bumps when anything that changes a " \
-                    "camera's output changes. It is a FRESHNESS RANK, not an expiry: a bump " \
-                    "means a newer request would draw this subject slightly better, never that " \
-                    "the stored picture is wrong. A camera change shifts fidelity, not subject " \
-                    "or style, so a store should keep what it has and PREFER the higher version " \
-                    "where it holds several — regeneration is a choice, never an obligation.",
+                    "camera's output changes. It is PROVENANCE, not a quality signal: it " \
+                    "says the configuration differed and implies nothing about better or " \
+                    "worse, so do not prefer on it — `quality` is the ordering signal. It " \
+                    "only moves when WE change something, so it cannot tell you a provider " \
+                    "silently upgraded a model behind an unchanged id; `generated_at` on each " \
+                    "result is what survives that, being a fact about the picture rather than " \
+                    "a claim about the config. Nothing here asks you to discard or regenerate.",
         }.to_json)
       end
 
@@ -236,13 +238,17 @@ module MJ
           # the `cameras` listing: a caller analysing a log of ten thousand generations
           # should not have to join back to a listing to learn which queue it was in, and
           # that is exactly the analysis that tells it where to send load next.
-          "pool"    => JSON::Any.new(cam.provider),
-          "version" => JSON::Any.new(cam.version.to_i64),
-          "model"   => JSON::Any.new(cam.model),
-          "width"   => JSON::Any.new(w.to_i64),
-          "height"  => JSON::Any.new(h.to_i64),
-          "bytes"   => JSON::Any.new(img.size.to_i64),
-          "format"  => JSON::Any.new(fmt),
+          "pool" => JSON::Any.new(cam.provider),
+          # When the picture was actually drawn. Unlike `version` this needs no discipline
+          # from us and cannot go stale: it is the only field that reflects a provider
+          # changing a model behind an unchanged id. UTC, RFC 3339.
+          "generated_at" => JSON::Any.new(Time.utc.to_rfc3339),
+          "version"      => JSON::Any.new(cam.version.to_i64),
+          "model"        => JSON::Any.new(cam.model),
+          "width"        => JSON::Any.new(w.to_i64),
+          "height"       => JSON::Any.new(h.to_i64),
+          "bytes"        => JSON::Any.new(img.size.to_i64),
+          "format"       => JSON::Any.new(fmt),
           # What the provider actually billed. nil means it reported no price, which is
           # recorded as unpriced — never silently as the camera's average, which would put
           # a guess into the caller's ledger as if it were fact.
