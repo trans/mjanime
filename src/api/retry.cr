@@ -45,19 +45,46 @@ module MJ
     # Precedence: the `Retry-After` header, then a `retryAfter` field anywhere in the body,
     # then exponential backoff with jitter. Jitter matters because several fibers hitting
     # the same 429 would otherwise retry in lockstep and rebuild the burst that caused it.
-    def self.delay(attempt : Int32, response : HTTP::Client::Response?) : Time::Span
+    # The longest we will ever wait on a provider's instruction. Past this, retrying is
+    # not patience, it is noise.
+    MAX_HONOURED_DELAY = 60.0
+
+    # nil means DO NOT RETRY: the provider named a wait longer than we are willing to
+    # serve, so the honest move is to fail now with its reason intact rather than burn the
+    # attempts at a shorter interval it already told us is useless.
+    #
+    # Google's free tier is the case that taught this: an exhausted daily image quota
+    # answers 429 with retryDelay "3175s" — 53 minutes. Clamping that to 60s meant two
+    # pointless retries and two more rejections, when the answer was simply "not today".
+    def self.delay?(attempt : Int32, response : HTTP::Client::Response?) : Time::Span?
       if r = response
         if secs = from_header(r) || from_body(r.body)
-          # Trust it, but not unboundedly: a provider asking for ten minutes should not
-          # silently park a caller that has its own deadline.
-          return Math.min(secs, 60.0).seconds
+          return nil if secs > MAX_HONOURED_DELAY
+          return secs.seconds
         end
       end
       backoff(attempt)
     end
 
+    # Kept for callers that just want a number; prefer `delay?`.
+    def self.delay(attempt : Int32, response : HTTP::Client::Response?) : Time::Span
+      delay?(attempt, response) || backoff(attempt)
+    end
+
+    # How long the provider asked for, whether or not we are willing to wait it — so an
+    # error message can say "it asked for 3175s" instead of leaving the caller guessing.
+    def self.requested_delay(response : HTTP::Client::Response?) : Float64?
+      return nil unless r = response
+      from_header(r) || from_body(r.body)
+    end
+
     def self.backoff(attempt : Int32) : Time::Span
       (Math.min(2.0 ** attempt, 32.0) + Random.rand).seconds
+    end
+
+    # Protobuf duration strings: "3175s", "1.5s". Plain numbers pass through too.
+    private def self.duration_seconds(raw : String) : Float64?
+      raw.ends_with?("s") ? raw[0..-2].to_f? : raw.to_f?
     end
 
     private def self.from_header(response : HTTP::Client::Response) : Float64?
@@ -92,8 +119,10 @@ module MJ
     private def self.find_retry_after(node : JSON::Any) : Float64?
       if h = node.as_h?
         h.each do |k, v|
-          if k == "retryAfter" || k == "retry_after"
-            return v.as_f? || v.as_i?.try(&.to_f) || v.as_s?.try(&.to_f?)
+          # Runware says `retryAfter` (a number); Google says `retryDelay` nested in
+          # error.details[] as a duration STRING like "3175s". Both mean the same thing.
+          if k == "retryAfter" || k == "retry_after" || k == "retryDelay" || k == "retry_delay"
+            return v.as_f? || v.as_i?.try(&.to_f) || v.as_s?.try { |str| duration_seconds(str) }
           end
           if found = find_retry_after(v)
             return found

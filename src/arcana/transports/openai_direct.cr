@@ -212,7 +212,14 @@ module MJ
             # guaranteed failure, so the body decides, not the status.
             return response unless MJ::Retry.retryable?(response.status_code, response.body)
             return response if attempt >= @retries
-            delay = MJ::Retry.delay(attempt + 1, response)
+            # nil means the provider named a wait longer than we will serve — fail now with
+            # its reason rather than burn attempts at an interval it called useless.
+            delay = MJ::Retry.delay?(attempt + 1, response)
+            unless delay
+              asked = MJ::Retry.requested_delay(response)
+              STDERR.puts "[openai] #{what} got #{response.status_code}, provider asked for #{asked.try(&.round) || "?"}s — not retrying"
+              return response
+            end
             STDERR.puts "[openai] #{what} got #{response.status_code}, retrying in #{delay.total_seconds.round(1)}s (#{attempt + 1}/#{@retries})"
             attempt += 1
             sleep delay
