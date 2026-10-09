@@ -1,5 +1,6 @@
 require "../transport"
 require "../../api/retry"
+require "../../api/image_sniff"
 require "http/client"
 require "http/formdata"
 require "json"
@@ -134,7 +135,7 @@ module MJ
             end
           end
           references.each_with_index do |bytes, i|
-            ext, mime = sniff(bytes)
+            ext, mime = MJ::ImageSniff.kind(bytes)
             builder.file("image[]", IO::Memory.new(bytes),
               HTTP::FormData::FileMetadata.new(filename: "ref#{i}.#{ext}"),
               HTTP::Headers{"Content-Type" => mime})
@@ -220,16 +221,6 @@ module MJ
             sleep delay
           end
         end
-      end
-
-      # truthful content type per part.
-      private def sniff(bytes : Bytes) : {String, String}
-        return {"png", "image/png"} if bytes.size > 8 && bytes[1] == 0x50 && bytes[2] == 0x4E
-        return {"jpg", "image/jpeg"} if bytes.size > 3 && bytes[0] == 0xFF && bytes[1] == 0xD8
-        if bytes.size > 12 && String.new(bytes[0, 4]) == "RIFF" && String.new(bytes[8, 4]) == "WEBP"
-          return {"webp", "image/webp"}
-        end
-        {"png", "image/png"}
       end
     end
   end

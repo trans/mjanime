@@ -1,6 +1,7 @@
 require "http/client"
 require "uri"
 require "./retry"
+require "./image_sniff"
 require "base64"
 require "uuid"
 
@@ -47,8 +48,11 @@ module MJ
     def upload_image_bytes(image_data : Bytes) : String
       task_uuid = UUID.random.to_s
 
+      # Label it for what it actually is. This used to say image/png for everything, which
+      # worked only because Runware sniffs the body and ignores the label — callers hand us
+      # webp (DataDungeon's store) and jpeg as often as png.
       base64 = Base64.strict_encode(image_data)
-      data_uri = "data:image/png;base64,#{base64}"
+      data_uri = "data:#{ImageSniff.mime(image_data)};base64,#{base64}"
 
       body = [{
         taskType: "imageUpload",
