@@ -5,6 +5,7 @@ require "./cameras"
 require "./transport"
 require "./xcf"
 require "./convert"
+require "./view"
 
 module MJ
   module Arcana
@@ -26,6 +27,9 @@ module MJ
           "width":{"type":"integer","description":"Desired width; snapped to the camera's nearest supported aspect. Default 1024."},
           "height":{"type":"integer","description":"Desired height; snapped. Default 1024."},
           "format":{"type":"string","enum":["webp","png","jpg","xcf"],"description":"Default webp: ~26x smaller on the wire than png for the same picture, and unlike jpg it keeps hard ink edges clean. Note Runware returns LOSSY webp with NO alpha channel (verified: a VP8 chunk, no VP8X) — it is the right default for serve-and-display, but do not plan on transparency or re-key a webp. Use png for lossless and for anything with an alpha channel; jpg only for photographic subjects (its ringing lands on the black outlines comic art is made of). xcf is GIMP's TILED format — far bigger, but two revisions of the same picture share ~98% of their chunks under content-defined chunking, so it is the right choice for art that will be edited repeatedly and stored in a deduplicating store. Adds ~1.4s for the GIMP conversion."},
+          "view":{"description":"Where the camera stands, as a unit vector {x,y,z}, or the readable form {side:'front'|'back',yaw:-1..1,pitch:-1..1} (quarter turns). Rendered into prompt words — these models take a prompt, not a camera matrix, so this is AS ASKED and not exact. Echoed back."},
+          "view_roll":{"type":"number","description":"Image turned in its own plane, quarter turns, -2..2."},
+          "light":{"description":"Where the light comes FROM, in the picture's frame, same shapes as `view`. Also as-asked."},
           "output_path":{"type":"string","description":"Write the image here instead of returning base64."}
         }
       }>)
@@ -141,6 +145,18 @@ module MJ
         prompt = data["prompt"]?.try(&.as_s?) || raise "shoot requires 'prompt'"
         id = data["camera"]?.try(&.as_s?) || "klein"
         cam = Cameras.find(id) || raise "unknown camera #{id.inspect} — call `cameras` for the list"
+
+        # Staging, if asked for. Kept OUT of the prompt unless given: an over-specified
+        # prompt drifts the concept, and these phrases are instructions the model will try
+        # to obey even when the caller did not care.
+        view = data["view"]?.try { |v| Direction.from_json_any(v) }
+        light = data["light"]?.try { |v| Direction.from_json_any(v) }
+        roll = data["view_roll"]?.try(&.as_f?) || 0.0
+        staging = [] of String
+        staging << ViewWords.camera(view, roll) if view
+        staging << ViewWords.camera(Direction.new(0.0, 0.0, 1.0), roll) if !view && roll.abs >= 0.1
+        staging << ViewWords.light(light) if light
+        prompt = staging.empty? ? prompt : "#{prompt.rstrip('.')}. #{staging.join(". ")}."
 
         tx = transports[cam.provider]? ||
              raise "camera #{cam.id} needs the #{cam.provider.inspect} transport, which is " \
@@ -269,6 +285,28 @@ module MJ
         res["usd"] = JSON::Any.new(cam.cost) unless result.cost
         if seed = data["seed"]?.try(&.as_i64?)
           res["seed"] = JSON::Any.new(seed)
+        end
+        # Echo the staging back, so whoever files the image has the fields without
+        # re-deriving them — and `staging_prompt` so a human can see what the model was
+        # actually told, which is the only way to judge how far it drifted.
+        if v = view
+          res["view"] = JSON::Any.new(v.to_json_object)
+          res["view_readable"] = JSON::Any.new({
+            "side"  => JSON::Any.new(v.side),
+            "yaw"   => JSON::Any.new(v.yaw),
+            "pitch" => JSON::Any.new(v.pitch),
+          } of String => JSON::Any)
+        end
+        res["view_roll"] = JSON::Any.new(roll) unless roll == 0.0
+        if l = light
+          res["light"] = JSON::Any.new(l.to_json_object)
+        end
+        unless staging.empty?
+          res["staging_prompt"] = JSON::Any.new(staging.join(". "))
+          res["staging_note"] = JSON::Any.new(
+            "AS ASKED, not measured: these models take a prompt, not a camera matrix, so " \
+            "compliance is good but inexact. Do not treat the echoed vectors as ground " \
+            "truth for compositing.")
         end
 
         if path = data["output_path"]?.try(&.as_s?)
