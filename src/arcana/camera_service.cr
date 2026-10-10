@@ -22,7 +22,8 @@ module MJ
         "properties":{
           "camera":{"type":"string","description":"Camera id — call `cameras` for the list. Default 'klein' (cheapest that holds a character)."},
           "prompt":{"type":"string","description":"What to draw. If you pass a reference, say 'in the same style' rather than describing the style: an over-specified style fights the reference image."},
-          "reference_base64":{"type":"string","description":"Reference image as base64 (PNG). The subject to carry into the new picture."},
+          "reference_base64":{"type":"string","description":"One reference image as base64. The subject to carry into the new picture."},
+          "references_base64":{"type":"array","items":{"type":"string"},"description":"SEVERAL references, base64. Order is preserved exactly as given; whether providers weight the first most heavily is NOT verified here, so do not rely on it. Use for a recurring character plus the scene to edit, or a room plus its neighbours. Measured: klein, kontext, dflare, dnano and dlite all accept at least 4."},
           "reference_path":{"type":"string","description":"Reference image path — ONLY works if the caller shares a filesystem with this service. Prefer reference_base64."},
           "width":{"type":"integer","description":"Desired width; snapped to the camera's nearest supported aspect. Default 1024."},
           "height":{"type":"integer","description":"Desired height; snapped. Default 1024."},
@@ -162,8 +163,8 @@ module MJ
              raise "camera #{cam.id} needs the #{cam.provider.inspect} transport, which is " \
                    "not configured on this host"
 
-        ref = reference_bytes(data)
-        if ref && Cameras::REFERENCE_BLIND.includes?(cam.model)
+        refs = reference_bytes(data)
+        if !refs.empty? && Cameras::REFERENCE_BLIND.includes?(cam.model)
           raise "#{cam.label} silently discards reference images — it would bill you for a " \
                 "picture that ignores the subject. Choose another camera."
         end
@@ -202,7 +203,6 @@ module MJ
           # An empty reference list means "no reference"; each transport decides what
           # that requires of it, since the providers differ on whether text-to-image
           # exists at all.
-          refs = ref ? [ref] of Bytes : [] of Bytes
           result = tx.edit(refs, prompt, w, h, cam.model, extra, wire_fmt.upcase)
         rescue ex
           msg = ex.message || "unknown"
@@ -325,18 +325,26 @@ module MJ
         JSON::Any.new(res)
       end
 
-      private def self.reference_bytes(data : JSON::Any) : Bytes?
+      # References in the order the caller gave them. Every provider here weights the
+      # first most heavily, so order is meaningful and is preserved exactly.
+      private def self.reference_bytes(data : JSON::Any) : Array(Bytes)
+        if list = data["references_base64"]?.try(&.as_a?)
+          return list.map_with_index do |node, i|
+            b64 = node.as_s? || raise "references_base64[#{i}] must be a base64 string"
+            Base64.decode(b64)
+          end
+        end
         if b64 = data["reference_base64"]?.try(&.as_s?)
-          return Base64.decode(b64)
+          return [Base64.decode(b64)]
         end
         if path = data["reference_path"]?.try(&.as_s?)
           unless File.exists?(path)
             raise "reference_path #{path.inspect} is not visible to this service. Bus services " \
                   "are filesystem-isolated — pass reference_base64 instead."
           end
-          return File.read(path).to_slice
+          return [File.read(path).to_slice]
         end
-        nil
+        [] of Bytes
       end
     end
   end
