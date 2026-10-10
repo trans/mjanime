@@ -6,6 +6,7 @@ require "./transport"
 require "./xcf"
 require "./convert"
 require "./view"
+require "./fetch_reference"
 
 module MJ
   module Arcana
@@ -24,7 +25,9 @@ module MJ
           "prompt":{"type":"string","description":"What to draw. If you pass a reference, say 'in the same style' rather than describing the style: an over-specified style fights the reference image."},
           "reference_base64":{"type":"string","description":"One reference image as base64. The subject to carry into the new picture."},
           "references_base64":{"type":"array","items":{"type":"string"},"description":"SEVERAL references, base64. Order is preserved exactly as given; whether providers weight the first most heavily is NOT verified here, so do not rely on it. Use for a recurring character plus the scene to edit, or a room plus its neighbours. Measured: klein, kontext, dflare, dnano and dlite all accept at least 4."},
-          "reference_path":{"type":"string","description":"Reference image path — ONLY works if the caller shares a filesystem with this service. Prefer reference_base64."},
+          "reference_url":{"type":"string","description":"One reference fetched by URL (http/https) — keeps image bytes off the bus entirely. A loopback URL like http://127.0.0.1:PORT/media/KEY works because the service fetches it here; it is NOT handed to the provider, which could not reach it."},
+          "references_url":{"type":"array","items":{"type":"string"},"description":"SEVERAL references by URL, order preserved. Same fetching as reference_url. Max 32MB each, http/https only, up to 2 redirects."},
+          "reference_path":{"type":"string","description":"Reference image path — ONLY works if the caller shares a filesystem with this service. Prefer reference_base64 or reference_url."},
           "width":{"type":"integer","description":"Desired width; snapped to the camera's nearest supported aspect. Default 1024."},
           "height":{"type":"integer","description":"Desired height; snapped. Default 1024."},
           "format":{"type":"string","enum":["webp","png","jpg","xcf"],"description":"Default webp: ~26x smaller on the wire than png for the same picture, and unlike jpg it keeps hard ink edges clean. Note Runware returns LOSSY webp with NO alpha channel (verified: a VP8 chunk, no VP8X) — it is the right default for serve-and-display, but do not plan on transparency or re-key a webp. Use png for lossless and for anything with an alpha channel; jpg only for photographic subjects (its ringing lands on the black outlines comic art is made of). xcf is GIMP's TILED format — far bigger, but two revisions of the same picture share ~98% of their chunks under content-defined chunking, so it is the right choice for art that will be edited repeatedly and stored in a deduplicating store. Adds ~1.4s for the GIMP conversion."},
@@ -328,6 +331,15 @@ module MJ
       # References in the order the caller gave them. Every provider here weights the
       # first most heavily, so order is meaningful and is preserved exactly.
       private def self.reference_bytes(data : JSON::Any) : Array(Bytes)
+        if list = data["references_url"]?.try(&.as_a?)
+          return list.map_with_index do |node, i|
+            url = node.as_s? || raise "references_url[#{i}] must be a URL string"
+            FetchReference.fetch(url)
+          end
+        end
+        if url = data["reference_url"]?.try(&.as_s?)
+          return [FetchReference.fetch(url)]
+        end
         if list = data["references_base64"]?.try(&.as_a?)
           return list.map_with_index do |node, i|
             b64 = node.as_s? || raise "references_base64[#{i}] must be a base64 string"
