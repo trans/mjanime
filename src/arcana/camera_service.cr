@@ -120,6 +120,7 @@ module MJ
               "quality"  => c.quality,
               "version"  => c.version,
               "provider" => c.provider,
+              "seeds"    => c.seeds,
               "note"     => c.note,
             }
           end,
@@ -203,8 +204,13 @@ module MJ
         # A caller-supplied seed makes a shot reproducible, which is also what the
         # same-seed A/B in notes/verify_param.py needs.
         extra = cam.extra.dup
-        if seed = data["seed"]?.try(&.as_i64?)
-          extra["seed"] = JSON::Any.new(seed)
+        asked_seed = data["seed"]?.try(&.as_i64?)
+        # Only send a seed to a camera that actually honours it. Every provider ACCEPTS
+        # one; most then ignore it, and `flare` rejects the request outright with
+        # unsupportedArchitectureSeed. Passing it anyway would either fail the shot or —
+        # worse — succeed while the result echoed a seed that did nothing.
+        if seed = asked_seed
+          extra["seed"] = JSON::Any.new(seed) if cam.seeds
         end
 
         begin
@@ -295,8 +301,18 @@ module MJ
           "usd_estimated" => JSON::Any.new(result.cost.nil? || result.cost_estimated),
         } of String => JSON::Any
         res["usd"] = JSON::Any.new(cam.cost) unless result.cost
-        if seed = data["seed"]?.try(&.as_i64?)
-          res["seed"] = JSON::Any.new(seed)
+        # Echo a seed only when it was honoured. When it was not, say so loudly rather
+        # than return a field implying reproducibility the caller does not have.
+        if seed = asked_seed
+          if cam.seeds
+            res["seed"] = JSON::Any.new(seed)
+          else
+            res["seed_ignored"] = JSON::Any.new(seed)
+            res["seed_note"] = JSON::Any.new(
+              "#{cam.id} does not reproduce from a seed — verified by drawing the same " \
+              "prompt twice and comparing bytes. Only `klein` does. The seed was NOT sent " \
+              "to the provider, since #{cam.id == "flare" || cam.id == "sunburst" ? "it would have failed the request" : "it would have been silently ignored"}.")
+          end
         end
         # Echo the staging back, so whoever files the image has the fields without
         # re-deriving them — and `staging_prompt` so a human can see what the model was

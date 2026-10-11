@@ -58,13 +58,30 @@ module MJ
       # diversity is not capacity diversity. When a second transport exists, this field is
       # what tells a caller which cameras are genuinely independent pools.
       getter provider : String
+      # Does a caller-supplied seed actually reproduce a picture on this camera?
+      #
+      # Measured by generating the same prompt with the same seed twice and comparing the
+      # bytes, because every provider ACCEPTS a seed and most then ignore it:
+      #
+      #   klein     identical bytes          -> honours it
+      #   flare     hard 400                 -> Runware: unsupportedArchitectureSeed
+      #   kontext   different bytes          -> accepted and ignored
+      #   lite      different bytes          -> accepted and ignored
+      #   dnano     different bytes          -> accepted and ignored
+      #   dlite     different bytes          -> accepted and ignored
+      #
+      # Only the FLUX diffusion model reproduces. The GPT-Image and Gemini families do not,
+      # whether reached through Runware or directly. nano, sunburst, hero, dflare,
+      # dsunburst and dhero are marked false by inference from their families rather than
+      # measured one by one — the two that were measured in each family agreed.
+      getter seeds : Bool
       @[JSON::Field(ignore: true)]
       getter extra : Hash(String, JSON::Any)
 
       def initialize(@id, @label, @model, @cost, @seconds, @note,
                      @quality : Int32, @version : Int32 = 1,
                      @dims = nil, @range = nil, @pixels = nil,
-                     @provider : String = "runware",
+                     @provider : String = "runware", @seeds : Bool = false,
                      @extra = {} of String => JSON::Any)
         raise "camera #{@id}: set exactly one of dims or range" if @dims.nil? == @range.nil?
       end
@@ -222,7 +239,7 @@ module MJ
       ALL = [
         Camera.new(
           id: "klein", label: "FLUX.2 Klein 9B", model: "runware:400@2",
-          cost: 0.0059, seconds: 9.6, quality: 1, range: KLEIN_RANGE,
+          cost: 0.0059, seconds: 9.6, quality: 1, range: KLEIN_RANGE, seeds: true,
           note: "The little camera that could. Unremarkable but dependable; cheapest that " \
                 "holds a character.",
           extra: steps(20, 3.5)),
