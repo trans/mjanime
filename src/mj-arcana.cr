@@ -102,8 +102,13 @@ if key = ENV["RUNWARE_API_KEY"]?
       GUIDE
     tags: ["image", "generation", "camera", "runware"],
   )
+  # Generous on purpose: this is a backstop against runaway fibers, not the real limit.
+  # Per-POOL caps do the actual limiting (see arcana/pool_limit.cr), because one
+  # Toolset-wide number would let shots queued for Runware crowd out shots that could
+  # have gone to Google — which is exactly the contention separate pools exist to avoid.
   cam_ts = Arcana::Toolset.new(client: cam_client, name: "mj:camera",
-    description: "Image generation behind a camera abstraction.")
+    description: "Image generation behind a camera abstraction.",
+    max_concurrent: 16)
   # Transports, not just a client: a camera is served by whichever pool it names. The
   # openai one is an INDEPENDENT queue running the same models — that is the whole value,
   # so it registers whenever the key is present.
@@ -167,8 +172,13 @@ else
       GUIDE
     tags: ["tts", "voice", "speech", "audio"],
   )
+  # Deliberately low until the ElevenLabs plan tier is known: that provider caps
+  # CONCURRENT requests per account (10/20/30 by plan) and answers an overrun with a hard
+  # 429 too_many_concurrent_requests, unlike Runware's queue. Raise it once the tier is
+  # confirmed; queueing here beats being refused there.
   voice_ts = Arcana::Toolset.new(client: voice_client, name: "mj:voice",
-    description: "Text to speech.")
+    description: "Text to speech.",
+    max_concurrent: 4)
   MJ::Arcana::VoiceService.register(voice_ts)
   toolsets << voice_ts
   clients << voice_client

@@ -6,6 +6,7 @@ require "./transport"
 require "./xcf"
 require "./convert"
 require "./view"
+require "./pool_limit"
 require "./fetch_reference"
 
 module MJ
@@ -125,8 +126,12 @@ module MJ
           # A caller planning for a spike needs this, and it is not guessable from the
           # model ids: google:/openai:/bfl: cameras all reach their provider THROUGH
           # Runware, so they share one queue on one account.
-          "pools"      => Cameras.pools,
-          "pools_note" => "Cameras grouped by transport. Cameras in the SAME group share one " \
+          "pools" => Cameras.pools,
+          # What this service will run at once PER POOL, so a caller can size its own
+          # queue instead of guessing. Three pools draw simultaneously; requests over a
+          # pool's limit wait here rather than being refused.
+          "pool_limits" => Cameras.pools.keys.to_h { |p| {p, PoolLimit.for(p)} },
+          "pools_note"  => "Cameras grouped by transport. Cameras in the SAME group share one " \
                           "endpoint, one account and one queue, so switching between them does " \
                           "not route around congestion — a model id of google:/openai:/bfl: " \
                           "names the MODEL, not an independent capacity pool. Only cameras in " \
@@ -206,7 +211,11 @@ module MJ
           # An empty reference list means "no reference"; each transport decides what
           # that requires of it, since the providers differ on whether text-to-image
           # exists at all.
-          result = tx.edit(refs, prompt, w, h, cam.model, extra, wire_fmt.upcase)
+          # One pool's token, held only for the provider call. Three pools draw at the
+          # same time; within a pool we stay inside the provider's own guidance.
+          result = PoolLimits[cam.provider].acquire do
+            tx.edit(refs, prompt, w, h, cam.model, extra, wire_fmt.upcase)
+          end
         rescue ex
           msg = ex.message || "unknown"
           if overloaded?(msg)

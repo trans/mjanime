@@ -28,6 +28,11 @@ module MJ
     @@session_calls = 0
     @@session_unpriced = 0
     @@hooked = false
+    # The ledger is appended from request handlers, which arcana-core 0.17.1 now runs
+    # concurrently. A file write can yield inside the event loop, so two fibers could
+    # interleave halfway through a line and leave an unparseable row — and a ledger that
+    # silently misreports spend is worse than one that is slow.
+    @@ledger_lock = Mutex.new
 
     def session_cost : Float64
       @@session_cost
@@ -108,7 +113,7 @@ module MJ
           json.field "h", height if height
         end
       end
-      File.open(path, "a") { |f| f.puts row }
+      @@ledger_lock.synchronize { File.open(path, "a") { |f| f.puts row } }
     rescue ex
       STDERR.puts "[spend] could not write ledger (#{ex.message})"
     end
