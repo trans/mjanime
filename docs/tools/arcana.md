@@ -242,8 +242,31 @@ number to pick and no amount of client-side throttling that avoids them. Plan fo
 seconds and a tail roughly 25× worse. Note also that capacity exhaustion reached us as **504**, not
 the documented 429.
 
-Requests do run **concurrently** — the Toolset does not serialize them, so one slow shot does not
-block the others.
+⚠️ **Requests do NOT run concurrently, and this is the real capacity ceiling.** I claimed the
+opposite here and told Overlore the same; both were wrong. `Toolset#start` wires
+`c.on_message { dispatch(envelope) }`, so the handler runs **inline on the WebSocket read loop** —
+the socket cannot read the next envelope until the provider call returns.
+
+Measured, 4 concurrent `dlite` shots whose single-shot latency is ~2.8 s:
+
+```
+completions: 3.5s, 6.5s, 9.9s, 13.0s     gaps: 3.0, 3.4, 3.1
+```
+
+Each gap is one whole shot. It is **per Toolset**, not global: a camera pair spaced 3.2 s apart ran
+alongside a voice pair, so `mj:camera` and `mj:voice` are independent of each other but each is
+strictly serial within itself.
+
+The consequence is severe and dwarfs provider choice: **throughput is 1 / latency**, so ~20
+images/minute on `dlite` and 5–12 on `klein`, no matter how many pools exist. Three independent
+capacity pools buy nothing while every request funnels through one serial dispatcher. The earlier
+concurrency sweep in this file shows the pattern plainly in hindsight — waves like
+`[3.8, 8.6, 13.2]` are evenly spaced by one shot's latency, which is serialization, not congestion.
+I read it as parallelism at the time.
+
+The fix is one line in arcana-core (`spawn` the dispatch), and it is not ours to make. It needs care
+over `set_busy`, which a concurrent dispatch would race: the first shot to finish would clear the
+flag while others are still running.
 
 The client had no defences against any of this and now has two:
 
