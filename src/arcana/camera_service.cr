@@ -50,10 +50,22 @@ module MJ
       def self.register(ts : ::Arcana::Toolset, transports : Hash(String, Transport))
         ts.tool("cameras",
           "List the available cameras with measured cost, speed and character.",
-          input_schema: CAMERAS_SCHEMA) { |_| handle_cameras }
+          input_schema: CAMERAS_SCHEMA) { |_, _ctx| handle_cameras }
+        # One lane per provider pool, waited for BEFORE the request takes a toolset slot.
+        # That ordering is the whole point and it is why this replaced a token bucket held
+        # inside the handler: parking on a pool from inside the handler still occupies a
+        # toolset slot, so a Runware backlog could starve Google of slots even while Google
+        # had capacity. @arcana spotted that; arcana-core 0.18.0 lanes fix it properly.
+        Cameras.pools.each_key do |pool|
+          ts.lane(pool, max_concurrent: PoolLimit.for(pool))
+        end
         ts.tool("shoot",
           "Draw a picture with a chosen camera, optionally carrying a character from a reference image.",
-          input_schema: SHOOT_SCHEMA) { |data| handle_shoot(transports, data) }
+          input_schema: SHOOT_SCHEMA,
+          lane: ->(data : JSON::Any) {
+            id = data["camera"]?.try(&.as_s?) || "klein"
+            Cameras.find(id).try(&.provider)
+          }) { |data, _ctx| handle_shoot(transports, data) }
       end
 
       # A provider's content filter refusing is NOT an error: it is unbilled, it is
@@ -217,11 +229,9 @@ module MJ
           # An empty reference list means "no reference"; each transport decides what
           # that requires of it, since the providers differ on whether text-to-image
           # exists at all.
-          # One pool's token, held only for the provider call. Three pools draw at the
-          # same time; within a pool we stay inside the provider's own guidance.
-          result = PoolLimits[cam.provider].acquire do
-            tx.edit(refs, prompt, w, h, cam.model, extra, wire_fmt.upcase)
-          end
+          # No pool limiting here any more: the toolset's lane for this camera's pool was
+          # acquired before the request took a slot (see register).
+          result = tx.edit(refs, prompt, w, h, cam.model, extra, wire_fmt.upcase)
         rescue ex
           msg = ex.message || "unknown"
           if overloaded?(msg)
@@ -329,6 +339,12 @@ module MJ
         if l = light
           res["light"] = JSON::Any.new(l.to_json_object)
         end
+        # The exact string the provider received. DataDungeon stores records as shared
+        # parts and asked whether the final prompt is fully determined by the request:
+        # it is — nothing in this service or any transport adds words of its own, so this
+        # is the caller's prompt plus `staging_prompt` and nothing else. Returned anyway so
+        # that is verifiable rather than a claim.
+        res["prompt_sent"] = JSON::Any.new(prompt)
         unless staging.empty?
           res["staging_prompt"] = JSON::Any.new(staging.join(". "))
           res["staging_note"] = JSON::Any.new(

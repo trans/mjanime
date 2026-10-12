@@ -40,9 +40,9 @@ module MJ
 
       def self.register(ts : ::Arcana::Toolset)
         ts.tool("voices", "List the speech providers available on this host and their voices.",
-          input_schema: VOICES_SCHEMA) { |_| handle_voices }
+          input_schema: VOICES_SCHEMA) { |_, _ctx| handle_voices }
         ts.tool("speak", "Synthesize speech from text.",
-          input_schema: SPEAK_SCHEMA) { |data| handle_speak(data) }
+          input_schema: SPEAK_SCHEMA) { |data, _ctx| handle_speak(data) }
       end
 
       def self.available : Array(String)
