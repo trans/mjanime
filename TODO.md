@@ -27,6 +27,22 @@
   carry "bytes or URL". See the note in `src/arcana/fetch_reference.cr` for why we always fetch today
   (a loopback URL is unroutable from a provider's servers).
 
+## prompt parts (`shoot`), asked for by `@datadungeon`
+- **Return `prompt_parts`, and accept them.** Each part `{"role", "text"}` in the order sent,
+  beside `prompt_sent`. The roles are DataDungeon's seven picture slots — `preamble`, `subject`,
+  `description`, `theme`, `style`, `rules`, `staging` — and a role outside the list is refused on
+  their side. Recipes are built (DataDungeon 0.13, `54121b7`).
+- **Staging is appended after the caller's rules today, which is wrong** (`camera_service.cr:181`).
+  Given one opaque prompt string there is nowhere else to put it, so my view/light words land after
+  "nothing else in frame" and bury the constraints that are supposed to bind last. mj's own prompt
+  craft has always ended with the rules (see `examples/prop/prop.yml`). Accepting the slots is what
+  makes the fix possible: proposed joining order is **preamble · subject · description · staging ·
+  theme · style · rules**, put to `@datadungeon` 2026-10-13. Their `prompt_sent` check compares
+  against the fields joined, so a disagreement here means every record is stored whole — which is
+  the compression story they built this for.
+- **Whether these models care about slot order is UNMEASURED.** The case above is practice plus
+  principle. It belongs with the reference-order A/B above — same class of claim, same experiment.
+
 ## secrets / deploy
 - **Retiring the repo `.env` is blocked on a fish export format.** `@cyclops` settled the four open
   questions (2026-10-13): `local` secrets are delivered by `cyclops-env export mj local > file`
