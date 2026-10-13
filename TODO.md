@@ -27,6 +27,21 @@
   carry "bytes or URL". See the note in `src/arcana/fetch_reference.cr` for why we always fetch today
   (a loopback URL is unroutable from a provider's servers).
 
+## secrets / deploy
+- **Retiring the repo `.env` is blocked on a fish export format.** `@cyclops` settled the four open
+  questions (2026-10-13): `local` secrets are delivered by `cyclops-env export mj local > file`
+  redirect (an ssh-less `push` is a wishlist item, not a gap); `production`/`local` are the only
+  environments, which mj already matches; and `EnvironmentFile` at mode 600 stays the standard —
+  `LoadCredential` is to be one hardening pass across every service, so mj is to be left alone.
+  The one thing still missing is interactive-shell use: `--format bash` emits `export KEY=value`
+  and works under `eval` today, but this shell is fish, so a hand-run `./bin/mj` still needs the
+  bash `.env` that CLAUDE.md tells you to source. `@cyclops` has queued a native `fish` format
+  (`set -x KEY value`) behind an overlore push and will ping when it lands; until then the `.env`
+  has to stay. The conventions are authoritative at
+  `~/Projects/cyclops/.ai/memory/cyclops-env-conventions.md` — read that, not this.
+- The repo `.env` is mode 644. Everything else in the chain is 600. Worth tightening, but it is
+  Thomas's file.
+
 ## sfx (audio) refinements
 - **Composite sounds need layers.** The recipe is single-source (one noise OR one osc), so it can't
   represent a sound that is several things at once. The bowling "bloop" is attack-transient + tonal bloop
