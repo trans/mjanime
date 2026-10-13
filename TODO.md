@@ -1,5 +1,32 @@
 # mj — TODO
 
+## arcana bus (`mj:camera`, `mj:voice`)
+- **`shoot_batch`** — one call, a list of shots, each with a caller-supplied `id`; each result carries
+  its own `id` and `status` so one refusal doesn't fail the rest. Asked for by `@overlore`
+  (2026-10-12), designed, not built. The lanes already give it per-pool concurrency for free; what it
+  needs deciding is whether results stream back as they land or arrive as one reply at the end.
+- **A workflow endpoint (on the radar, 2026-10-13, Thomas).** Submit a multi-step job, get an id back
+  at once, learn about each step as it finishes. The gap it fills is **asynchronous submission**, not
+  pipelines as such — `prop`, `base`, `decorate`, `pixelize` and `sfx` are already on the bus as single
+  tools. What doesn't fit synchronous request/reply: Gemini batch (~2 min floor however few images),
+  `prop` (several provider calls deep), `base`→`decorate` (two stages with an intermediate nobody but
+  mj should hold). `shoot_batch` is the smallest instance of the same shape — build that first and see
+  whether it generalises, rather than designing a step engine before we know if steps need branching,
+  per-step retry or shared intermediates. Two open questions either way:
+  - **Where intermediates live.** Bus services are filesystem-isolated, so stage two can't be handed a
+    path. Either mj holds them in memory for the job's life, or they go to R2 and steps pass URLs —
+    which argues for finishing the R2 move first.
+  - **Whether per-step notification is even available.** Gemini's batch goes straight from `RUNNING` to
+    `SUCCEEDED` with no partial completion, so for that lane the honest answer may be one message when
+    the whole lot lands.
+- **`mj:voice` concurrency** — unmeasured; needs the ElevenLabs plan tier and a key on this host.
+- **Reference-order A/B** — whether providers weight the first reference most. The claim was removed
+  from the schema as unverified; it stays unverified until measured.
+- **URL pass-through to providers** — all three accept image URLs and Google is verified to fetch them,
+  so a public R2 link could skip a download-and-reupload per shot. Needs the transport interface to
+  carry "bytes or URL". See the note in `src/arcana/fetch_reference.cr` for why we always fetch today
+  (a loopback URL is unroutable from a provider's servers).
+
 ## sfx (audio) refinements
 - **Composite sounds need layers.** The recipe is single-source (one noise OR one osc), so it can't
   represent a sound that is several things at once. The bowling "bloop" is attack-transient + tonal bloop
