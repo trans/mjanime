@@ -140,6 +140,34 @@ would have to put a rule under pressure it can actually lose to: a longer prompt
 contradict each other, or a rule mj is known to break — "no signage" fails in practice on venue
 prompts that name a venue, and no venue was named here.
 
+### By eye (Thomas, 2026-10-14)
+
+"Other than the fact that the wheels were in the wrong place in most of those teapot carts, nothing
+looks particularly wrong in any of them." Which closes the eye-half of the test the same way the
+machine half closed.
+
+The misses are worth recording, because none of them is a rule: the two *prohibitions* held
+everywhere, and everything the model got wrong was a positive instruction.
+
+| instruction | result |
+|---|---|
+| "a **two-wheeled** popcorn cart" | four wheels in 4 of 12 |
+| "a **folded** parasol at the back" | open in 10 of 12 |
+| "a brass **kettle** inside" | a teapot in 12 of 12 |
+
+**And the defects track the SEED, not the arrangement.** Seed 141421 draws four wheels under A, B, E
+and F alike; seed 31337 is the only seed that ever folds the parasol, and it folds it in B and E.
+When this model gets something wrong, reordering the slots does not fix it and reseeding does. That
+is a better argument for the null than the border statistics are.
+
+"Teapot cart" is the diagnosis as well as the nickname: "brass kettle" reads as a teapot, so every
+one of the twelve drew a teapot. Word choice beat slot position by a distance — which is the house
+line about lean prompts, arriving from a direction nobody aimed at.
+
+**This also names the sensitive test.** "Two-wheeled" and "folded" are instructions this model
+demonstrably loses, so a v2 that walks THOSE through the slot positions would have real variance to
+explain, where v1 had none. Same harness, same cost, one changed constant.
+
 **So the order is free to be chosen for other reasons.** That is the fallback this note predicted,
 and DataDungeon's reason now carries it unopposed: pick the order that makes `prompt_sent` equal to
 the fields joined, so it is not stored twice. Thomas's **E** does that and reads correctly besides
