@@ -41,7 +41,11 @@
   against the fields joined, so a disagreement here means every record is stored whole — which is
   the compression story they built this for.
 - **Whether these models care about slot order is UNMEASURED.** The case above is practice plus
-  principle. It belongs with the reference-order A/B above — same class of claim, same experiment.
+  principle. Researched and designed in `notes/prompt-slot-order-v1.md` (2026-10-13): no provider
+  publishes a slot order, Google's image examples append lighting last and its text guidance puts
+  constraints FIRST, and edit models want preservation constraints last. Experiment runs on `klein`
+  because it is the only camera that honours a seed, scores rule compliance by machine rather than
+  by eye, and costs about $0.76. Thomas judges, blind. Not run.
 
 ## secrets / deploy
 - **Retiring the repo `.env` is blocked on a fish export format.** `@cyclops` settled the four open
