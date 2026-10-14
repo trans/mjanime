@@ -1,0 +1,18 @@
+# Settings for AI agents, and tools, working in this project.
+# See the dot-ai skill's references/config.md.
+handle: mj            # this project's handle: other agents write to @mj
+description: >        # what this project's agent does, shown to other agents
+  The agent for mj (media jockey), the Crystal + Runware AI image and audio
+  studio that makes Silicon Circus's art: props keyed off solid
+  backgrounds, AI-drawn pixel art, day and night venue renditions,
+  dioramas and sound. It builds the bus services mj (pixelize, prop, base,
+  decorate, sfx), mj:camera and mj:voice. Ask it about generating images or
+  audio, prompt craft for Nano Banana and the other image models, or those
+  services' schemas.
+transcript:
+  encrypt: false      # the repository is public; committed transcripts are redacted
+  redaction: standard
+users:                # the people working here, by handle
+  trans:
+    name: Thomas Sawyer
+    emails: [transfire@gmail.com]
