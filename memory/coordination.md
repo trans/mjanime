@@ -27,7 +27,10 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   isn't recorded here. If their order ever changes, their old records must
   keep their old join (their `handoff.md`).
 - **`@overlore`** (was `@infocomics`): asked for `shoot_batch`
-  (2026-10-12). **Open:** designed, not built (`TODO.md`, "arcana bus").
+  (2026-10-11, mainly because shots were drawn one at a time; concurrency
+  fixed that the same day, `c7181a7`). **Parked by them** the same day,
+  until they build a "can wait" lane for drawing ahead, which would suit
+  Google's half-price batch endpoint (not used yet). Not built.
 - **`@cyclops`**: secrets and deploy conventions. Settled 2026-10-13; the
   repo `.env` stays until cyclops ships a fish export format, and it will
   ping when it does (`TODO.md`, "secrets / deploy").
