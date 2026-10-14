@@ -3,8 +3,14 @@
 ## arcana bus (`mj:camera`, `mj:voice`)
 - **`shoot_batch`** — one call, a list of shots, each with a caller-supplied `id`; each result carries
   its own `id` and `status` so one refusal doesn't fail the rest. Asked for by `@overlore`
-  (2026-10-12), designed, not built. The lanes already give it per-pool concurrency for free; what it
-  needs deciding is whether results stream back as they land or arrive as one reply at the end.
+  (2026-10-11), mostly because shots were being drawn one at a time; concurrency fixed that the same
+  day (`c7181a7`, lanes in `34b3765`), and **`@overlore` parked it** the same day, until they build a
+  "can wait" lane for drawing rooms ahead. Not built. As a plain envelope over concurrent `shoot`s it
+  adds little; what would give it a reason to exist is **Google's batch endpoint**
+  (`batchGenerateContent`): half the rate, every image model supports it, ~2 min floor however few
+  images, nothing uses it yet (`src/arcana/cameras.cr`, `google_direct.cr`). A per-shot "can wait"
+  flag routes there; the player's own picture still goes now. Still to decide: whether results stream
+  back as they land or arrive as one reply at the end.
 - **A workflow endpoint (on the radar, 2026-10-13, Thomas).** Submit a multi-step job, get an id back
   at once, learn about each step as it finishes. The gap it fills is **asynchronous submission**, not
   pipelines as such — `prop`, `base`, `decorate`, `pixelize` and `sfx` are already on the bus as single
@@ -40,12 +46,12 @@
   theme · style · rules**, put to `@datadungeon` 2026-10-13. Their `prompt_sent` check compares
   against the fields joined, so a disagreement here means every record is stored whole — which is
   the compression story they built this for.
-- **Whether these models care about slot order is UNMEASURED.** The case above is practice plus
-  principle. Researched and designed in `notes/prompt-slot-order-v1.md` (2026-10-13): no provider
-  publishes a slot order, Google's image examples append lighting last and its text guidance puts
-  constraints FIRST, and edit models want preservation constraints last. Experiment runs on `klein`
-  because it is the only camera that honours a seed, scores rule compliance by machine rather than
-  by eye, and costs about $0.76. Thomas judges, blind. Not run.
+- **Whether these models care about slot order: measured 2026-10-14, null** (`notes/prompt-slot-order-v1.md`,
+  "Result"). 36 images on `klein`, four arrangements; both rules held in all 36, by machine and by
+  Thomas's eye, and the misses that did happen tracked the seed, not the order. So the order is free
+  to be chosen for `prompt_sent` reconstruction. Bounds: `klein` only, text-to-image, no reference;
+  Nano and editing untested. A sensitive v2 would walk instructions the model actually loses
+  ("two-wheeled", "folded") through the slot positions.
 
 ## secrets / deploy
 - **Retiring the repo `.env` is blocked on a fish export format.** `@cyclops` settled the four open
