@@ -2,7 +2,7 @@
 
 _Built 2026-07-08. Turns a rough flat-colour template into a game-ready 2D prop with a transparent
 background. Validated on `data/props/{barrel,plant,clown}-*.png` ("worked pretty damn well"). Source:
-`src/models/prop_spec.cr`, `src/engine/prop.cr`, CLI `minanime prop <dir>`._
+`src/models/prop_spec.cr`, `src/engine/prop.cr`, CLI `mj prop <dir>`._
 
 ## What it does
 

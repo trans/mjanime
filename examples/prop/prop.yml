@@ -1,5 +1,5 @@
 # Prop-machine config. Put this as prop.yml beside a template.png (a rough flat-colour
-# sketch: subject silhouette + feature colour patches). Run:  minanime prop <dir>
+# sketch: subject silhouette + feature colour patches). Run:  mj prop <dir>
 #   -> writes render.png (raw AI output) and prop.png (transparent cut-out)
 #
 # The template is a ROUGH reference for subject + size/placement, not a strict boundary.

@@ -13,7 +13,7 @@ _Investigation date: 2026-07-05. Companion visual exhibit: [`inpainting-analysis
 
 ## The goal (two layers)
 
-1. **Near-term — scenery strips.** Take a line of simple scenery images, stylize them, and fill the gaps between them so the result is one long seamless horizontal background for a 2D platformer. (`minanime strip`)
+1. **Near-term — scenery strips.** Take a line of simple scenery images, stylize them, and fill the gaps between them so the result is one long seamless horizontal background for a 2D platformer. (`mj strip`)
 2. **Ultimate — a tiled world evolver.** Take a *snippet* of a large image, enhance/edit it per instructions such that the snippet's **edges stay byte-identical**, so it drops back into the exact same spot in the large image. Enhance and fill a world one region at a time.
 
 Both layers are the **same primitive**: edit a masked region so it (a) matches the surrounding art style and (b) preserves its boundary exactly.

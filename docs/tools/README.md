@@ -27,8 +27,9 @@ Most image commands need `RUNWARE_API_KEY` (read from the environment — source
 
 The project was renamed **minanime → mj** ("media jockey"). Module `MJ`, binary/config/bus all
 `mj`; full product name `mjanime` (`github.com/trans/mjanime`). The local dir was renamed to match
-on 2026-10-08 — `~/Projects/mjanime`, with a `minanime` symlink left as a compatibility shim. Some
-`examples/*.yml` / `notes/*.md` still say `minanime <cmd>` — read those as `mj <cmd>`.
+on 2026-10-08 — `~/Projects/mjanime`, with a `minanime` symlink left as a compatibility shim.
+Nothing references the old path any more (checked 2026-10-14: not the repo, not `~/.config/mj`, not
+the installed systemd units), so the symlink can be dropped whenever.
 
 ## Setup
 

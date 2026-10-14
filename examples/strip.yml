@@ -1,5 +1,5 @@
 # Scenery strip config. Drop this as `strip.yml` into a folder of ordered
-# source PNGs (01.png, 02.png, ...) and run:  minanime strip <folder>
+# source PNGs (01.png, 02.png, ...) and run:  mj strip <folder>
 title: "Fantasy hills panorama"
 
 # Applied to every source tile (img2img restyle).
