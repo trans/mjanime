@@ -32,8 +32,23 @@
   so a public R2 link could skip a download-and-reupload per shot. Needs the transport interface to
   carry "bytes or URL". See the note in `src/arcana/fetch_reference.cr` for why we always fetch today
   (a loopback URL is unroutable from a provider's servers).
+- **Revisit: `view_words` as a bus tool** (Thomas, 2026-10-14: not yet). DataDungeon now owns turning
+  `view` and `light` into words; mj's `src/arcana/view.cr` was handed to them 2026-10-14
+  (`.ai/mail/sent/*-@datadungeon--view-words.md`). Later, offer it on `mj:camera` for apps that don't
+  use DataDungeon: a thin wrapper that requires DataDungeon's file (its only runtime dependency is
+  `sqlite3`, which mj has), not a second copy that can drift. Until then `shoot` still renders
+  `view`/`light` itself and appends them; whether it should stop is open (below).
+- **Grey canvas shows through.** Runware has no text-to-image route in mj's transport, so an
+  unreferenced shot edits a flat 128-grey canvas (`src/arcana/transport.cr`). In the cow tests
+  (2026-10-14) it survived as a flat grey sky: `klein` seed 31337 in 3 of 4 prompts, `flare` once.
+  Overlore draws a room's first picture on `klein` with its theme's seed, so this can reach the game.
 
 ## prompt parts (`shoot`), asked for by `@datadungeon`
+- **Under review (Thomas, 2026-10-14):** mj sends exactly the prompt it is given, and the calling app
+  (or DataDungeon's join) owns the order and the heuristics; mj measures its cameras and publishes how
+  they behave. If that holds, the two items below are moot. Evidence so far: `notes/cow_order.py`
+  (v1, v2) — `nano` let the later instruction win 5 of 6; `klein` and `flare` let "draw X" beat
+  "don't draw X" in either order, and a "don't" alone drew nothing.
 - **Return `prompt_parts`, and accept them.** Each part `{"role", "text"}` in the order sent,
   beside `prompt_sent`. The roles are DataDungeon's seven picture slots — `preamble`, `subject`,
   `description`, `theme`, `style`, `rules`, `staging` — and a role outside the list is refused on

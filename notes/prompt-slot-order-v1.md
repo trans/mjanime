@@ -1,6 +1,7 @@
 # Prompt slot order — what the providers say, and how to test it
 
-*2026-10-13. Research half done; the experiment is designed, not run. Thomas is judging.*
+*2026-10-13. Research done; the experiment ran 2026-10-14 (see Result). The order was then designed
+in `picture-prompt-design-v1.md`.*
 
 ## Why this exists
 
