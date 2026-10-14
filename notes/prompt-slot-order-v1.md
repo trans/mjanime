@@ -109,6 +109,51 @@ Content held fixed: three real Silicon Circus subjects decomposed into the seven
 Three seeds on klein because a seed makes the comparison exact but one seed could flatter an
 arrangement by luck; three is enough to notice that.
 
+## Result (run 2026-10-14, `notes/slot_order.py`)
+
+**Null, and clean.** 36 images on `klein`, four arrangements x three subjects x three seeds, $0.0993
+including the seed check. Thomas's order was added as **E** (`rating · theme · style · subject ·
+description · framing · light`) and **F** repeats it with the framing constraint hoisted to the
+front beside the rating rules, so E vs F is the one clean test of Google's "constraints at the very
+beginning" against our rules-last.
+
+The seed check passed first: same prompt, same seed, twice, mean absolute pixel difference
+**0.0000**. Identical files, so within a pair the slot order really is the only thing that moved.
+
+| arrangement | border mean | border max | lit share |
+|---|---|---|---|
+| A (DataDungeon's original) | 2.058 | 8.0 | 0.358 |
+| B (staging mid, rules last) | 1.841 | 7.9 | 0.349 |
+| E (Thomas's) | 2.177 | 8.6 | 0.337 |
+| F (E, framing hoisted first) | 2.388 | 9.1 | 0.322 |
+
+A spread of 0.5 on a 0-255 scale, with n=9 a cell. That is noise, not an effect.
+
+**Both rules were obeyed in all 36.** The background is solid black everywhere and nothing else is
+in frame; and — the harder one — **no text, letters, numbers or signage appears in any of the 36**,
+including nine ticket booths, which is the subject most likely to invite a sign.
+
+**The test was not sensitive, and that is the real finding.** No arrangement ever broke a rule, so
+there was no variance for order to explain. These are lean prompts, seven short slots, two
+unambiguous rules, and a model that obeys them from any position. To detect an order effect you
+would have to put a rule under pressure it can actually lose to: a longer prompt, slots that
+contradict each other, or a rule mj is known to break — "no signage" fails in practice on venue
+prompts that name a venue, and no venue was named here.
+
+**So the order is free to be chosen for other reasons.** That is the fallback this note predicted,
+and DataDungeon's reason now carries it unopposed: pick the order that makes `prompt_sent` equal to
+the fields joined, so it is not stored twice. Thomas's **E** does that and reads correctly besides
+(rating, world, medium, subject, particulars, shot). Nothing in the measurements argues against it.
+
+Bounds on the null: `klein` (FLUX.2 Klein 9B) only, 1024x1024, text-to-image with no reference.
+Nano, the camera we actually ship, is untested — and so is editing, where the Kontext evidence
+points at preservation-last for a different reason. Note also that the harness calls Runware
+directly, where `klein` does accept text-to-image; mj's own transport has no text-to-image route
+and feeds a flat grey canvas instead (`src/arcana/transport.cr:69`), so production prompts arrive
+with an image attached. Worth repeating through the service if the question ever turns sharp.
+
+Spend: **not in mj's ledger** — the harness calls Runware directly.
+
 ## What this can and cannot settle
 
 It can settle whether slot order changes rule compliance on one FLUX model and one Nano, for prop-
