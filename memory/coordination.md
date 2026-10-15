@@ -32,6 +32,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   order; `template` is Overlore's fill-in-the-blanks text, unrelated to
   prompts; DD takes `view.cr` in the release with the new order. The
   older `prompt_parts` request (`TODO.md`) is under review in that light.
+  **0.14 built 2026-10-15** (`c76640e`, branch `0.14`, not tagged;
+  `mail/received/20261015-164301Z-@datadungeon--datadungeon-0-14-8f1a5289.md`,
+  sent to `@overlore` and `@owl`, copied to us): order rules · framing ·
+  style · flavor · theme · subject · description · staging · light ·
+  directives. `style` is now DataDungeon's own words for the art style;
+  `flavor` (Thomas) is the app's wording refining it. A picture whose
+  style isn't DataDungeon's isn't stored. mj's view words are in it as
+  `ViewWords`. mj has no DataDungeon dependency, so nothing to bump here.
 - **`@overlore`** (was `@infocomics`): asked for `shoot_batch`
   (2026-10-11, mainly because shots were drawn one at a time; concurrency
   fixed that the same day, `c7181a7`). **Parked by them** the same day,
