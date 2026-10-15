@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-14*
+*Updated 2026-10-15*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -17,20 +17,32 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
 
 ## Correspondents
 
-- **`@datadungeon`**: asked for `prompt_parts` on `shoot` (the seven
-  picture slots). **Open:** accepting them, and fixing staging, which is
-  appended after the caller's rules (`TODO.md`, "prompt parts"). Our
-  proposed join order went to them 2026-10-13. Thomas asked mj
-  (2026-10-14) to test whether slot order matters before anything
-  changes: **run 2026-10-14, null** (`notes/prompt-slot-order-v1.md`,
-  commits `81d12c1`, `569f210`). Whether the result has been sent to them
-  isn't recorded here. If their order ever changes, their old records must
-  keep their old join (their `handoff.md`).
+- **`@datadungeon`**: picture prompts. mj sent the design (order, groups,
+  `framing`, `light`, `changes`) to them, `@overlore` and `@owl` on
+  2026-10-14 (`mail/sent/*-picture-prompt-design.md`; the note is
+  `notes/picture-prompt-design-v1.md` at `f712770`), and `view.cr` for
+  turning view and light into words (`mail/sent/*-view-words.md`). They
+  answered 2026-10-15, after going through it with Thomas
+  (`mail/received/20261015-003151Z-@datadungeon--re-picture-prompt-design-f58634bb.md`):
+  `directives` replace `changes` and take the kind's own rules, so the
+  fixed `rules` at the front are the same for every picture; a fixed rule
+  must not contradict a description ("no text unless the description asks
+  for it", Thomas); no kind setting, since the asset's type and the app's
+  tag already say it; one migration, with each recipe recording its join
+  order; `template` is Overlore's fill-in-the-blanks text, unrelated to
+  prompts; DD takes `view.cr` in the release with the new order. The
+  older `prompt_parts` request (`TODO.md`) is under review in that light.
 - **`@overlore`** (was `@infocomics`): asked for `shoot_batch`
   (2026-10-11, mainly because shots were drawn one at a time; concurrency
   fixed that the same day, `c7181a7`). **Parked by them** the same day,
   until they build a "can wait" lane for drawing ahead, which would suit
   Google's half-price batch endpoint (not used yet). Not built.
+  **The Bard, head to toe, cut out** for overlore.xyz, asked 2026-10-15
+  (`mail/received/*-@overlore--bard-full-figure-*.md`): three candidates
+  made with `mj prop` (two fantasy poses, and the golden-style cartoon
+  with its forest removed), recipes in
+  `~/.local/share/mj/experiments/bard-full/`. **Open:** Thomas picks;
+  then send `@overlore` the path.
 - **`@cyclops`**: secrets and deploy conventions. Settled 2026-10-13; the
   repo `.env` stays until cyclops ships a fish export format, and it will
   ping when it does (`TODO.md`, "secrets / deploy").
