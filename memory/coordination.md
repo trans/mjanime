@@ -40,9 +40,13 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   **The Bard, head to toe, cut out** for overlore.xyz, asked 2026-10-15
   (`mail/received/*-@overlore--bard-full-figure-*.md`): three candidates
   made with `mj prop` (two fantasy poses, and the golden-style cartoon
-  with its forest removed), recipes in
-  `~/.local/share/mj/experiments/bard-full/`. **Open:** Thomas picks;
-  then send `@overlore` the path.
+  with its forest removed), each a prop dir in the project's
+  `outtake/bard-full/`. Thomas then asked for more poses: two sets
+  (fantasy, cartoon) of five, the cartoon bow in two takes picked 50/50.
+  **Sent 2026-10-15** (`mail/sent/20261015-031922Z-@overlore--bard-poses.md`):
+  the pictures and a `manifest.json` for Overlore's DataDungeon store in
+  `outtake/bard-overlore/`. **Open:** Overlore's type and tags; whether
+  the raw renders are kept, and as what (Thomas raised XCF, 2026-10-15).
 - **`@cyclops`**: secrets and deploy conventions. Settled 2026-10-13; the
   repo `.env` stays until cyclops ships a fish export format, and it will
   ping when it does (`TODO.md`, "secrets / deploy").
