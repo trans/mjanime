@@ -44,11 +44,21 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   worked out with Thomas, not copied to `@overlore` or `@owl`): one
   prompt with Mustache tags for the registered parts (rules, framing,
   style, flavor, theme, kind rules, character, light), each pinned to its
-  wording and version when stored, by row id (Thomas's choice); the field
-  order, `prompt_sent` and the custom case go away. No compression
-  dictionary (Thomas). Thomas will talk it over with DataDungeon.
-  The thinking is in `notes/picture-prompt-design-v1.md`, "A prompt as a
-  template".
+  wording and version when stored; the field order, `prompt_sent` and the
+  custom case go away. No compression dictionary (Thomas). The thinking is
+  in `notes/picture-prompt-design-v1.md`, "A prompt as a template".
+  **Accepted 2026-10-16, after Thomas went through it with them**
+  (`mail/received/20261016-174214Z-@datadungeon--re-proposal-prompt-as-template-97f4d8dc.md`):
+  built in 0.14 before the tag, for every form (speech too), so the field
+  orders go entirely. References are **full names**, not row ids (Thomas,
+  with DD: ids save ~108 B a prompt; compression can come later). Bare
+  tags wait for 0.15's standard `art-style`/`rating` tags; until then the
+  app names the wording. **Light and view are plain words, not tags**: the
+  app puts `ViewWords`' output in as its own text. A references table
+  keeps `with_text` and `text.style=` (curio) indexed. Characters are
+  named texts in field `character`; a literal `{{` is refused. DD's
+  answers are "for you and Thomas to correct"; open: a naming rule for
+  an app's rating wording (`overlore:g`?).
 - **`@overlore`** (was `@infocomics`): asked for `shoot_batch`
   (2026-10-11, mainly because shots were drawn one at a time; concurrency
   fixed that the same day, `c7181a7`). **Parked by them** the same day,
