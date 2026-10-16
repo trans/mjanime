@@ -78,6 +78,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   as `{{style dd:silver-comic@6e21dec2ab overlore:place@ad346239b4}}`, so
   a flavor's name is its purpose (`overlore:place`, filed under each
   style) and the `/purpose` part goes; DataDungeon's words take no purpose.
+  Thomas, 2026-10-16, sent the same day (`mail/sent/20261016-203838Z-@datadungeon--flavor-answers.md`,
+  with his view that a rating's words are `dd:`'s, not decided): a style with no
+  wording of the named flavor falls back to DataDungeon's words alone;
+  one flavor per tag (another refinement is another flavor name, e.g.
+  `place-cave`); a change to a standard wording needn't be announced,
+  since it will only ever refine.
 - **`@overlore`** (was `@infocomics`): asked for `shoot_batch`
   (2026-10-11, mainly because shots were drawn one at a time; concurrency
   fixed that the same day, `c7181a7`). **Parked by them** the same day,
