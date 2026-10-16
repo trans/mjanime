@@ -105,6 +105,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   the pictures and a `manifest.json` for Overlore's DataDungeon store in
   `outtake/bard-overlore/`. **Open:** Overlore's type and tags; whether
   the raw renders are kept, and as what (Thomas raised XCF, 2026-10-15).
+  **Mouths and blinks for the Bard**, asked 2026-10-16
+  (`mail/received/20261016-221432Z-@overlore--bard-mouths-and-blinks-be6adc02.md`):
+  Rhubarb Lip Sync gives the timing (Thomas checked it); they want mouth
+  patches X, A-F (G, H optional) for beckon, present, play and write in
+  both sets, and closed (and half-closed) eyes for all 11 poses, each a
+  cropped patch with alpha that lines up exactly with its cut-out in
+  `outtake/bard-overlore/`, plus a manifest of pose, shape, size and x, y.
+  A trial first: present in both sets. Waiting on Thomas's go-ahead.
 - **`@cyclops`**: secrets and deploy conventions. Settled 2026-10-13; the
   repo `.env` stays until cyclops ships a fish export format, and it will
   ping when it does (`TODO.md`, "secrets / deploy").
