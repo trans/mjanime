@@ -34,7 +34,8 @@
   (a loopback URL is unroutable from a provider's servers).
 - **Revisit: `view_words` as a bus tool** (Thomas, 2026-10-14: not yet). DataDungeon now owns turning
   `view` and `light` into words; mj's `src/arcana/view.cr` was handed to them 2026-10-14
-  (`.ai/mail/sent/*-@datadungeon--view-words.md`). Later, offer it on `mj:camera` for apps that don't
+  (`.ai/mail/sent/*-@datadungeon--view-words.md`), and is in DataDungeon 0.14 as
+  `ViewWords.view`/`ViewWords.light` (built 2026-10-15, not tagged). Later, offer it on `mj:camera` for apps that don't
   use DataDungeon: a thin wrapper that requires DataDungeon's file (its only runtime dependency is
   `sqlite3`, which mj has), not a second copy that can drift. Until then `shoot` still renders
   `view`/`light` itself and appends them; whether it should stop is open (below).

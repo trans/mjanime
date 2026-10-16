@@ -4,6 +4,16 @@
 `@owl` 2026-10-14. Follows `prompt-slot-order-v1.md` (the research and the first order test) and the two
 cow tests (`cow_order.py`).*
 
+*DataDungeon answered 2026-10-15, after going through it with Thomas (`.ai/mail/received/20261015-003151Z-@datadungeon--re-picture-prompt-design-f58634bb.md`).
+Where it differs from what follows: `directives` replace `changes` and also take the kind's own rules
+("each named thing drawn once", "keep their face, hair and clothes"), so `rules` at the front are only
+the fixed ones, the same for every picture; a fixed rule must not contradict a description ("no text
+unless the description asks for it", Thomas); there is no kind setting, because the asset's type and
+the app's tag already say it. The order is now **rules · framing · style · theme · subject ·
+description · staging · light · directives**. DataDungeon 0.14 (built 2026-10-15, `c76640e`, not
+tagged) adds `flavor` after `style` (Thomas): `style` is DataDungeon's own words for the art style,
+`flavor` the app's wording refining it.*
+
 ## Why this exists
 
 DataDungeon 0.13's picture order, **preamble · subject · description · staging · theme · style ·
@@ -192,6 +202,30 @@ the `prompt_parts` and staging-order TODOs are moot.
 - **The grey canvas shows through.** mj's Runware transport has no text-to-image route, so an
   unreferenced shot edits a flat grey canvas (`src/arcana/transport.cr`). It survived as a flat grey
   sky on `klein` seed 31337 in 3 of 4 prompts, and once on `flare`. Overlore's seed camera is `klein`.
+
+## A prompt as a template (Thomas, 2026-10-16; being worked out)
+
+Thomas's first reason for the fields was storage: the same words repeated in every record. Measured
+on mj's own 459 prop prompts (`outtake/prompt-dedup/`), storing each distinct sentence once leaves
+51%, and zlib with a 32 KB dictionary leaves 22%, so fields are not the best tool for bytes alone.
+Most of what fields hold is a registered choice anyway: rules (by rating), framing and the kind's
+own rules (by kind), style, flavor, theme, a stored character's appearance, and light (computed from
+the place's measured direction). What is written per picture (description, staging, an edit's
+change) is small. And a hand-written prompt (the Bard's, 2026-10-15) doesn't split into fields
+cleanly, though a rewrite in field order drew a usable picture (`outtake/bard-field-order/`).
+
+So Thomas's idea: **one prompt field, with Mustache tags for the registered parts** (Mustache because
+DataDungeon already uses it for Overlore's decrees; `$` turns up in prompts). Code writes the bare
+tags around the DM's words, `{{rules}} {{framing}} {{style}} … <the DM's words> {{light}}
+{{kind-rules}}`, a bare tag taking its value from the asset's category. DataDungeon pins each to the
+exact wording when it stores the prompt. The asset's category says what it is and may change later;
+the stored prompt says what was sent and doesn't. That replaces the field order (each prompt has its
+own), the custom flag (a prompt with no tags is just text) and the stored whole prompt.
+
+Still open: how a pinned tag is written (field, owner, name, version; plain Mustache names have no
+arguments); light pins the version of the `ViewWords` code as well as the direction; where a
+character's appearance is registered; DataDungeon pulling the references out on store, so "every
+picture drawn with `golden-comic@1`" is still a query.
 
 ## Open
 
