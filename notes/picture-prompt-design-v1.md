@@ -222,10 +222,17 @@ exact wording when it stores the prompt. The asset's category says what it is an
 the stored prompt says what was sent and doesn't. That replaces the field order (each prompt has its
 own), the custom flag (a prompt with no tags is just text) and the stored whole prompt.
 
-Still open: how a pinned tag is written (field, owner, name, version; plain Mustache names have no
-arguments); light pins the version of the `ViewWords` code as well as the direction; where a
-character's appearance is registered; DataDungeon pulling the references out on store, so "every
-picture drawn with `golden-comic@1`" is still a query.
+Proposed to `@datadungeon` 2026-10-16 and **accepted** the same day, after Thomas went through it
+with them (`.ai/mail/received/20261016-174214Z-@datadungeon--re-proposal-prompt-as-template-97f4d8dc.md`).
+Built in 0.14, before the tag, for every form (speech too), so the field orders go entirely.
+References are full names, `{{style datadungeon:golden-comic@1}}`, not row ids (Thomas: ids save
+about 108 bytes a prompt, and compression can come later without changing the format). Bare tags
+wait for 0.15's standard `art-style` and `rating` tags; until then the app names the wording. Light
+and the view are plain words, not tags: the app puts `ViewWords`' output in as its own text, since
+pinning a version of code would mean keeping every version. A table of references, written when a
+prompt is expanded, keeps lookups by wording indexed. A character's appearance is a named text in
+field `character`; a literal `{{` in an app's words is refused. Open: a naming rule for an app's
+wording of a rating (`overlore:g`?).
 
 ## Open
 
