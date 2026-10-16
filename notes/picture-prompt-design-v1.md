@@ -234,6 +234,15 @@ prompt is expanded, keeps lookups by wording indexed. A character's appearance i
 field `character`; a literal `{{` in an app's words is refused. Open: a naming rule for an app's
 wording of a rating (`overlore:g`?).
 
+Later the same day (`.ai/mail/received/20261016-194736Z-@datadungeon--re-wording-versions-as-hashes-f3cbc3d8.md`):
+a wording's version is a hash of its words, not a number, because each store numbered versions
+itself, so `@2` could mean different words in two stores. It is the first 10 hex characters of the
+SHA-256 DataDungeon already keeps for every text. Wordings can't be changed or deleted once they
+exist (triggers), and a rename is a new name. Thomas decided: DataDungeon's owner is `dd`; standard
+styles stay `dd:`'s; and style and flavor are one tag, `{{style dd:silver-comic overlore:place}}`,
+stored as `{{style dd:silver-comic@6e21dec2ab overlore:place@ad346239b4}}`. So a flavor's name is
+its purpose, and the `/purpose` part of a name goes.
+
 ## Open
 
 - **Rules at the front, measured.** Overlore's mailbox check (`image_prompts.cr`, 2026-10-14) found
