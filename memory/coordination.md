@@ -67,6 +67,17 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   Thomas also thinks the rating's words may be universal rather than each
   app's (not sent; the vocabulary already calls the rating "the same in
   every app").
+  **Accepted 2026-10-16**, after Thomas went through it with them
+  (`mail/received/20261016-194736Z-@datadungeon--re-wording-versions-as-hashes-f3cbc3d8.md`):
+  a version is the first 10 hex characters of the text's existing SHA-256
+  (`texts.hash`), not base 32, so the store keeps one hash. Triggers
+  refuse UPDATE/DELETE on a wording; a rename is a new name. Thomas
+  decided: DataDungeon's owner is `dd`; standard styles stay `dd:`'s
+  (custom ones would be the app's, e.g. `owl:kiddy-cartoon`); **style and
+  flavor are one tag**, `{{style dd:silver-comic overlore:place}}`, pinned
+  as `{{style dd:silver-comic@6e21dec2ab overlore:place@ad346239b4}}`, so
+  a flavor's name is its purpose (`overlore:place`, filed under each
+  style) and the `/purpose` part goes; DataDungeon's words take no purpose.
 - **`@overlore`** (was `@infocomics`): asked for `shoot_batch`
   (2026-10-11, mainly because shots were drawn one at a time; concurrency
   fixed that the same day, `c7181a7`). **Parked by them** the same day,
