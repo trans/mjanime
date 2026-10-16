@@ -59,6 +59,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   named texts in field `character`; a literal `{{` is refused. DD's
   answers are "for you and Thomas to correct"; open: a naming rule for
   an app's rating wording (`overlore:g`?).
+  **Sent 2026-10-16** (`mail/sent/20261016-191635Z-@datadungeon--wording-versions-as-hashes.md`,
+  Thomas): a wording's version is numbered by each store (`put_named`,
+  max+1), so `@2` can mean different words in two stores; proposed a
+  version be the first 40 bits of SHA-256 of the exact words, Crockford
+  base 32, 8 characters, every numbered version converted in 0.14.
+  Thomas also thinks the rating's words may be universal rather than each
+  app's (not sent; the vocabulary already calls the rating "the same in
+  every app").
 - **`@overlore`** (was `@infocomics`): asked for `shoot_batch`
   (2026-10-11, mainly because shots were drawn one at a time; concurrency
   fixed that the same day, `c7181a7`). **Parked by them** the same day,
