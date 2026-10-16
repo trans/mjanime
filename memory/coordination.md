@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-15*
+*Updated 2026-10-16*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -40,6 +40,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   `flavor` (Thomas) is the app's wording refining it. A picture whose
   style isn't DataDungeon's isn't stored. mj's view words are in it as
   `ViewWords`. mj has no DataDungeon dependency, so nothing to bump here.
+  **Proposal sent 2026-10-16** (`mail/sent/20261016-171751Z-@datadungeon--prompt-as-template.md`,
+  worked out with Thomas, not copied to `@overlore` or `@owl`): one
+  prompt with Mustache tags for the registered parts (rules, framing,
+  style, flavor, theme, kind rules, character, light), each pinned to its
+  wording and version when stored, by row id (Thomas's choice); the field
+  order, `prompt_sent` and the custom case go away. No compression
+  dictionary (Thomas). Thomas will talk it over with DataDungeon.
+  The thinking is in `notes/picture-prompt-design-v1.md`, "A prompt as a
+  template".
 - **`@overlore`** (was `@infocomics`): asked for `shoot_batch`
   (2026-10-11, mainly because shots were drawn one at a time; concurrency
   fixed that the same day, `c7181a7`). **Parked by them** the same day,
