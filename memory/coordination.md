@@ -84,6 +84,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   one flavor per tag (another refinement is another flavor name, e.g.
   `place-cave`); a change to a standard wording needn't be announced,
   since it will only ever refine.
+  **Ratings settled 2026-10-16** (Thomas with DataDungeon,
+  `mail/received/20261016-204705Z-@datadungeon--re-wording-versions-as-hashes-350e88c5.md`):
+  one wording per rating, DataDungeon's (`dd:g`, `dd:pg`, `dd:r`, `dd:x`),
+  shared by text and pictures and worded as what's suitable, not what's
+  forbidden; speech gets
+  none, since the rating applies when its text is written.
 - **`@overlore`** (was `@infocomics`): asked for `shoot_batch`
   (2026-10-11, mainly because shots were drawn one at a time; concurrency
   fixed that the same day, `c7181a7`). **Parked by them** the same day,
