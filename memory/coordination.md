@@ -126,6 +126,13 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   change outside the face). Asked them 2026-10-17
   (`mail/sent/20261017-020413Z-@overlore--bard-mouths-audio.md`) for a spoken
   and a sung Bard clip with Rhubarb's cues, for a preview page here.
+  **They answered 2026-10-17**: all nine lines with Rhubarb's cues in
+  `~/Projects/overlore/outtake/bard-lips/clips/` (`a-2` spoken, in present;
+  `c-1` verse spoken in rhythm, in play; drive frames from the audio's
+  `currentTime`, the page plays at 1.05x). Rhubarb is the v1.14.0 release
+  zip run as it comes, not installed. They asked for a sung take with
+  ElevenLabs (v3 `[sings]` or Eleven Music); no ElevenLabs key on this host
+  (not in `.env`, the shell, or cyclops-env for mj or overlore).
 - **`@cyclops`**: secrets and deploy conventions. Settled 2026-10-13; the
   repo `.env` stays until cyclops ships a fish export format, and it will
   ping when it does (`TODO.md`, "secrets / deploy").
