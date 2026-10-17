@@ -78,6 +78,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   as `{{style dd:silver-comic@6e21dec2ab overlore:place@ad346239b4}}`, so
   a flavor's name is its purpose (`overlore:place`, filed under each
   style) and the `/purpose` part goes; DataDungeon's words take no purpose.
+  Hex, not base 32, because everything else in DataDungeon is hex
+  (Thomas with DataDungeon, 2026-10-16). Storing hashes as 32-byte blobs,
+  hex only at the edges, is an open idea there, not scheduled: ~9% of
+  Overlore's store, half of it a `content_hash` tag that goes in 0.15
+  (their `memory/performance.md`). Thomas, 2026-10-16: worth doing for all
+  hash fields; 4% at 10,000,000 assets is not nothing.
   Thomas, 2026-10-16, sent the same day (`mail/sent/20261016-203838Z-@datadungeon--flavor-answers.md`,
   with his view that a rating's words are `dd:`'s, not decided): a style with no
   wording of the named flavor falls back to DataDungeon's words alone;
@@ -112,7 +118,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   both sets, and closed (and half-closed) eyes for all 11 poses, each a
   cropped patch with alpha that lines up exactly with its cut-out in
   `outtake/bard-overlore/`, plus a manifest of pose, shape, size and x, y.
-  A trial first: present in both sets. Waiting on Thomas's go-ahead.
+  A trial first: present in both sets. **Patches dropped** (Thomas, 2026-10-16:
+  a wide mouth moves the jaw, so pasted patches never meet the face's lines);
+  head swaps between poses also dropped (placement needs a person every
+  time). Each mouth is now a whole-picture edit of the pose's render (trial
+  in `outtake/bard-mouths/`, 10 edits, $0.692: no shift in 9 of 10, ~3.5/255
+  change outside the face). Asked them 2026-10-17
+  (`mail/sent/20261017-020413Z-@overlore--bard-mouths-audio.md`) for a spoken
+  and a sung Bard clip with Rhubarb's cues, for a preview page here.
 - **`@cyclops`**: secrets and deploy conventions. Settled 2026-10-13; the
   repo `.env` stays until cyclops ships a fish export format, and it will
   ping when it does (`TODO.md`, "secrets / deploy").
