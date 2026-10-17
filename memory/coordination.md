@@ -212,5 +212,18 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   arcana-ai's ElevenLabs speech report the credits charged, from the
   `character-cost` header (eleven_v3: 12 for 30 characters, where mj's table
   said 1.0 a character). Until then mj:voice reads it by overriding the
-  private `ElevenLabs#post_api` in a subclass, to drop once arcana-ai has it;
-  mj is on arcana-ai 0.3.0 and said it would move up for it. **Open.**
+  private `ElevenLabs#post_api` in a subclass (`37aa35d`), to drop once
+  arcana-ai has it; mj is on arcana-ai 0.3.0 and said it would move up for it.
+  **Answered: arcana-ai 0.5.5** (2026-10-17, correcting 0.5.4;
+  `mail/received/20261017-211900Z-@arcana--arcana-ai-0.5.5-characters-not-credits-031f269a.md`).
+  @arcana reads ElevenLabs' API price page as billing API use in dollars per
+  character, one rate per model on every plan, so the header is the
+  characters billed, not credits: `result.usage.characters`, and
+  `result.cost` prices it with no table of ours ($0.08 per 1,000 for
+  eleven_v4, eleven_v3, eleven_multilingual_v2; $0.04 for eleven_v4_turbo,
+  eleven_v3_conversational, Flash and Turbo; checked 2026-10-17), so the
+  test line is $0.00096. mj:voice still calls the figure `credits`, with usd
+  null. **Open:** moving mj to 0.5.5 and dropping the override (not started);
+  @arcana's question, whether the account counts that line at 12 (the
+  header) or 30 (the text). The ElevenLabs key lacks
+  `speech_history_read`, so the history API can't answer it (2026-10-17).
