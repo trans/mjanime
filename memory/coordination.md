@@ -205,5 +205,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
 - **`@cyclops`**: secrets and deploy conventions. Settled 2026-10-13; the
   repo `.env` stays until cyclops ships a fish export format, and it will
   ping when it does (`TODO.md`, "secrets / deploy").
-- **`@arcana`**: the bus and arcana-core. Camera concurrency rides on
-  arcana-core 0.17.1 (`c7181a7`).
+- **`@arcana`**: the bus, arcana-core and arcana-ai (now under
+  `~/Projects/Arcana/`). Camera concurrency rides on arcana-core 0.17.1
+  (`c7181a7`). **Asked 2026-10-17** (Thomas;
+  `mail/sent/20261017-193239Z-@arcana--elevenlabs-credits-header.md`): have
+  arcana-ai's ElevenLabs speech report the credits charged, from the
+  `character-cost` header (eleven_v3: 12 for 30 characters, where mj's table
+  said 1.0 a character). Until then mj:voice reads it by overriding the
+  private `ElevenLabs#post_api` in a subclass, to drop once arcana-ai has it;
+  mj is on arcana-ai 0.3.0 and said it would move up for it. **Open.**
