@@ -174,11 +174,17 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   glancing up), then cut-outs, then mouths; the cartoon is fine as it is.
   Inbetweens with the closed mouth only: 5 realistic, 8 cartoon. Blinks
   wait. About 75 frames; a visitor loads about 20 (talk a or b) or 25 (c).
-  c-3 to be tried sung and spoken (Thomas). **Open:** whether each strum
-  frame needs all five mouths (Thomas decides); and their request that
-  `mj:voice` get the ElevenLabs key, `eleven_v3` and Eleven Music, so they
-  record the lines themselves. `model` already passes through to
-  ElevenLabs, so v3 needs only the key; music needs a new tool.
+  c-3 to be tried sung and spoken (Thomas). Strumming (Thomas, 2026-10-17):
+  the strum keeps its own tempo, so each strum position gets all five
+  mouths; Nano moves the hand a long way or not at all, so the positions
+  are still being worked on. They asked that `mj:voice` get the ElevenLabs
+  key, `eleven_v3` and Eleven Music. **Key live 2026-10-17** (`just
+  env-pull` from cyclops, service restarted; Thomas asked): `speak` with
+  `provider: elevenlabs`, `model: eleven_v3` works, though `voices` lists
+  models only to v2.5 (arcana-ai's list). Eleven Music isn't in `mj:voice`;
+  Thomas is arranging a music tool with a new key. Told them, with the
+  frames so far
+  (`mail/sent/20261017-062622Z-@overlore--elevenlabs-in-mj-voice-and-frames.md`).
 - **`@cyclops`**: secrets and deploy conventions. Settled 2026-10-13; the
   repo `.env` stays until cyclops ships a fish export format, and it will
   ping when it does (`TODO.md`, "secrets / deploy").
