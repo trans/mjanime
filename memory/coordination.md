@@ -112,9 +112,24 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   is advice in DD's README. One owner per store (sharing = copying, with
   `copied-from`); MatchIndex, per-app indexes, views, light and keyframes
   frozen; uses, owner tags and refusing to delete what's in use dropped; the
-  hub deferred. mj is pinned to `~> 0.13.x`: nothing to do until the tag. DD
+  hub deferred. DD's mail says mj is pinned to `~> 0.13.x`, but mj has no
+  DataDungeon dependency (`shard.yml`), so nothing to bump. DD
   says the rating's words still wait for Thomas. The blob idea is noted
   there for later.
+  **Tagged v0.14.0 2026-10-17** (`401dd4a`, on `main`;
+  `mail/received/20261017-185356Z-@datadungeon--datadungeon-v0-14-0-is-tagged-8e82f4ca.md`),
+  with two changes before the tag (Thomas, 2026-10-17;
+  `mail/received/20261017-165102Z-*-1a8b718e.md`, `-175715Z-*-3591c9a9.md`):
+  **no standard styles.** Each app names, words and tags its own
+  (`overlore:silver-comic`, kind `style`), so `dd:`'s art styles,
+  `db.style_text` and flavor are gone, superseding the style lines above.
+  The vocabulary keeps only the ratings (`db.rating_text("pg")`, `dd:pg`).
+  A wording's `/purpose` is deprecated, and a later release removes it.
+  New: `db.add_wordings(id, wordings)` names words a stored recipe was sent
+  but didn't name. Styles shared between apps fall to the hub, later. A
+  store's first read-write open converts it one way, so back it up first.
+  mj's own store (`TODO.md`) was waiting for this tag; mj would name its
+  own styles.
 - **`@overlore`** (was `@infocomics`): asked for `shoot_batch`
   (2026-10-11, mainly because shots were drawn one at a time; concurrency
   fixed that the same day, `c7181a7`). **Parked by them** the same day,
