@@ -1,6 +1,7 @@
 require "arcana-core"
 require "arcana-ai"
 require "base64"
+require "http/client"
 require "json"
 require "./tts_rates"
 
@@ -38,11 +39,26 @@ module MJ
 
       VOICES_SCHEMA = JSON.parse(%<{"type":"object","properties":{}}>)
 
+      MUSIC_SCHEMA = JSON.parse(%<{
+        "type":"object",
+        "description":"A song from Eleven Music, sung, from a composition plan or a prompt. It takes no voice id. Returns base64 audio unless output_path is given. Needs ELEVENLABS_API_KEY.",
+        "properties":{
+          "composition_plan":{"type":"object","description":"ElevenLabs' plan: positive_global_styles, negative_global_styles, and sections, each {section_name, positive_local_styles, negative_local_styles, duration_ms, lines}. The sections set the length."},
+          "prompt":{"type":"string","description":"A text prompt instead of a plan."},
+          "music_length_ms":{"type":"integer","description":"With a prompt only: the length in ms."},
+          "model":{"type":"string","description":"Default music_v1."},
+          "format":{"type":"string","description":"ElevenLabs' output_format, default mp3_44100_128."},
+          "output_path":{"type":"string","description":"Write the audio here instead of returning base64."}
+        }
+      }>)
+
       def self.register(ts : ::Arcana::Toolset)
         ts.tool("voices", "List the speech providers available on this host and their voices.",
           input_schema: VOICES_SCHEMA) { |_, _ctx| handle_voices }
         ts.tool("speak", "Synthesize speech from text.",
           input_schema: SPEAK_SCHEMA) { |data, _ctx| handle_speak(data) }
+        ts.tool("music", "A sung song from Eleven Music, from a composition plan or a prompt.",
+          input_schema: MUSIC_SCHEMA) { |data, _ctx| handle_music(data) }
       end
 
       def self.available : Array(String)
@@ -63,11 +79,102 @@ module MJ
           "elevenlabs" => {
             "voices"  => "any ElevenLabs voice id",
             "default" => ::Arcana::AI::TTS::ElevenLabs::DEFAULT_VOICE,
-            "models"  => ::Arcana::AI::TTS::ElevenLabs::MODELS,
+            "models"  => ELEVENLABS_MODELS,
             "note"    => "Supports `previous_text` / `next_text` for prosody continuity " \
                       "across consecutive lines — useful when narrating in sequence.",
           },
+          "music" => {
+            "available" => !ENV["ELEVENLABS_API_KEY"]?.nil?,
+            "provider"  => "elevenlabs",
+            "models"    => [MUSIC_MODEL],
+            "note"      => "{\"tool\":\"music\"} with a composition_plan or a prompt.",
+          },
         }.to_json)
+      end
+
+      # arcana-ai's list stops at v2.5. Any model name passes through to ElevenLabs as given,
+      # but callers read this list to see what's there, so v3 has to be on it.
+      ELEVENLABS_MODELS = (::Arcana::AI::TTS::ElevenLabs::MODELS + ["eleven_v3"]).uniq
+
+      # --- music ---------------------------------------------------------------------------
+      #
+      # Eleven Music, called directly: arcana-ai has no music provider. It sings, but it
+      # takes no voice id, so a song is in a voice's manner, not its voice.
+      MUSIC_ENDPOINT = "https://api.elevenlabs.io/v1/music"
+      MUSIC_MODEL    = "music_v1"
+      MUSIC_FORMAT   = "mp3_44100_128"
+      # A plan or prompt it won't take comes back as one of these, often with a suggestion.
+      MUSIC_REFUSALS = ["bad_prompt", "bad_composition_plan"]
+
+      def self.handle_music(data : JSON::Any) : JSON::Any
+        key = ENV["ELEVENLABS_API_KEY"]? || raise "ELEVENLABS_API_KEY is not set on this host"
+        plan = data["composition_plan"]?
+        prompt = data["prompt"]?.try(&.as_s?)
+        raise "music takes a composition_plan or a prompt, not both" if plan && prompt
+        model = data["model"]?.try(&.as_s?) || MUSIC_MODEL
+        format = data["format"]?.try(&.as_s?) || MUSIC_FORMAT
+
+        body = {"model_id" => JSON::Any.new(model)}
+        if plan
+          body["composition_plan"] = plan
+        elsif prompt
+          body["prompt"] = JSON::Any.new(prompt)
+          if ms = data["music_length_ms"]?.try(&.as_i64?)
+            body["music_length_ms"] = JSON::Any.new(ms)
+          end
+        else
+          raise "music requires a composition_plan or a prompt"
+        end
+
+        uri = URI.parse("#{MUSIC_ENDPOINT}?output_format=#{URI.encode_www_form(format)}")
+        client = HTTP::Client.new(uri)
+        client.connect_timeout = 30.seconds
+        client.read_timeout = 600.seconds # a song takes far longer than a spoken line
+        headers = HTTP::Headers{"xi-api-key" => key, "Content-Type" => "application/json"}
+        response = client.post(uri.request_target, headers: headers, body: body.to_json)
+
+        unless response.success?
+          msg = response.body
+          if MUSIC_REFUSALS.any? { |r| msg.includes?(r) } || refusal?(msg)
+            return JSON::Any.new({
+              "status"   => JSON::Any.new("refused"),
+              "provider" => JSON::Any.new("elevenlabs"),
+              "reason"   => (JSON.parse(msg) rescue JSON::Any.new(msg[0, 400])),
+              "retry"    => JSON::Any.new(true),
+              "note"     => JSON::Any.new("ElevenLabs declined this plan or prompt; its reason " \
+                                          "may carry a suggested rewrite. Not billed."),
+            } of String => JSON::Any)
+          end
+          raise "Eleven Music error (#{response.status_code}): #{msg[0, 400]}"
+        end
+
+        audio = response.body.to_slice
+        container = format.split('_').first
+        cost = response.headers["character-cost"]?.try(&.to_f?)
+        h = {
+          "status"           => JSON::Any.new("ok"),
+          "provider"         => JSON::Any.new("elevenlabs"),
+          "model"            => JSON::Any.new(model),
+          "format"           => JSON::Any.new(format),
+          "duration_seconds" => TtsRates.duration(audio, container).try { |s| JSON::Any.new(s.round(3)) } || JSON::Any.new(nil),
+          # Unlike speech, a song's response has carried no cost header; null means unknown.
+          "credits"       => cost ? JSON::Any.new(cost) : JSON::Any.new(nil),
+          "credits_basis" => JSON::Any.new(cost ? "ElevenLabs' character-cost header" :
+                                             "Eleven Music returned no cost; see the account's usage page"),
+          "usd"            => JSON::Any.new(nil),
+          "content_type"   => JSON::Any.new(response.headers["Content-Type"]? || ""),
+          "content_length" => JSON::Any.new(audio.size.to_i64),
+        } of String => JSON::Any
+        if song = response.headers["song-id"]?
+          h["song_id"] = JSON::Any.new(song)
+        end
+        if path = data["output_path"]?.try(&.as_s?)
+          File.write(path, audio)
+          h["output_path"] = JSON::Any.new(path)
+        else
+          h["audio_base64"] = JSON::Any.new(Base64.strict_encode(audio))
+        end
+        JSON::Any.new(h)
       end
 
       REFUSAL_MARKERS = ["content_policy", "content policy", "moderation", "rejected",

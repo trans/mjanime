@@ -371,7 +371,16 @@ dedup work under any chunking scheme. No library does this: `gimpformats`' `save
 ```
 {"tool":"voices"}                                     # providers and voices available on this host
 {"tool":"speak","text":"…","provider":"openai"|"elevenlabs","voice":"…"}
+{"tool":"music","composition_plan":{…}}               # or "prompt" (+ "music_length_ms"); Eleven Music
 ```
+
+`voices` lists ElevenLabs' models from arcana-ai plus `eleven_v3`, which arcana-ai's list lacks;
+any model name passes through as given. `music` calls Eleven Music directly (arcana-ai has no music
+provider). It sings but takes no voice id, so a song is in a voice's manner, written into the plan's
+styles. Its response has carried no cost header, so `credits` is null rather than a guess; the
+account's own credit count lags the call, so it can't stand in either. A plan ElevenLabs won't take
+(`bad_prompt`, `bad_composition_plan`) comes back `refused`, its reason often holding a suggested
+rewrite.
 
 Same OpenAI provider as arcana's old `openai:tts`, so migration is close to a rename. Two
 differences: **ElevenLabs is offered** (it was fully implemented in `arcana-ai` and simply never

@@ -138,8 +138,8 @@ else
     url: bus_url,
     address: "mj:voice",
     name: "mj Voice",
-    description: "Text to speech — OpenAI and ElevenLabs. Ported out of the arcana server " \
-                 "so the bus is not also a provider.",
+    description: "Text to speech — OpenAI and ElevenLabs — and songs from Eleven Music. " \
+                 "Ported out of the arcana server so the bus is not also a provider.",
     kind: Arcana::Directory::Kind::Service,
     guide: <<-GUIDE,
       {"tool":"voices"} lists the providers actually usable on this host (a provider only
@@ -168,16 +168,23 @@ else
       genuinely unknown, never zero.
 
       Omit `voice` to get the provider's own default — do not pass OpenAI's "alloy" to
-      ElevenLabs, which expects a voice id.
+      ElevenLabs, which expects a voice id. ElevenLabs takes any model name as given,
+      eleven_v3 included.
+
+      {"tool":"music","composition_plan":{...}} or {"tool":"music","prompt":"...",
+       "music_length_ms":30000} gives a sung song from Eleven Music (ElevenLabs key).
+      It takes no voice id, so a song is sung in a voice's manner, described in the
+      styles, not in the voice itself. Reply as for speak, with credits null when
+      ElevenLabs reports no cost; "refused" carries its reason, often a suggested rewrite.
       GUIDE
-    tags: ["tts", "voice", "speech", "audio"],
+    tags: ["tts", "voice", "speech", "audio", "music"],
   )
   # Deliberately low until the ElevenLabs plan tier is known: that provider caps
   # CONCURRENT requests per account (10/20/30 by plan) and answers an overrun with a hard
   # 429 too_many_concurrent_requests, unlike Runware's queue. Raise it once the tier is
   # confirmed; queueing here beats being refused there.
   voice_ts = Arcana::Toolset.new(client: voice_client, name: "mj:voice",
-    description: "Text to speech.",
+    description: "Text to speech, and songs.",
     max_concurrent: 4)
   MJ::Arcana::VoiceService.register(voice_ts)
   toolsets << voice_ts
