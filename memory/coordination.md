@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-16*
+*Updated 2026-10-17*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -96,6 +96,25 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   shared by text and pictures and worded as what's suitable, not what's
   forbidden; speech gets
   none, since the rating applies when its text is written.
+  **0.14 rebuilt 2026-10-17, superseding both the fields and the template**
+  (`4426581`, branch `0.14`, not tagged;
+  `mail/received/20261017-035601Z-@datadungeon--datadungeon-0-14-simplified-faefa8b6.md`).
+  A review found the prompt model redesigned four times in three days, and
+  on Overlore's store the fields took more room than plain prompts (426 KB
+  against 295 KB). Thomas chose, 2026-10-16: `prompt:` is exactly what the
+  provider was sent; `instructions:` is speech's and chat's second input;
+  `wordings:` lists the named wordings in it (`Recipe.wording(kind,
+  "owner:name[/purpose]", words)`, kind free), each versioned by the
+  10-hex hash and checked word for word against the prompt when stored. A
+  picture's style is `dd:`'s (`db.style_text`), and an app's own words are a
+  `flavor` named for the style (`overlore:silver-comic/place`), so the
+  one-tag `{{style ...}}` form is gone with the template. The order of parts
+  is advice in DD's README. One owner per store (sharing = copying, with
+  `copied-from`); MatchIndex, per-app indexes, views, light and keyframes
+  frozen; uses, owner tags and refusing to delete what's in use dropped; the
+  hub deferred. mj is pinned to `~> 0.13.x`: nothing to do until the tag. DD
+  says the rating's words still wait for Thomas. The blob idea is noted
+  there for later.
 - **`@overlore`** (was `@infocomics`): asked for `shoot_batch`
   (2026-10-11, mainly because shots were drawn one at a time; concurrency
   fixed that the same day, `c7181a7`). **Parked by them** the same day,
@@ -131,8 +150,35 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   `c-1` verse spoken in rhythm, in play; drive frames from the audio's
   `currentTime`, the page plays at 1.05x). Rhubarb is the v1.14.0 release
   zip run as it comes, not installed. They asked for a sung take with
-  ElevenLabs (v3 `[sings]` or Eleven Music); no ElevenLabs key on this host
-  (not in `.env`, the shell, or cyclops-env for mj or overlore).
+  ElevenLabs (v3 `[sings]` or Eleven Music). Thomas then put a scoped
+  ElevenLabs key in cyclops-env for mj (TTS, voices, similar voices, music;
+  not `user_read` or `audio_isolation`). Takes in the project's
+  `outtake/bard-sung/`, with a preview at `outtake/bard-preview/`
+  (`mail/sent/20261017-023932Z-@overlore--sung-takes.md`). `[sings]` only
+  makes v3 lull; Eleven Music sings but takes no voice id.
+  **Thomas's voice decisions, 2026-10-17** (sent in
+  `mail/sent/20261017-034920Z-@overlore--bard-poses-per-line.md`): offer
+  both, Henry (`KP6QbSvtyKSTfuh4UzcQ`) at 1.1x and the British Football
+  Announcer (`gU0LNdkMOQCOrPrwtbee`) at 1.0x, chosen by the visitor with
+  comedy and tragedy masks or at random; songs from Eleven Music in each
+  voice's manner, Henry's preferred. Pitch-shifting Henry was rejected
+  ("elf").
+  **Their answers, 2026-10-17**
+  (`mail/received/20261017-041802Z-@overlore--re-bard-pose-per-line-32e438b7.md`,
+  `mail/received/20261017-045215Z-@overlore--bard-frames-gaze-and-count-366a21aa.md`,
+  the second agreed with Thomas): one pose per line, never changing partway:
+  beckon a-1, b-1; present a-2, b-2; play c-1, c-2 (sung, strumming); write
+  a-3, b-3, c-3. Bows are silent. Mouths A, B, C, D, F for those four poses
+  in both sets (40); one set serves both voices. The realistic Bard first
+  gets new poses looking at the visitor (beckon, present, play; write
+  glancing up), then cut-outs, then mouths; the cartoon is fine as it is.
+  Inbetweens with the closed mouth only: 5 realistic, 8 cartoon. Blinks
+  wait. About 75 frames; a visitor loads about 20 (talk a or b) or 25 (c).
+  c-3 to be tried sung and spoken (Thomas). **Open:** whether each strum
+  frame needs all five mouths (Thomas decides); and their request that
+  `mj:voice` get the ElevenLabs key, `eleven_v3` and Eleven Music, so they
+  record the lines themselves. `model` already passes through to
+  ElevenLabs, so v3 needs only the key; music needs a new tool.
 - **`@cyclops`**: secrets and deploy conventions. Settled 2026-10-13; the
   repo `.env` stays until cyclops ships a fish export format, and it will
   ping when it does (`TODO.md`, "secrets / deploy").
