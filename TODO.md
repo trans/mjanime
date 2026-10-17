@@ -39,10 +39,33 @@
   use DataDungeon: a thin wrapper that requires DataDungeon's file (its only runtime dependency is
   `sqlite3`, which mj has), not a second copy that can drift. Until then `shoot` still renders
   `view`/`light` itself and appends them; whether it should stop is open (below).
+- **Provider strictness by rating** (Thomas, 2026-10-16). A rating has one wording, DataDungeon's
+  (`dd:g` … `dd:x`), and the DM is told the rating; nothing else enforces it. Find which cameras take
+  a per-request safety or strictness setting and how it behaves, on each path: Runware's (`klein`,
+  `flare`, `sunburst`, `lite`, `nano`, `hero`), OpenAI direct (`dflare`, `dsunburst`, `dhero`), Google
+  direct (`dnano`, `dlite`). mj passes none today; `camera_service.cr` only recognises a refusal
+  after the fact. If they exist, `shoot` could take the rating and ask for the strictest at `g`.
+- **Second checks on a rating, parked** (Thomas, 2026-10-16: trust the DM's attempt, and add these
+  if failures become noticeable). A text check of the description against the rating before drawing
+  (the failure the cow tests point at: a description asking for the thing beats a rule against it),
+  and a vision check of the picture after, mainly for G. Either could be a tool on mj's bus. Until
+  then DataDungeon's `flagged` and `rating`, set by people (Curio), are the backstop.
 - **Grey canvas shows through.** Runware has no text-to-image route in mj's transport, so an
   unreferenced shot edits a flat 128-grey canvas (`src/arcana/transport.cr`). In the cow tests
   (2026-10-14) it survived as a flat grey sky: `klein` seed 31337 in 3 of 4 prompts, `flare` once.
   Overlore draws a room's first picture on `klein` with its theme's seed, so this can reach the game.
+
+## mj's own DataDungeon store
+- **Decided (Thomas, 2026-10-16): each app has its own store, mj included.** mj requires DataDungeon
+  as a library and stores with `DB#store`, as Overlore does. It holds what mj makes for others (the
+  Bard cut-outs and their mouth frames, each linked to the picture it was edited from),
+  each with its recipe. Moving an asset into another app's store is a transfer between stores, to be
+  added: DataDungeon's side carries the bytes, recipe, wordings and links; Curio runs it across the
+  fleet. Until then deliveries stay files plus a manifest (`outtake/bard-overlore/`).
+- **Wait for 0.14's tag:** recipes change format in it (the prompt as sent with the named wordings
+  in it, hashed versions, `dd:`; rebuilt 2026-10-17, replacing the template). Open: where the
+  store lives (Overlore's is `~/.local/share/overlore/assets.db`), and which types to register,
+  since DataDungeon's standard types are still drafts.
 
 ## prompt parts (`shoot`), asked for by `@datadungeon`
 - **Under review (Thomas, 2026-10-14):** mj sends exactly the prompt it is given, and the calling app
