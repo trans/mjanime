@@ -62,8 +62,9 @@
   each with its recipe. Moving an asset into another app's store is a transfer between stores, to be
   added: DataDungeon's side carries the bytes, recipe, wordings and links; Curio runs it across the
   fleet. Until then deliveries stay files plus a manifest (`outtake/bard-overlore/`).
-- **Wait for 0.14's tag:** recipes change format in it (the prompt as sent with the named wordings
-  in it, hashed versions, `dd:`; rebuilt 2026-10-17, replacing the template). Open: where the
+- **0.14.0 is tagged (2026-10-17, `401dd4a`):** a recipe keeps the prompt as sent, with the named
+  wordings in it and hashed versions. There are no standard styles, so mj would name, word and tag
+  its own. Open: where the
   store lives (Overlore's is `~/.local/share/overlore/assets.db`), and which types to register,
   since DataDungeon's standard types are still drafts.
 
