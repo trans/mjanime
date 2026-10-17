@@ -162,7 +162,7 @@ else
       The providers do not share a billing unit. gpt-4o-mini-tts bills per TOKEN and audio
       tokens track duration, so it is estimated from measured length — do NOT estimate it
       from characters, which is 100% under on a slow delivery. tts-1/tts-1-hd bill per
-      character and come back exact. ElevenLabs bills characters as credits (returned as
+      character and come back exact. ElevenLabs reports the credits it charged (returned as
       `credits`), but a credit's dollar value depends on the plan, so usd is null unless a
       rate is configured here. `usd_basis` spells out which rule ran; null usd means
       genuinely unknown, never zero.

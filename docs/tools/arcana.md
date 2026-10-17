@@ -401,13 +401,14 @@ there is no temp-file round-trip for delivery.
 ### Costing a spoken line
 
 No TTS provider reports a price in the response — there is no `includeCost` equivalent — so this is
-computed, and the trap is assuming one billing unit. **The two providers do not share one.**
+computed (ElevenLabs reports the credits it charged, but not dollars), and the trap is assuming one
+billing unit. **The two providers do not share one.**
 
 | model | billed on | what we report |
 | --- | --- | --- |
 | `gpt-4o-mini-tts` (OpenAI default) | tokens — $0.60/1M input chars **+ $12/1M audio output tokens** | estimated from **measured duration** at $0.015/min, OpenAI's published composite |
 | `tts-1` / `tts-1-hd` | characters, $15 / $30 per 1M | **exact** — computable from the text alone |
-| ElevenLabs | characters, as credits (Flash/Turbo families are 0.5 credits/char, the rest 1.0) | `credits` always; dollars only once a plan rate is configured |
+| ElevenLabs | characters, as credits, at a rate per model | `credits` as charged, from ElevenLabs' `character-cost` header; dollars only once a plan rate is configured |
 
 `usd_exact` says which rule applied, and `usd_basis` spells it out in words. A `usd` of `null` means
 genuinely unknown — never a guess dressed as a figure, because it would land in the caller's ledger
@@ -426,9 +427,13 @@ Identical text, **2.02× the duration and 2.02× the cost**. A character-based e
 same price for both and is 100 % under on the slow one. `instructions` that ask for a slow delivery,
 and non-English text, drift the same way.
 
-ElevenLabs is the opposite case: characters there are the *real* billing unit and exact, and it is
-the dollars-per-credit that is unknowable here, because it depends on the subscription tier. Set
-`MJ_ELEVENLABS_USD_PER_1K_CHARS` to have it priced; otherwise bill on the returned `credits`.
+ElevenLabs is the opposite case: it says what a line was charged, in credits, in a `character-cost`
+response header, and `credits` is that figure (`credits_basis` says where it came from). The rate
+table (Flash/Turbo 0.5 credits a character, the rest 1.0) is only the fallback for a reply without
+the header, and it was wrong for `eleven_v3`: a 30-character line was charged 12 credits, 0.4 a
+character (2026-10-17). It is the dollars-per-credit that is unknowable here, because it depends on
+the subscription tier. Set `MJ_ELEVENLABS_USD_PER_1K_CHARS` to have it priced; otherwise bill on the
+returned `credits`.
 
 Published rates drift, so all of them are overridable: `MJ_OPENAI_TTS_USD_PER_MINUTE`,
 `MJ_ELEVENLABS_USD_PER_1K_CHARS`. Unlike the camera costs — which are *measured* from Runware's

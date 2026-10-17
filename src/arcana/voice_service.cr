@@ -39,6 +39,17 @@ module MJ
 
       VOICES_SCHEMA = JSON.parse(%<{"type":"object","properties":{}}>)
 
+      # ElevenLabs says what a line was charged in a `character-cost` header, and arcana-ai's
+      # Result drops the headers, so this keeps that one. The rate table had it wrong: it
+      # assumed 1.0 credit/character for eleven_v3, which was charged 12 for 30 (2026-10-17).
+      class CostedElevenLabs < ::Arcana::AI::TTS::ElevenLabs
+        getter credits : Float64?
+
+        private def post_api(voice_id : String, payload : String, output_format : String) : HTTP::Client::Response
+          super.tap { |r| @credits = r.headers["character-cost"]?.try(&.to_f?) }
+        end
+      end
+
       MUSIC_SCHEMA = JSON.parse(%<{
         "type":"object",
         "description":"A song from Eleven Music, sung, from a composition plan or a prompt. It takes no voice id. Returns base64 audio unless output_path is given. Needs ELEVENLABS_API_KEY.",
@@ -193,8 +204,9 @@ module MJ
       private def self.ok_result(provider : String, model : String, voice : String,
                                  format : String, text : String,
                                  seconds : Float64?,
-                                 content_type : String?, content_length : Int64 | Int32 | Nil)
-        usd, exact, basis = TtsRates.price(provider, model, text.size, seconds)
+                                 content_type : String?, content_length : Int64 | Int32 | Nil,
+                                 charged : Float64? = nil)
+        usd, exact, basis = TtsRates.price(provider, model, text.size, seconds, charged)
         h = {
           "status"     => JSON::Any.new("ok"),
           "provider"   => JSON::Any.new(provider),
@@ -214,7 +226,10 @@ module MJ
         } of String => JSON::Any
         h["duration_seconds"] = seconds ? JSON::Any.new(seconds.round(3)) : JSON::Any.new(nil)
         if provider == "elevenlabs"
-          h["credits"] = JSON::Any.new(text.size * TtsRates.elevenlabs_credits_per_char(model))
+          # What ElevenLabs says it charged; the rate table only when it sends no header.
+          h["credits"] = JSON::Any.new(charged || text.size * TtsRates.elevenlabs_credits_per_char(model))
+          h["credits_basis"] = JSON::Any.new(charged ? "ElevenLabs' character-cost header" :
+                                             "estimated from the rate table; ElevenLabs sent no character-cost header")
         end
         h["content_type"] = content_type ? JSON::Any.new(content_type) : JSON::Any.new(nil)
         h["content_length"] = content_length ? JSON::Any.new(content_length.to_i64) : JSON::Any.new(nil)
@@ -236,13 +251,13 @@ module MJ
             m = data["model"]?.try(&.as_s?)
             v = data["voice"]?.try(&.as_s?)
             if m && v
-              ::Arcana::AI::TTS::ElevenLabs.new(api_key: key, model: m, voice_id: v)
+              CostedElevenLabs.new(api_key: key, model: m, voice_id: v)
             elsif m
-              ::Arcana::AI::TTS::ElevenLabs.new(api_key: key, model: m)
+              CostedElevenLabs.new(api_key: key, model: m)
             elsif v
-              ::Arcana::AI::TTS::ElevenLabs.new(api_key: key, voice_id: v)
+              CostedElevenLabs.new(api_key: key, voice_id: v)
             else
-              ::Arcana::AI::TTS::ElevenLabs.new(api_key: key)
+              CostedElevenLabs.new(api_key: key)
             end
           else
             raise "unknown provider #{provider.inspect} — expected openai or elevenlabs"
@@ -278,7 +293,8 @@ module MJ
           if path = data["output_path"]?.try(&.as_s?)
             result = tts.synthesize(req, path)
             JSON::Any.new(ok_result(provider, result.model, effective_voice, format, text,
-              TtsRates.duration(path), result.content_type, result.content_length).tap { |h|
+              TtsRates.duration(path), result.content_type, result.content_length,
+              tts.as?(CostedElevenLabs).try(&.credits)).tap { |h|
               h["output_path"] = JSON::Any.new(result.output_path)
             })
           else
@@ -286,7 +302,8 @@ module MJ
             # ffprobe measures duration straight off the bytes through a pipe.
             result = tts.synthesize(req)
             JSON::Any.new(ok_result(provider, result.model, effective_voice, format, text,
-              TtsRates.duration(result.audio, format), result.content_type, result.content_length).tap { |h|
+              TtsRates.duration(result.audio, format), result.content_type, result.content_length,
+              tts.as?(CostedElevenLabs).try(&.credits)).tap { |h|
               h["audio_base64"] = JSON::Any.new(Base64.strict_encode(result.audio))
             })
           end

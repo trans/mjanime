@@ -6,7 +6,8 @@ module MJ
     # images, for speech.
     #
     # Unlike Runware, no TTS provider reports a price in the response, so this has to be
-    # computed. The trap is assuming one billing unit: the two providers do not share one.
+    # computed. (ElevenLabs reports the credits it charged, in a header, but not dollars.)
+    # The trap is assuming one billing unit: the two providers do not share one.
     #
     #   OpenAI gpt-4o-mini-tts   billed per TOKEN — $0.60/1M input characters plus
     #                            $12.00/1M AUDIO OUTPUT tokens. Audio tokens track
@@ -39,8 +40,9 @@ module MJ
       }
 
       # ElevenLabs bills credits per character, and the multiplier IS model-dependent:
-      # the Flash and Turbo families are half price per character. This part is knowable;
-      # only the dollars-per-credit is not.
+      # the Flash and Turbo families are half price per character. Only a fallback now:
+      # the credits charged come back in a header, and this table had eleven_v3 at 1.0
+      # where it was charged 0.4 (2026-10-17). The dollars-per-credit is still unknown.
       ELEVENLABS_CREDITS_PER_CHAR  = 1.0
       ELEVENLABS_HALF_PRICE_MODELS = ["flash", "turbo"]
 
@@ -67,8 +69,9 @@ module MJ
 
       # Returns {usd, exact?, basis}. `usd` nil means genuinely unknown — never a guess
       # dressed as a figure.
+      # `charged` is the credits ElevenLabs said it charged, when it said.
       def self.price(provider : String, model : String, characters : Int32,
-                     seconds : Float64?) : {Float64?, Bool, String}
+                     seconds : Float64?, charged : Float64? = nil) : {Float64?, Bool, String}
         case provider
         when "openai"
           # Character-billed models are exactly computable from the text alone.
@@ -91,15 +94,15 @@ module MJ
           {nil, false, "no rate known for model #{model}"}
         when "elevenlabs"
           mult = elevenlabs_credits_per_char(model)
-          credits = characters * mult
+          credits = charged || characters * mult
+          charge = charged ? "ElevenLabs charged #{credits.round(1)} credits for #{characters} characters" :
+                             "#{model} bills #{mult} credit(s)/character = #{credits.round(1)} credits (estimated)"
           if per_1k = elevenlabs_usd_per_1k
             {credits * per_1k / 1000.0, false,
-             "#{model} bills #{mult} credit(s)/character = #{credits.round(1)} credits; " \
-             "priced at the configured $#{per_1k}/1k characters"}
+             "#{charge}; priced at the configured $#{per_1k}/1k credits"}
           else
             {nil, false,
-             "#{model} bills #{mult} credit(s)/character = #{credits.round(1)} credits, but a " \
-             "credit's dollar value depends on your ElevenLabs plan. Set " \
+             "#{charge}, but a credit's dollar value depends on your ElevenLabs plan. Set " \
              "MJ_ELEVENLABS_USD_PER_1K_CHARS to have this priced, or bill on `credits` yourself"}
           end
         else
