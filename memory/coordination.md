@@ -130,6 +130,11 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   store's first read-write open converts it one way, so back it up first.
   mj's own store (`TODO.md`) was waiting for this tag; mj would name its
   own styles.
+  **v0.15.0 tagged 2026-10-17** (`58f1fa6`, a cleanup;
+  `mail/received/20261017-224314Z-@datadungeon--datadungeon-v0-15-0-is-tagged-5a81fe4f.md`):
+  wording names are `owner:name[@version]`, a `/` refused; `recipe_fields`
+  dropped; stores from before 0.12 must go through 0.14 first. Nothing for
+  mj, which has no DataDungeon dependency; its own store would start on it.
 - **`@overlore`** (was `@infocomics`): asked for `shoot_batch`
   (2026-10-11, mainly because shots were drawn one at a time; concurrency
   fixed that the same day, `c7181a7`). **Parked by them** the same day,
