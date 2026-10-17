@@ -181,10 +181,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   key, `eleven_v3` and Eleven Music. **Key live 2026-10-17** (`just
   env-pull` from cyclops, service restarted; Thomas asked): `speak` with
   `provider: elevenlabs`, `model: eleven_v3` works, though `voices` lists
-  models only to v2.5 (arcana-ai's list). Eleven Music isn't in `mj:voice`;
-  Thomas is arranging a music tool with a new key. Told them, with the
-  frames so far
+  models only to v2.5 (arcana-ai's list). Told them, with the frames so far
   (`mail/sent/20261017-062622Z-@overlore--elevenlabs-in-mj-voice-and-frames.md`).
+  Thomas then widened the key's permissions (same key; `user_read` works
+  now), and `mj:voice` got a `music` tool (Eleven Music) and lists
+  `eleven_v3` (not yet committed in the code repo); told them the same day
+  (`mail/sent/*-@overlore--music-in-mj-voice.md`).
 - **`@cyclops`**: secrets and deploy conventions. Settled 2026-10-13; the
   repo `.env` stays until cyclops ships a fish export format, and it will
   ping when it does (`TODO.md`, "secrets / deploy").
