@@ -282,7 +282,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   flipbook's unusable marks). Mouths are a separate layer chosen by the
   cues, not graph nodes. mj's preview is now driven by it (`bard-preview/
   build.py`). Next if wanted: the flipbook editing links and groups; then
-  Overlore playing the same compiled graph.
+  Overlore playing the same compiled graph. **Graph and walker delivered**
+  the same day (`outtake/bard-overlore-graph/`: graph.json with a frame
+  table, frames/, bard-walker.js; `mail/sent/20261018-071956Z-@overlore--bard-animation-graph.md`).
+  **The song for talk c** (Thomas approved, 2026-10-18): song #28's verse
+  with c-2 added in its style (`outtake/bard-sung/take-music-28c2c.mp3`,
+  made by uploading #28 and inpainting with music_v2_5; c-2's words
+  changed to Overlore's "Soon, soon! So tell me where to send / a letter to
+  an early friend"; he sings "Soon!" once, kept). Sent with the re-recorded
+  spoken c-2 (`mail/sent/20261018-074744Z-@overlore--the-song-for-talk-c.md`).
   **Open:** strum positions (Thomas, 2026-10-18: the poses are
   close, and only the hand just above the strings is missing; his wording,
   "touching the strings, most of the hand above them", left the hand in
