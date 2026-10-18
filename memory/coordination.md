@@ -291,6 +291,10 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   changed to Overlore's "Soon, soon! So tell me where to send / a letter to
   an early friend"; he sings "Soon!" once, kept). Sent with the re-recorded
   spoken c-2 (`mail/sent/20261018-074744Z-@overlore--the-song-for-talk-c.md`).
+  **Final: `take-music-28c2d`** (Thomas: "perfect"): the second "soon"
+  spliced back in from a copy of the sung word (`outtake/bard-sung/soonsoon.py`),
+  so c-2's words stand in full; sent as a correction
+  (`mail/sent/20261018-081211Z-@overlore--the-song-for-talk-c-final.md`).
   **Open:** strum positions (Thomas, 2026-10-18: the poses are
   close, and only the hand just above the strings is missing; his wording,
   "touching the strings, most of the hand above them", left the hand in
