@@ -219,7 +219,18 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   poses at their offsets on the 848x1264 stage, mouths stacked in place,
   cues from our `bard-preview/` Rhubarb runs; checked in headless Chromium.
   Pose changes are cuts and the song plays in the still play pose until
-  strums and inbetweens come. **Open:** strum positions (Thomas, 2026-10-18: the poses are
+  strums and inbetweens come. **Voices and song delivered 2026-10-18**
+  (Thomas: off the old OpenAI voice; `mail/sent/20261018-021441Z-@overlore--bard-voices-and-song.md`):
+  all nine lines in Henry (1.1x) and the Announcer, eleven_v3, and c-1+c-2
+  sung as one song plus c-3 sung, with cues, in `outtake/bard-overlore-voice/`.
+  **Thomas's notes, 2026-10-18:** the closed "m" mouth reads as cross at
+  rest and at the end (a resting smile X was made for every pose); the
+  cartoon's eyes were closed in every play frame (open-eyed play mouths
+  made, strum hands pasted on); the body must move while he talks (head and
+  body to be split into layers: heads carry mouths, bodies carry strums and
+  gestures; a marionette sway is in mj's preview); the realistic Bard
+  smiles on some syllables (later). None of this delivered yet.
+  **Open:** strum positions (Thomas, 2026-10-18: the poses are
   close, and only the hand just above the strings is missing; his wording,
   "touching the strings, most of the hand above them", left the hand in
   place on both sets, `outtake/bard-strum/prompt.txt`); inbetweens.
