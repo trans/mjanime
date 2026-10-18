@@ -238,7 +238,11 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   decoded up front (stacked images blinked black for Thomas), so new
   frames need only the same naming and offsets. Thomas prefers song #28
   (the first c-1 take) to the c1c2 song (#32); extending #28 with c-2 is
-  proposed, not started.
+  proposed, not started. **Cartoon first** (Thomas, 2026-10-18): get the
+  cartoon Bard working, then consider the realistic one. Gestures for the
+  cartoon's beckon, present and write are made (Nano edits of the arm, the
+  talking heads pasted on, `outtake/bard-gesture/`), cycled while he talks
+  (present 1, 3, 2, 3 is Thomas's come-hither). No crossfades (Thomas).
   **Open:** strum positions (Thomas, 2026-10-18: the poses are
   close, and only the hand just above the strings is missing; his wording,
   "touching the strings, most of the hand above them", left the hand in
