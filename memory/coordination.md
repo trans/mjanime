@@ -205,8 +205,19 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   (`mail/sent/20261017-062622Z-@overlore--elevenlabs-in-mj-voice-and-frames.md`).
   Thomas then widened the key's permissions (same key; `user_read` works
   now), and `mj:voice` got a `music` tool (Eleven Music) and lists
-  `eleven_v3` (not yet committed in the code repo); told them the same day
+  `eleven_v3` (committed `605031a`); told them the same day
   (`mail/sent/*-@overlore--music-in-mj-voice.md`).
+  **Talking frames delivered 2026-10-18** (Thomas: deliver what's done, so
+  the site can run talks while strums and inbetweens come;
+  `mail/sent/20261018-010830Z-@overlore--bard-talking-frames.md`): 40 mouth
+  frames and the 3 bows in `outtake/bard-overlore-frames/` with
+  `manifest.json` (made by its `build.py`). Each frame keeps its offset in
+  the 848x1264 render; a pose's mouths share one crop; recipes give
+  `prompt` as sent. Also told them `credits` became `billed_characters`
+  and `usd`. **Open:** strum positions (Thomas, 2026-10-18: the poses are
+  close, and only the hand just above the strings is missing; his wording,
+  "touching the strings, most of the hand above them", left the hand in
+  place on both sets, `outtake/bard-strum/prompt.txt`); inbetweens.
 - **`@cyclops`**: secrets and deploy conventions. Settled 2026-10-13; the
   repo `.env` stays until cyclops ships a fish export format, and it will
   ping when it does (`TODO.md`, "secrets / deploy").
