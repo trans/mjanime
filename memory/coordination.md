@@ -310,7 +310,19 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   preset, a phase-vocoder monotone at his 241 Hz, and that at 11 kHz /
   8-bit (8 kHz, or the preset's drive on the monotone, lost the words to
   Whisper); `mail/sent/20261018-200936Z-@overlore--robot-voice-for-i-dont-know-the-word.md`.
-  Overlore is trying an LPC vocoder too; Thomas picks.
+  Overlore is trying an LPC vocoder too; Thomas picks. **Closed** the same
+  day (`mail/received/20261018-202055Z-@overlore--re-robot-versions-of-i-don-t-know-the-word-ce008482.md`):
+  Thomas kept Overlore's LPC take. Of mj's, Thomas liked the monotone's tone
+  best, but it sat at about -20 LUFS against Overlore's -16.6 (mj matched
+  the take's peak, not its loudness); raised 5 dB, it still lost. Lesson:
+  match loudness (LUFS) when making takes to compare or splice in.
+  **The realistic present pose is broken** (Thomas, 2026-10-18: the lute's
+  neck doesn't line up with its body; #198, and its mouths and three
+  gestures made from it, are marked unusable in the flipbook). One mend
+  edit made: `outtake/bard-poses/fantasy-present-lute` (#321), the lute
+  now across his hips, neck straight out to the right. **Waiting on
+  Thomas**; if it's good, carry the mend into the six mouths and three
+  gestures as new frames.
   **Open:** strum positions (Thomas, 2026-10-18: the poses are
   close, and only the hand just above the strings is missing; his wording,
   "touching the strings, most of the hand above them", left the hand in
