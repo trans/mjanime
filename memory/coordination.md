@@ -214,7 +214,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   `manifest.json` (made by its `build.py`). Each frame keeps its offset in
   the 848x1264 render; a pose's mouths share one crop; recipes give
   `prompt` as sent. Also told them `credits` became `billed_characters`
-  and `usd`. **Open:** strum positions (Thomas, 2026-10-18: the poses are
+  and `usd`. **In their landing page** (`be55b4a` there, not deployed;
+  `mail/received/20261018-011555Z-@overlore--re-the-bard-s-talking-frames-in-the-page-70e792e9.md`):
+  poses at their offsets on the 848x1264 stage, mouths stacked in place,
+  cues from our `bard-preview/` Rhubarb runs; checked in headless Chromium.
+  Pose changes are cuts and the song plays in the still play pose until
+  strums and inbetweens come. **Open:** strum positions (Thomas, 2026-10-18: the poses are
   close, and only the hand just above the strings is missing; his wording,
   "touching the strings, most of the hand above them", left the hand in
   place on both sets, `outtake/bard-strum/prompt.txt`); inbetweens.
