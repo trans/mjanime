@@ -320,9 +320,19 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   neck doesn't line up with its body; #198, and its mouths and three
   gestures made from it, are marked unusable in the flipbook). One mend
   edit made: `outtake/bard-poses/fantasy-present-lute` (#321), the lute
-  now across his hips, neck straight out to the right. **Waiting on
-  Thomas**; if it's good, carry the mend into the six mouths and three
-  gestures as new frames.
+  now across his hips, neck straight out to the right; Thomas: fine, but
+  he doesn't look at the camera. **Thomas's fix instead** (2026-10-18):
+  just take off the neck above his shoulder, in present and wherever the
+  lute is slung behind him (write, bow), since the lute is short when he
+  plays. **Done in place** by `outtake/bard-poses/mend_neck.py`: one clean
+  picture per pose (#321 for present; Nano edits `fantasy-write-noneck`
+  #323 and `fantasy-bow-noneck` #322), its neck area pasted onto all 38
+  frames (present: pose, gaze, 6 mouths, 3 gestures x 7; write: pose,
+  gaze, 6 mouths; bow); originals kept as `prop-neck.png`. The frames line
+  up with their poses (1-3 levels of 255 around the patch). Thomas's
+  unusable marks are still on the present frames, for Thomas to clear.
+  Overlore's `graph.json` copy of the realistic frames predates this:
+  rebuild before the realistic Bard is used.
   **Open:** strum positions (Thomas, 2026-10-18: the poses are
   close, and only the hand just above the strings is missing; his wording,
   "touching the strings, most of the hand above them", left the hand in
