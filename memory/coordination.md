@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-17*
+*Updated 2026-10-18*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -295,6 +295,22 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   spliced back in from a copy of the sung word (`outtake/bard-sung/soonsoon.py`),
   so c-2's words stand in full; sent as a correction
   (`mail/sent/20261018-081211Z-@overlore--the-song-for-talk-c-final.md`).
+  **Car-salesman skit** (Thomas and Overlore, script finished 2026-10-18):
+  Overlore is making its voices itself; Thomas will come back to mj for the
+  poses once they've heard them, possibly on the realistic Bard. mj's pose
+  sketch (finger-gun, arms wide, counting, "but wait", stage whisper, hand
+  on heart, shrug, hourglass, sign here, wink) is in the session, not built.
+  Thomas will mark the realistic Bard's unusable frames in the flipbook
+  (filter "fantasy", 63 frames) before any are used. **Open.** Overlore's
+  voice is the Announcer (eleven_v3), played at 1.15x. **Robot phrase
+  asked** the same day (`mail/received/20261018-173753Z-@overlore--a-robot-voice-for-one-phrase-in-the-bard-s-salesma-4eeff115.md`):
+  he imitates the old parser's "I don't know the word!", and v3's [robotic]
+  tag did nothing. **Sent** three takes with the same 1.200 s timing
+  (`outtake/salesman-robot/`, `robot.py`): the Sound Box's Full Robot
+  preset, a phase-vocoder monotone at his 241 Hz, and that at 11 kHz /
+  8-bit (8 kHz, or the preset's drive on the monotone, lost the words to
+  Whisper); `mail/sent/20261018-200936Z-@overlore--robot-voice-for-i-dont-know-the-word.md`.
+  Overlore is trying an LPC vocoder too; Thomas picks.
   **Open:** strum positions (Thomas, 2026-10-18: the poses are
   close, and only the hand just above the strings is missing; his wording,
   "touching the strings, most of the hand above them", left the hand in
