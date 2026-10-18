@@ -250,7 +250,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   him, set to his right as seen), a "caught" frame on the 848x1264 stage
   (wide-eyed, mouth closed or a small o, hands at his belt), a sidling
   frame if easy, and three sounds (whistled tune 3-4 s, water stream 3-4 s
-  that stops cleanly, a zipper ~0.5 s). **Open.**
+  that stops cleanly, a zipper ~0.5 s). **Reworked by Thomas the same day**
+  (`mail/received/20261018-042818Z-@overlore--re-the-bush-gag-changed-no-stream-or-zip-a476471c.md`):
+  the bush rises where he'll stand, whistling, the visitor types "> Hello."
+  and the whistling stops dead, "Huh?" (Thomas records it), the bush slides
+  away left. Still wanted: the bush (his height plus a bit, wider than him,
+  hiding feathers and lute), the caught frame, a whistled tune 3-4 s that
+  can be cut mid-phrase. Dropped: the stream, the zip, the sidling frame.
+  A landscape rising from below is for later. **Open.**
   **Moves between poses** (Thomas, 2026-10-18: each pose has its gesture
   group but nothing joins them). Chained Nano edits failed (a second lute,
   doubled quills; the write pose itself had two quills, now mended in every
