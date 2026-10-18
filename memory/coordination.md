@@ -274,6 +274,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   Thomas after a second take ("the video is awful, far too many issues"):
   no video moves; poses cut. Lesson: inspect generated frames at full size,
   frame by frame, before showing them; a contact sheet hid the errors.
+  **Animation state graph built 2026-10-18** (Thomas's idea: a graph of
+  acceptable paths, walked in a variety of ways): `outtake/bard-graph/
+  graph.yml` (body nodes by frame folder, groups, weighted edges, a walk
+  rule per pose: cycle / random / beat / pause / hold, moves between poses)
+  and `graph.py` (checks frames exist, compiles neighbour lists, applies the
+  flipbook's unusable marks). Mouths are a separate layer chosen by the
+  cues, not graph nodes. mj's preview is now driven by it (`bard-preview/
+  build.py`). Next if wanted: the flipbook editing links and groups; then
+  Overlore playing the same compiled graph.
   **Open:** strum positions (Thomas, 2026-10-18: the poses are
   close, and only the hand just above the strings is missing; his wording,
   "touching the strings, most of the hand above them", left the hand in
