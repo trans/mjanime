@@ -297,6 +297,16 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   (`mail/sent/20261018-081211Z-@overlore--the-song-for-talk-c-final.md`).
   **Which Bard where** (Thomas, 2026-10-18): the realistic Bard does the
   salesman pitch, the cartoon Bard the song (landing page, talk c).
+  **Salesman poses, first batch made** (2026-10-18, Thomas: "I trust you";
+  `outtake/bard-pitch/`, flipbook #324-353, $0.83): a base (`fantasy-base`,
+  from the mended write pose: hands free, looking at the viewer, lute
+  behind his hip) with its six mouths ("oo" redone: the first frowned,
+  kept as `fantasy-base-F-frown`), and pointing, arms spread and finger up,
+  arm-only edits of the base with its heads pasted on by `compose.py`
+  (spread's neck taken off by a box patch; the full no-neck edit turned
+  the lute round). Script beats mapped to poses in the session; next:
+  robot arms, counting x3, patting the lute, minding the lute, hand on
+  heart, leaning in, wink. Not in the graph yet.
   **Car-salesman skit** (Thomas and Overlore, script finished 2026-10-18):
   Overlore is making its voices itself; Thomas will come back to mj for the
   poses once they've heard them, possibly on the realistic Bard. mj's pose
