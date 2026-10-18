@@ -304,9 +304,19 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   kept as `fantasy-base-F-frown`), and pointing, arms spread and finger up,
   arm-only edits of the base with its heads pasted on by `compose.py`
   (spread's neck taken off by a box patch; the full no-neck edit turned
-  the lute round). Script beats mapped to poses in the session; next:
-  robot arms, counting x3, patting the lute, minding the lute, hand on
-  heart, leaning in, wink. Not in the graph yet.
+  the lute round). Thomas: all usable but #353 (the turned lute).
+  **Second batch made** the same day (flipbook #354-412, $0.76): counting
+  two and three (from finger up, which is "one"), robot arms (sideways,
+  redone once: the first lost the lute), patting the lute, minding the
+  lute (hugged in front), hand on heart (redone: the first lost the
+  lute), the secret hand (laid over the heads), thumbs-up (the wink's
+  body under the talking heads) and the wink (its own frame). `compose.py`
+  now keeps only the moving face from the heads (a head box left a seam
+  across his throat). All in `bard-graph/graph.yml` (realistic set, a
+  pose each; counting walks one-two-three at pauses: the walker's and the
+  preview's "pause" rule now takes an `order`). **Waiting on Thomas** to
+  look; then send Overlore the poses, graph.json, the walker and the
+  line-by-line pose map.
   **Car-salesman skit** (Thomas and Overlore, script finished 2026-10-18):
   Overlore is making its voices itself; Thomas will come back to mj for the
   poses once they've heard them, possibly on the realistic Bard. mj's pose
