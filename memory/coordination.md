@@ -263,7 +263,10 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   doubled quills; the write pose itself had two quills, now mended in every
   write frame). A first-and-last-frame video (LTX-2.5 Pro on Runware,
   present -> write, $0.72) keyed cleanly and, scaled back onto the stage,
-  matches both poses to 1 px (`outtake/bard-move-video/`).
+  matches both poses to 1 px (`outtake/bard-move-video/`). **Rejected** by
+  Thomas after a second take ("the video is awful, far too many issues"):
+  no video moves; poses cut. Lesson: inspect generated frames at full size,
+  frame by frame, before showing them; a contact sheet hid the errors.
   **Open:** strum positions (Thomas, 2026-10-18: the poses are
   close, and only the hand just above the strings is missing; his wording,
   "touching the strings, most of the hand above them", left the hand in
