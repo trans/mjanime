@@ -295,6 +295,8 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   spliced back in from a copy of the sung word (`outtake/bard-sung/soonsoon.py`),
   so c-2's words stand in full; sent as a correction
   (`mail/sent/20261018-081211Z-@overlore--the-song-for-talk-c-final.md`).
+  **Which Bard where** (Thomas, 2026-10-18): the realistic Bard does the
+  salesman pitch, the cartoon Bard the song (landing page, talk c).
   **Car-salesman skit** (Thomas and Overlore, script finished 2026-10-18):
   Overlore is making its voices itself; Thomas will come back to mj for the
   poses once they've heard them, possibly on the realistic Bard. mj's pose
