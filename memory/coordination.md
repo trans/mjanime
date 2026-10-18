@@ -319,7 +319,10 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   we'll see how it plays". **Sent** the same day: the rebuilt graph
   package (`outtake/bard-overlore-graph/`, 226 frames) with a pose for
   each line (`mail/sent/20261018-225627Z-@overlore--salesman-pitch-poses.md`);
-  present left out of the map until Thomas clears its marks.
+  present left out of the map until Thomas clears its marks. **Tin robot
+  arms** tried for the robot line (Thomas: "it might be funny"):
+  `bard-pitch/fantasy-tinrobot`, flipbook #413-419, in the graph as pose
+  `tinrobot`; not sent to Overlore yet, waiting on Thomas.
   **Car-salesman skit** (Thomas and Overlore, script finished 2026-10-18):
   Overlore is making its voices itself; Thomas will come back to mj for the
   poses once they've heard them, possibly on the realistic Bard. mj's pose
