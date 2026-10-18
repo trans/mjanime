@@ -243,6 +243,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   cartoon's beckon, present and write are made (Nano edits of the arm, the
   talking heads pasted on, `outtake/bard-gesture/`), cycled while he talks
   (present 1, 3, 2, 3 is Thomas's come-hither). No crossfades (Thomas).
+  **Entrance gag asked 2026-10-18** (Thomas's idea, via `@overlore`,
+  `mail/received/20261018-032817Z-@overlore--a-gag-entrance-for-the-cartoon-bard-a-bush-a-caugh-cf132693.md`):
+  the cartoon Bard behind a bush (whistling, a stream, a zip), sliding out
+  wide-eyed. Wanted: a bush cut-out in his style (taller and wider than
+  him, set to his right as seen), a "caught" frame on the 848x1264 stage
+  (wide-eyed, mouth closed or a small o, hands at his belt), a sidling
+  frame if easy, and three sounds (whistled tune 3-4 s, water stream 3-4 s
+  that stops cleanly, a zipper ~0.5 s). **Open.**
   **Open:** strum positions (Thomas, 2026-10-18: the poses are
   close, and only the hand just above the strings is missing; his wording,
   "touching the strings, most of the hand above them", left the hand in
