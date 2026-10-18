@@ -315,8 +315,11 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   across his throat). All in `bard-graph/graph.yml` (realistic set, a
   pose each; counting walks one-two-three at pauses: the walker's and the
   preview's "pause" rule now takes an `order`). **Waiting on Thomas** to
-  look; then send Overlore the poses, graph.json, the walker and the
-  line-by-line pose map.
+  look. Thomas: patting the lute out (#384-390, no neck), robot "fine,
+  we'll see how it plays". **Sent** the same day: the rebuilt graph
+  package (`outtake/bard-overlore-graph/`, 226 frames) with a pose for
+  each line (`mail/sent/20261018-225627Z-@overlore--salesman-pitch-poses.md`);
+  present left out of the map until Thomas clears its marks.
   **Car-salesman skit** (Thomas and Overlore, script finished 2026-10-18):
   Overlore is making its voices itself; Thomas will come back to mj for the
   poses once they've heard them, possibly on the realistic Bard. mj's pose
