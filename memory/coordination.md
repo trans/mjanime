@@ -230,6 +230,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   body to be split into layers: heads carry mouths, bodies carry strums and
   gestures; a marionette sway is in mj's preview); the realistic Bard
   smiles on some syllables (later). None of this delivered yet.
+  **Voices and song in their page** (`0ba1b7f` there, not deployed;
+  `mail/received/20261018-024740Z-@overlore--re-the-bard-s-elevenlabs-voices-and-his-song-in-th-4df579f9.md`):
+  Henry or the Announcer at random, recorded at signup; talk c plays the
+  c1c2 song, bow, email, then c-3 (sung by default, `?c3=spoken`); all
+  takes evened to -18 LUFS. Frames now go on a canvas, each pose's frames
+  decoded up front (stacked images blinked black for Thomas), so new
+  frames need only the same naming and offsets. Thomas prefers song #28
+  (the first c-1 take) to the c1c2 song (#32); extending #28 with c-2 is
+  proposed, not started.
   **Open:** strum positions (Thomas, 2026-10-18: the poses are
   close, and only the hand just above the strings is missing; his wording,
   "touching the strings, most of the hand above them", left the hand in
