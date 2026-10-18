@@ -251,6 +251,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   (wide-eyed, mouth closed or a small o, hands at his belt), a sidling
   frame if easy, and three sounds (whistled tune 3-4 s, water stream 3-4 s
   that stops cleanly, a zipper ~0.5 s). **Open.**
+  **Moves between poses** (Thomas, 2026-10-18: each pose has its gesture
+  group but nothing joins them). Chained Nano edits failed (a second lute,
+  doubled quills; the write pose itself had two quills, now mended in every
+  write frame). A first-and-last-frame video (LTX-2.5 Pro on Runware,
+  present -> write, $0.72) keyed cleanly and, scaled back onto the stage,
+  matches both poses to 1 px (`outtake/bard-move-video/`).
   **Open:** strum positions (Thomas, 2026-10-18: the poses are
   close, and only the hand just above the strings is missing; his wording,
   "touching the strings, most of the hand above them", left the hand in
