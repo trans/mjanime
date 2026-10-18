@@ -257,7 +257,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   away left. Still wanted: the bush (his height plus a bit, wider than him,
   hiding feathers and lute), the caught frame, a whistled tune 3-4 s that
   can be cut mid-phrase. Dropped: the stream, the zip, the sidling frame.
-  A landscape rising from below is for later. **Open.**
+  A landscape rising from below is for later. **Corrected the same day**
+  (`mail/received/20261018-044621Z-@overlore--re-the-bush-gag-the-stream-and-zip-are-back-in-sor-b7929c3d.md`):
+  the stream and the zip are back in (they say what he was doing). Order:
+  whistling and the stream; "> Hello." and both stop dead; "Huh?"; the zip;
+  the bush slides left and he's caught. Wanted: the bush, the caught frame,
+  and three sounds: the whistle (loops while the prompt waits, or cuts
+  mid-phrase), the stream (loops, stops dead), the zip (~0.5 s). No sidling
+  frame. **Open.**
   **Moves between poses** (Thomas, 2026-10-18: each pose has its gesture
   group but nothing joins them). Chained Nano edits failed (a second lute,
   doubled quills; the write pose itself had two quills, now mended in every
