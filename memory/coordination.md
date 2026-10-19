@@ -392,7 +392,10 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   Thomas, via Overlore, "in the images the bard holds the paper facing
   him, so we see no writing" (frames checked: the scroll is blank;
   `mail/received/20261019-194317Z-@overlore--the-quill-moves-*`), so both
-  play backwards too. Format, `graph.py`, `bard-walker.js`
+  play backwards too. Overlore copied it in and played talk a: after the
+  written line the move runs backwards (f145 to f073), then the bow, no
+  errors; uncommitted on its side until Thomas says
+  (`mail/received/20261019-200627Z-@overlore--re-the-quill-moves-*`). Format, `graph.py`, `bard-walker.js`
   (`move(from, to, {abnormal})`) and the preview changed, tested in Node;
   **sent** (`mail/sent/20261019-191809Z-@overlore--the-bard-s-graph-*`).
   Overlore copied it into the landing (`landing/public/bard/`, uncommitted
