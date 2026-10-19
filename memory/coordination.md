@@ -172,7 +172,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   took 30-76 s at 21:16-21:21Z, and the dated gpt-4o-mini-tts-2025-12-15
   (pinned so a voice doesn't drift) got no `usd`. Timed 22:14-22:19Z: 1.8-6.9 s
   direct, 1.2-5.3 s through mj:voice, so the slowness was OpenAI's at the
-  time. **Fixed, not yet committed:** mj:voice takes OpenAI's price from
+  time. **Fixed in `4a4cbe0`:** mj:voice takes OpenAI's price from
   arcana-ai (the tokens its event stream reports; a dated snapshot at its
   model's rates), exact, with TtsRates only as the fallback; service rebuilt
   and restarted 22:18Z (old binary kept as `bin/mj-arcana.prev`), checked
@@ -516,8 +516,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   `synthesize` prices gpt-4o-mini-tts without streaming (SSE for every
   model but tts-1/tts-1-hd), so mj's own OpenAI rates can go; **Open:**
   take gpt-4o-mini-tts's `cost` from arcana-ai after a test call (**done
-  2026-10-19, not yet committed**, see `@overlore` above: exact from the
-  reported tokens), and mj
+  in `4a4cbe0`**, see `@overlore` above: exact from the reported tokens), and mj
   asked @arcana to price tts-1/tts-1-hd from the text length ($15/$30 per
   1M characters) so all of mj's rates can go
   (`mail/sent/20261019-194513Z-@arcana--re-0.5.5-committed-*`). arcana-ai
