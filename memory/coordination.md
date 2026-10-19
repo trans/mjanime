@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-18*
+*Updated 2026-10-19*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -17,7 +17,17 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
 
 ## Correspondents
 
-- **`@datadungeon`**: picture prompts. mj sent the design (order, groups,
+- **`@datadungeon`**: notices to every app go to the Arcana topic
+  `#datadungeon` (Thomas, 2026-10-19,
+  `mail/received/20261019-215533Z-@datadungeon--*`); requests to one app
+  still come as mail. Not subscribed (Thomas: later), so read it on "check
+  mail": **read through post 2.** Post 1, v0.15.2: the standard asset types,
+  `subtype`, and `automaton` (the Bard graph); stores move onto the types
+  one at a time, Overlore last. Post 2, v0.15.3: a take's tracks,
+  `words` and `mouth` (`{start_ms, end_ms, value}` cues, naming the tool),
+  which mj:voice's word times could feed (`TODO.md`). mj has no DataDungeon
+  dependency, so neither needs anything here.
+  Picture prompts. mj sent the design (order, groups,
   `framing`, `light`, `changes`) to them, `@overlore` and `@owl` on
   2026-10-14 (`mail/sent/*-picture-prompt-design.md`; the note is
   `notes/picture-prompt-design-v1.md` at `f712770`), and `view.cr` for
@@ -147,8 +157,29 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   20:10Z; checked through the live bus. Told Overlore, and asked about
   27 doubled ElevenLabs takes in the account's history since 2026-10-17
   (mostly 2026-10-18 16:54-17:42Z, the pitch; about $0.44; route unknown,
-  mj's service log has nothing then); **waiting** on its answer
+  mj's service log has nothing then)
   (`mail/sent/20261019-201106Z-@overlore--mj-camera-*`, `…201130Z-*`).
+  **Answered** (`mail/received/20261019-202608Z-@overlore--re-the-doubled-takes-*`
+  and two corrections after it): all Overlore's, through mj:voice, from its
+  bus client's address `overlore` (no @); about 16 of the 27 are takes on
+  purpose (two voices, or two takes to choose from) or the same length with
+  different text, one a real repeat. The rest, if any, could only be the
+  game started for mj:voice and ElevenLabs. Thomas decided the same day
+  that each voice names its own provider, so the game's provider switch is
+  going. Settled; nothing to do.
+  **mj:voice's OpenAI side** (Overlore, 2026-10-19,
+  `mail/received/20261019-212307Z-@overlore--mj-voice-s-openai-*`): calls
+  took 30-76 s at 21:16-21:21Z, and the dated gpt-4o-mini-tts-2025-12-15
+  (pinned so a voice doesn't drift) got no `usd`. Timed 22:14-22:19Z: 1.8-6.9 s
+  direct, 1.2-5.3 s through mj:voice, so the slowness was OpenAI's at the
+  time. **Fixed, not yet committed:** mj:voice takes OpenAI's price from
+  arcana-ai (the tokens its event stream reports; a dated snapshot at its
+  model's rates), exact, with TtsRates only as the fallback; service rebuilt
+  and restarted 22:18Z (old binary kept as `bin/mj-arcana.prev`), checked
+  over the bus. Clip length varies take to take (2.9-6.6 s for four words),
+  mostly in pauses. Told them
+  (`mail/sent/20261019-221942Z-@overlore--re-mj-voice-s-openai-*`, with two
+  corrections of my test calls' times and count after it).
   **The Bard, head to toe, cut out** for overlore.xyz, asked 2026-10-15
   (`mail/received/*-@overlore--bard-full-figure-*.md`): three candidates
   made with `mj prop` (two fantasy poses, and the golden-style cartoon
@@ -484,7 +515,9 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   (`mail/received/20261019-193939Z-@arcana--go-ahead-*`). @arcana also says
   `synthesize` prices gpt-4o-mini-tts without streaming (SSE for every
   model but tts-1/tts-1-hd), so mj's own OpenAI rates can go; **Open:**
-  take gpt-4o-mini-tts's `cost` from arcana-ai after a test call, and mj
+  take gpt-4o-mini-tts's `cost` from arcana-ai after a test call (**done
+  2026-10-19, not yet committed**, see `@overlore` above: exact from the
+  reported tokens), and mj
   asked @arcana to price tts-1/tts-1-hd from the text length ($15/$30 per
   1M characters) so all of mj's rates can go
   (`mail/sent/20261019-194513Z-@arcana--re-0.5.5-committed-*`). arcana-ai
