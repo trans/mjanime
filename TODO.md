@@ -26,6 +26,10 @@
     `SUCCEEDED` with no partial completion, so for that lane the honest answer may be one message when
     the whole lot lands.
 - **`mj:voice` concurrency** — unmeasured; needs the ElevenLabs plan tier and a key on this host.
+- **Word times from `mj:voice`** (candidate, 2026-10-19): ElevenLabs' `with-timestamps` speech
+  endpoint returns each character's start and end; untested with `eleven_v3`. Returned as cues in
+  the shape of DataDungeon's `words` track (`{start_ms, end_ms, value}`, v0.15.3), an app could
+  store a take's word times as they come, for choreography, instead of aligning them again.
 - **Reference-order A/B** — whether providers weight the first reference most. The claim was removed
   from the schema as unverified; it stays unverified until measured.
 - **URL pass-through to providers** — all three accept image URLs and Google is verified to fetch them,

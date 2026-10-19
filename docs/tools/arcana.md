@@ -386,6 +386,7 @@ Same OpenAI provider as arcana's old `openai:tts`, so migration is close to a re
 differences: **ElevenLabs is offered** (it was fully implemented in `arcana-ai` and simply never
 wired to the bus), and it accepts **`previous_text` / `next_text`** for prosody continuity across
 consecutive lines — the thing that stops synthesized narration sounding like a list of sentences.
+`eleven_v3` refuses `previous_text` with a 400 (Overlore, 2026-10-18).
 
 Returns `audio_base64` unless `output_path` is given. **Omit `voice` to get the provider's own
 default** — arcana-ai 0.3.0 changed `TTS::Request`'s defaults to `""` for this reason: the old
@@ -405,15 +406,21 @@ computed, and the trap is assuming one billing unit. **The two providers do not 
 
 | model | billed on | what we report |
 | --- | --- | --- |
-| `gpt-4o-mini-tts` (OpenAI default) | tokens — $0.60/1M input chars **+ $12/1M audio output tokens** | estimated from **measured duration** at $0.015/min, OpenAI's published composite |
+| `gpt-4o-mini-tts` (OpenAI default), and its dated snapshots | tokens — $0.60/1M input **+ $12/1M audio output tokens** | **exact** — the tokens OpenAI reports, priced by arcana-ai; a snapshot (`gpt-4o-mini-tts-2025-12-15`) at its model's rates |
 | `tts-1` / `tts-1-hd` | characters, $15 / $30 per 1M | **exact** — computable from the text alone |
 | ElevenLabs | the characters it bills, at a rate per model | **exact** — `billed_characters` from ElevenLabs' `character-cost` header, priced by arcana-ai |
+
+OpenAI reports a call's tokens only when it answers in events (`stream_format: "sse"`), which
+arcana-ai (0.5.5 on) asks for on every model but tts-1 and tts-1-hd. A reply that comes back without
+them falls back to an estimate from measured duration at $0.015/min, OpenAI's published composite,
+with `usd_exact` false. Until 2026-10-19 that estimate was all mj reported for gpt-4o-mini-tts, and
+a dated snapshot got no price at all.
 
 `usd_exact` says which rule applied, and `usd_basis` spells it out in words. A `usd` of `null` means
 genuinely unknown — never a guess dressed as a figure, because it would land in the caller's ledger
 as fact.
 
-**Why duration and not characters for the token-billed model.** For ordinary English prose the two
+**Why duration and not characters for the fallback.** For ordinary English prose the two
 agree closely, which makes characters look like a safe proxy. It isn't — the model decides how long
 to take. Same 133-character line, measured:
 
@@ -436,8 +443,9 @@ not the text's length: three 30-character `eleven_v3` lines on 2026-10-17 each m
 counter by 12 (checked 2026-10-19 in the speech history, `character_count_change_from`/`_to` per
 item; the key needs `speech_history_read`).
 
-Published rates drift. OpenAI's are overridable here (`MJ_OPENAI_TTS_USD_PER_MINUTE`); ElevenLabs'
-are arcana-ai's table, and `usd_basis` names its version. Unlike the camera costs — which are
+Published rates drift. The rates for reported usage are arcana-ai's table, and `usd_basis` names
+its version; the fallback's are mj's own (`TtsRates`, the per-minute one overridable with
+`MJ_OPENAI_TTS_USD_PER_MINUTE`). Unlike the camera costs — which are
 *measured* from Runware's `includeCost` — these are quoted from published price lists and should be
 re-checked.
 

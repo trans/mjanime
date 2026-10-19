@@ -2,13 +2,15 @@ require "json"
 
 module MJ
   module Arcana
-    # What an OpenAI spoken line cost — the same per-provider knowledge `cameras.cr` holds
-    # for images, for speech. ElevenLabs isn't here: it reports the characters it billed,
-    # and arcana-ai prices those (`VoiceService.elevenlabs_price`).
+    # What an OpenAI spoken line cost when OpenAI reported no usage — the same per-provider
+    # knowledge `cameras.cr` holds for images, for speech. Usage is the usual case: from
+    # arcana-ai 0.5.5 on, every model but tts-1 and tts-1-hd answers in events whose last
+    # one reports its tokens, and arcana-ai prices those (`VoiceService.price`), as it
+    # does ElevenLabs' billed characters. This is the fallback: tts-1's characters, and a
+    # token-billed reply that came back without usage.
     #
-    # Unlike Runware, OpenAI reports no price in the response (and its token usage only on
-    # a streamed reply, which mj doesn't use), so this has to be computed. The trap is
-    # assuming one billing unit: its models do not share one.
+    # Unlike Runware, OpenAI reports no price in the response, so this has to be computed.
+    # The trap is assuming one billing unit: its models do not share one.
     #
     #   OpenAI gpt-4o-mini-tts   billed per TOKEN — $0.60/1M input characters plus
     #                            $12.00/1M AUDIO OUTPUT tokens. Audio tokens track
@@ -40,11 +42,16 @@ module MJ
         if v = ENV["MJ_OPENAI_TTS_USD_PER_MINUTE"]?.try(&.to_f?)
           return v
         end
-        USD_PER_MINUTE[model]?
+        USD_PER_MINUTE[model]? || USD_PER_MINUTE[undated(model)]?
       end
 
       def self.openai_usd_per_1m_chars(model : String) : Float64?
-        USD_PER_1M_CHARS[model]?
+        USD_PER_1M_CHARS[model]? || USD_PER_1M_CHARS[undated(model)]?
+      end
+
+      # A dated snapshot (gpt-4o-mini-tts-2025-12-15) is billed at its model's rates.
+      def self.undated(model : String) : String
+        model.sub(/-\d{4}-\d{2}-\d{2}\z/, "")
       end
 
       # Returns {usd, exact?, basis}. `usd` nil means genuinely unknown — never a guess

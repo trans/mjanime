@@ -31,7 +31,7 @@ module MJ
           "format":{"type":"string","description":"mp3, wav, aac, flac, opus, pcm (default opus)."},
           "instructions":{"type":"string","description":"Style/persona direction. OpenAI only."},
           "speed":{"type":"number","description":"0.25-4.0. OpenAI only."},
-          "previous_text":{"type":"string","description":"Preceding line, for prosody continuity. ElevenLabs only."},
+          "previous_text":{"type":"string","description":"Preceding line, for prosody continuity. ElevenLabs only, and not eleven_v3, which refuses it with a 400."},
           "next_text":{"type":"string","description":"Following line, for prosody continuity. ElevenLabs only."},
           "output_path":{"type":"string","description":"Write the audio here instead of returning base64."}
         }
@@ -193,12 +193,7 @@ module MJ
                                  voice : String, format : String, text : String,
                                  seconds : Float64?)
         model = result.model
-        usd, exact, basis =
-          if provider == "elevenlabs"
-            elevenlabs_price(result)
-          else
-            TtsRates.price(provider, model, text.size, seconds)
-          end
+        usd, exact, basis = price(provider, result, text.size, seconds)
         h = {
           "status"     => JSON::Any.new("ok"),
           "provider"   => JSON::Any.new(provider),
@@ -208,8 +203,9 @@ module MJ
           "characters" => JSON::Any.new(text.size.to_i64),
           # The provider returns no price, so this is computed. `usd_exact` is the whole
           # point of reporting it: true means the billing unit is one we hold exactly
-          # (characters against a published per-character rate), false means it was derived
-          # from measured duration or a configured rate. nil usd means genuinely unknown —
+          # (the characters or tokens the provider reported, or tts-1's characters, against
+          # a published rate), false means it was derived from measured duration or a
+          # configured rate. nil usd means genuinely unknown —
           # a guess is never dressed up as a figure, because it would land in someone
           # else's ledger as fact.
           "usd"       => usd ? JSON::Any.new(usd) : JSON::Any.new(nil),
@@ -228,18 +224,32 @@ module MJ
         h
       end
 
-      # arcana-ai prices ElevenLabs from the characters it reports billing (its
-      # `character-cost` header) at the published per-model rate, so this is exact when
-      # priced. Without that header there's no usage, and the price is unknown.
-      private def self.elevenlabs_price(result : ::Arcana::AI::TTS::Result) : {Float64?, Bool, String}
+      # arcana-ai prices what the provider reports billing, at the published per-model
+      # rate, so this is exact when priced: ElevenLabs' characters (its `character-cost`
+      # header), and OpenAI's input and audio tokens (the event stream's last event, on
+      # every model but tts-1 and tts-1-hd). It prices a dated snapshot at its model's
+      # rates, so a caller pinning gpt-4o-mini-tts-2025-12-15 gets a price too (it got
+      # none from TtsRates, 2026-10-19). OpenAI without usage falls back to TtsRates:
+      # exact for tts-1's characters, an estimate from duration otherwise.
+      private def self.price(provider : String, result : ::Arcana::AI::TTS::Result,
+                             characters : Int32, seconds : Float64?) : {Float64?, Bool, String}
         case cost = result.cost
         when ::Arcana::AI::Pricing::Cost
-          line = cost.lines.first?
-          {cost.total.to_f, true,
-           line ? "ElevenLabs billed #{line.quantity} #{line.unit}, at $#{line.rate} per 1,000 (#{cost.rates})" :
-                  "priced by arcana-ai (#{cost.rates})"}
+          who = provider == "elevenlabs" ? "ElevenLabs" : "OpenAI"
+          lines = cost.lines.map { |l|
+            per = l.unit == "tokens" ? "1M" : "1,000"
+            what = l.item == l.unit ? l.unit : "#{l.item} #{l.unit}"
+            "#{l.quantity} #{what} at $#{l.rate} per #{per}"
+          }
+          basis = lines.empty? ? "priced by arcana-ai" : "#{who} billed #{lines.join(" and ")}"
+          basis += ", priced as #{cost.priced_as}" if cost.priced_as != cost.model
+          {cost.total.to_f, true, "#{basis} (#{cost.rates})"}
         else
-          {nil, false, cost.detail}
+          if provider == "openai"
+            TtsRates.price(provider, result.model, characters, seconds)
+          else
+            {nil, false, cost.detail}
+          end
         end
       end
 
