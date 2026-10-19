@@ -140,6 +140,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   fixed that the same day, `c7181a7`). **Parked by them** the same day,
   until they build a "can wait" lane for drawing ahead, which would suit
   Google's half-price batch endpoint (not used yet). Not built.
+  **Grey canvas fixed** (Thomas asked, 2026-10-19, `f5f3bc6`): Runware
+  shots with no reference are text-to-image now, not an edit of a flat
+  grey canvas (its grey survived as a sky on `klein`, which draws
+  Overlore's rooms). `bin/mj-arcana` rebuilt and the service restarted
+  20:10Z; checked through the live bus. Told Overlore, and asked about
+  27 doubled ElevenLabs takes in the account's history since 2026-10-17
+  (mostly 2026-10-18 16:54-17:42Z, the pitch; about $0.44; route unknown,
+  mj's service log has nothing then); **waiting** on its answer
+  (`mail/sent/20261019-201106Z-@overlore--mj-camera-*`, `…201130Z-*`).
   **The Bard, head to toe, cut out** for overlore.xyz, asked 2026-10-15
   (`mail/received/*-@overlore--bard-full-figure-*.md`): three candidates
   made with `mj prop` (two fantasy poses, and the golden-style cartoon
