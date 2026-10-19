@@ -46,6 +46,7 @@ require "./engine/cyclorama"
 require "./engine/sfx"
 require "./web/routes"
 require "./diorama"
+require "./flipbook"
 require "./bus_service"
 
 module MJ

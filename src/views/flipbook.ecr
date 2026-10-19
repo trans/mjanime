@@ -1,0 +1,66 @@
+<style>
+  main { max-width: none; padding: 1rem 1.5rem; }
+  #fb { display: flex; flex-direction: column; gap: 10px; }
+  #fb .bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  #fb label { display: inline; margin: 0; font-weight: normal; }
+  #fb input[type=text], #fb input[type=number], #fb select { width: auto; background: #222; color: #ddd;
+    border: 1px solid #555; border-radius: 3px; padding: 3px 6px; }
+  #fb #note { width: 100%; }
+  #fb button { padding: 3px 10px; }
+  #cols { display: flex; gap: 14px; align-items: flex-start; }
+  #lib { flex: 1; height: 640px; overflow-y: auto; background: #1d1d1d; padding: 6px; }
+  #lib h4 { margin: 10px 4px 4px; color: #aaa; font-weight: normal; }
+  .grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .card { position: relative; background: #2a2a2a; border: 2px solid transparent; cursor: pointer; }
+  .card img { height: 120px; display: block; }
+  .card .num { position: absolute; left: 2px; top: 2px; background: #000a; color: #fff; font: 12px monospace; padding: 0 3px; }
+  .card.sel { border-color: #6cf; }
+  .card.bad { opacity: .35; }
+  .card.bad::after { content: "\2715"; position: absolute; right: 3px; top: 0; color: #f55; font-size: 18px; }
+  #center { width: 430px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+  #stageWrap { position: relative; width: 403px; height: 600px; flex-shrink: 0; background: #333; }
+  #stageWrap img { position: absolute; left: 0; top: 0; height: 600px; }
+  #onion { opacity: .35; }
+  #info { font: 13px monospace; color: #ccc; word-break: break-all; }
+  #near { display: flex; flex-wrap: wrap; gap: 4px; }
+  #near .card img { height: 70px; }
+  #seq { display: flex; gap: 6px; overflow-x: auto; min-height: 112px; background: #1d1d1d; padding: 6px; }
+  #seq .item { background: #2a2a2a; border: 2px solid transparent; text-align: center; font: 11px monospace; color: #ccc; }
+  #seq .item.cur { border-color: #6cf; }
+  #seq .item img { height: 70px; display: block; margin: 0 auto; }
+  #seq .item input { width: 52px; font-size: 11px; }
+  #seq .item.drag { opacity: .4; }
+  .hint { color: #888; font-size: 13px; }
+</style>
+<div id="fb">
+  <div class="bar">
+    <input type="text" id="filter" size="28" placeholder="filter words, e.g. cartoon present" value="bard cartoon">
+    <label><input type="checkbox" id="hideBad"> hide unusable</label>
+    <span id="count" class="hint"></span>
+    <span class="hint">click: show &middot; double-click or A: add to the sequence &middot; X: mark unusable &middot; space: play</span>
+  </div>
+  <div class="bar">
+    <button id="play">Play</button> <button id="stop">Stop</button>
+    <label><input type="checkbox" id="loop" checked> loop</label>
+    <label>hold <input type="number" id="hold" value="400" min="20" step="20" style="width:5em"> ms</label>
+    <label><input type="checkbox" id="onionOn" checked> onion skin (the frame before)</label>
+    <input type="text" id="seqName" size="16" placeholder="sequence name">
+    <button id="save">Save</button>
+    <select id="load"><option value="">load a sequence…</option></select>
+    <button id="del">Delete</button> <button id="clear">Clear</button>
+    <span id="saved" class="hint"></span>
+  </div>
+  <div id="seq"></div>
+  <div id="cols">
+    <div id="lib"></div>
+    <div id="center">
+      <div id="stageWrap"><img id="onion" alt=""><img id="stage" alt=""></div>
+      <div id="info"></div>
+      <div><button id="badBtn">mark unusable (X)</button> <button id="addBtn">add to sequence (A)</button></div>
+      <input type="text" id="note" placeholder="a note on this frame">
+      <div class="hint">closest to this frame, the likeliest easy moves:</div>
+      <div id="near"></div>
+    </div>
+  </div>
+</div>
+<script src="/js/flipbook.js"></script>

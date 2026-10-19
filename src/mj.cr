@@ -13,6 +13,7 @@ when "serve", nil
   MJ::Database.setup!
   MJ::Routes.register
   MJ::Diorama.register
+  MJ::Flipbook.register
 
   # Join the Arcana bus alongside the web server (opt out with MJ_BUS=0).
   MJ::BusService.start_background unless ENV["MJ_BUS"]? == "0"
