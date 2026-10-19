@@ -374,9 +374,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   made by its agent from an automaton and a take
   (`mail/received/20261019-174852Z-@overlore--re-choreography-*`). Asked of
   mj: each pose's meaning, and rests and endings: added as `means` and
-  `kind` in `bard-graph/graph.yml`, link direction documented (both ways
-  within a pose, by design; moves one way); graph.json rebuilt and
-  **sent** (`mail/sent/20261019-190037Z-@overlore--re-choreography-*`).
+  `kind` in `bard-graph/graph.yml`; graph.json rebuilt and **sent**
+  (`mail/sent/20261019-190037Z-@overlore--re-choreography-*`). **Every
+  link and move goes both ways** (Thomas, 2026-10-19): a way that breaks
+  physics (a glass unbreaking) is flagged `reverse: abnormal`, kept for a
+  rewind gag, taken only on purpose. Both cartoon moves are flagged (the
+  words would vanish off the scroll). Format, `graph.py`, `bard-walker.js`
+  (`move(from, to, {abnormal})`) and the preview changed, tested in Node;
+  **sent** (`mail/sent/20261019-191809Z-@overlore--the-bard-s-graph-*`).
   **Car-salesman skit** (Thomas and Overlore, script finished 2026-10-18):
   Overlore is making its voices itself; Thomas will come back to mj for the
   poses once they've heard them, possibly on the realistic Bard. mj's pose
