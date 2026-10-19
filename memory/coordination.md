@@ -365,6 +365,18 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   (`mail/received/20261019-015832Z-@overlore--the-pitch-brows-is-on-the-page-c837f372.md`):
   brows from 0, surprise at 0.45 s in the silence before "WHAT?"; and, at
   Thomas's request, he holds finger while waiting for the email.
+  **Automaton and choreography** (2026-10-19; mj's TODO.md, "The Bard's
+  animation graph as an asset", has the whole thread): Thomas and
+  DataDungeon named the type `automaton`; mj proposed blocking in the
+  script and characters as assets to both
+  (`mail/sent/20261019-171409Z-@datadungeon--*`, `…171415Z-@overlore--*`).
+  Thomas then decided, with Overlore, that choreography is the app's own,
+  made by its agent from an automaton and a take
+  (`mail/received/20261019-174852Z-@overlore--re-choreography-*`). Asked of
+  mj: each pose's meaning, and rests and endings: added as `means` and
+  `kind` in `bard-graph/graph.yml`, link direction documented (both ways
+  within a pose, by design; moves one way); graph.json rebuilt and
+  **sent** (`mail/sent/20261019-190037Z-@overlore--re-choreography-*`).
   **Car-salesman skit** (Thomas and Overlore, script finished 2026-10-18):
   Overlore is making its voices itself; Thomas will come back to mj for the
   poses once they've heard them, possibly on the realistic Bard. mj's pose
