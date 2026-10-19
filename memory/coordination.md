@@ -455,3 +455,8 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   streamed reply. **Open:** @arcana's question, whether the account counts that line at 12 (the
   header) or 30 (the text). The ElevenLabs key lacks
   `speech_history_read`, so the history API can't answer it (2026-10-17).
+  mj hadn't answered until 2026-10-19 (Thomas asked):
+  `mail/sent/20261019-192754Z-@arcana--re-arcana-ai-0.5.5-*` says mj is on
+  0.5.5, uncommitted until Thomas has talked with @arcana, and that the
+  12-or-30 check needs the account's usage page or a key with
+  `speech_history_read`.
