@@ -48,8 +48,8 @@ module MJ
       # A short stable name a Camera refers to, e.g. "runware".
       abstract def name : String
 
-      # Draw a picture. `references` may be empty where a transport supports text-to-image
-      # directly; the Runware transport has no text2img route and substitutes a flat canvas.
+      # Draw a picture. `references` may be empty: then it's text-to-image, on a route the
+      # provider offers for it, never an edit of a stand-in picture.
       abstract def edit(references : Array(Bytes), prompt : String,
                         width : Int32, height : Int32, model : String,
                         extra : Hash(String, JSON::Any)?,
@@ -70,17 +70,15 @@ module MJ
                width : Int32, height : Int32, model : String,
                extra : Hash(String, JSON::Any)?,
                format : String) : GenerationResult
-        # Runware has no text-to-image route here — the reference-edit endpoint is the only
-        # way in — so an unreferenced shot gets a flat canvas to edit. That is this
-        # transport's problem, not the service's: other providers have a real generate
-        # route and should use it.
-        refs = references.empty? ? [blank_canvas(width, height)] : references
-        @client.edit_references(refs, prompt, width, height, model, extra, format)
-      end
-
-      private def blank_canvas(w : Int32, h : Int32) : Bytes
-        canvas = StumpyCore::Canvas.new(w, h, StumpyCore::RGBA.from_rgb8(128, 128, 128))
-        CanvasUtil.to_png_bytes(canvas)
+        # An unreferenced shot used to edit a flat grey canvas here, for want of a
+        # text-to-image route, and the grey could survive into the picture (a flat grey sky
+        # on `klein`, 2026-10-14). Runware takes the same task with no references as
+        # text-to-image: all seven cameras here did, 2026-10-19.
+        if references.empty?
+          @client.text_to_image(prompt, width, height, model, extra, format)
+        else
+          @client.edit_references(references, prompt, width, height, model, extra, format)
+        end
       end
     end
   end

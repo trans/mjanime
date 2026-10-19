@@ -232,8 +232,28 @@ module MJ
       task_uuid = UUID.random.to_s
       STDERR.puts "[runware] Edit(refs=#{reference_bytes.size}): model=#{model} #{width}x#{height} #{format}"
       ref_uuids = reference_bytes.map { |b| upload_image_bytes(b) }
+      body = image_task(task_uuid, ref_uuids, prompt, width, height, model, extra, format)
+      post_inference(body, task_uuid, "edit", model, width, height)
+    end
 
-      body = JSON.build do |json|
+    # Text-to-image: the same imageInference task with no references at all. Before this
+    # existed, mj:camera's Runware transport gave an unreferenced shot a flat grey canvas to
+    # edit, and the grey survived into the picture (a flat grey sky on `klein`, 2026-10-14).
+    def text_to_image(prompt : String, width : Int32, height : Int32, model : String,
+                      extra : Hash(String, JSON::Any)? = nil,
+                      format : String = "PNG") : GenerationResult
+      task_uuid = UUID.random.to_s
+      STDERR.puts "[runware] Generate: model=#{model} #{width}x#{height} #{format}"
+      body = image_task(task_uuid, [] of String, prompt, width, height, model, extra, format)
+      post_inference(body, task_uuid, "generate", model, width, height)
+    end
+
+    # The imageInference body that editing and text-to-image share; `inputs` only when
+    # there are references to give.
+    private def image_task(task_uuid : String, ref_uuids : Array(String), prompt : String,
+                           width : Int32, height : Int32, model : String,
+                           extra : Hash(String, JSON::Any)?, format : String) : String
+      JSON.build do |json|
         json.array do
           json.object do
             json.field "taskType", "imageInference"
@@ -246,18 +266,18 @@ module MJ
             json.field "outputFormat", format
             json.field "includeCost", true
             extra.try &.each { |k, v| json.field k, v }
-            json.field "inputs" do
-              json.object do
-                json.field "referenceImages" do
-                  json.array { ref_uuids.each { |u| json.string u } }
+            unless ref_uuids.empty?
+              json.field "inputs" do
+                json.object do
+                  json.field "referenceImages" do
+                    json.array { ref_uuids.each { |u| json.string u } }
+                  end
                 end
               end
             end
           end
         end
       end
-
-      post_inference(body, task_uuid, "edit", model, width, height)
     end
 
     # Background removal via Runware's imageBackgroundRemoval task (Tier 3 matting — GPU-backed,

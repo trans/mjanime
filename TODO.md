@@ -50,10 +50,13 @@
   (the failure the cow tests point at: a description asking for the thing beats a rule against it),
   and a vision check of the picture after, mainly for G. Either could be a tool on mj's bus. Until
   then DataDungeon's `flagged` and `rating`, set by people (Curio), are the backstop.
-- **Grey canvas shows through.** Runware has no text-to-image route in mj's transport, so an
-  unreferenced shot edits a flat 128-grey canvas (`src/arcana/transport.cr`). In the cow tests
-  (2026-10-14) it survived as a flat grey sky: `klein` seed 31337 in 3 of 4 prompts, `flare` once.
-  Overlore draws a room's first picture on `klein` with its theme's seed, so this can reach the game.
+- **Grey canvas shows through: fixed, 2026-10-19.** An unreferenced shot on the Runware transport
+  edited a flat 128-grey canvas, and in the cow tests (2026-10-14) the grey survived as a flat sky
+  (`klein` seed 31337 in 3 of 4 prompts, `flare` once). It's now text-to-image
+  (`RunwareClient#text_to_image`, the same task with no references): all seven Runware cameras
+  took it and drew a real sky, and the three grey `klein` cases, re-run with the same prompts and
+  seed, came back with none (checked by eye: a grey sky can be warm, which a neutral-grey count
+  misses; $0.32 to test).
 
 ## mj's own DataDungeon store
 - **Decided (Thomas, 2026-10-16): each app has its own store, mj included.** mj requires DataDungeon

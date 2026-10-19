@@ -7,8 +7,8 @@ Thomas's question (2026-10-14): "Draw a field. Draw a cow in the field. Don't dr
 field." against the same with the last two sentences swapped. Which wins?
 
 Through mj:camera on the bus (the path Overlore uses), so spend lands in mj's ledger. Note that
-mj's transport gives `klein` a flat grey canvas rather than true text-to-image
-(src/arcana/transport.cr), as in production.
+mj's transport then gave `klein` a flat grey canvas rather than true text-to-image, as in
+production; fixed 2026-10-19 (`RunwareClient#text_to_image`), so re-runs won't match these results.
 
 Three cameras, one per kind of model: `klein` (FLUX.2 Klein, diffusion), `nano` (Nano Banana 2,
 Gemini), `flare` (GPT-Image 2.5). Only klein honours a seed, so its three runs are three seeds and
