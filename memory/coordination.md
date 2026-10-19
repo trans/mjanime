@@ -361,6 +361,10 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   to life". Lesson: an expression built up in steps (brows, then eyes)
   over the same heads is cheap (one edit for a new face, none when a
   picture already has the look) and is what the pitch was missing.
+  Overlore's confirmation
+  (`mail/received/20261019-015832Z-@overlore--the-pitch-brows-is-on-the-page-c837f372.md`):
+  brows from 0, surprise at 0.45 s in the silence before "WHAT?"; and, at
+  Thomas's request, he holds finger while waiting for the email.
   **Car-salesman skit** (Thomas and Overlore, script finished 2026-10-18):
   Overlore is making its voices itself; Thomas will come back to mj for the
   poses once they've heard them, possibly on the realistic Bard. mj's pose
