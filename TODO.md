@@ -67,6 +67,19 @@
   its own. Open: where the
   store lives (Overlore's is `~/.local/share/overlore/assets.db`), and which types to register,
   since DataDungeon's standard types are still drafts.
+- **The Bard's animation graph as an asset** (Thomas, 2026-10-18: "another type of asset we should be
+  able to store in DD"). `outtake/bard-graph/graph.yml`, compiled to
+  `outtake/bard-overlore-graph/graph.json`, says which body frames may follow which, and is walked
+  fresh on each play (`bard-walker.js`). It isn't a timeline, so none of DataDungeon's draft types
+  fit: `sequence` is one fixed timeline, 3D `motion` is skeletal, and a sprite sheet's
+  `ImageAnimation` is a fixed loop. Today it could only be `data`. Sketch: the graph is one asset;
+  each frame is a prop, linked from it with its node and mouth shape in the link's data, so copying
+  the graph copies its frames (what `bard-overlore-graph/` does by hand now); Thomas's unusable marks
+  become `flagged` on the frames; the walker stays app code, named by the graph's format and version.
+  Open: its own type or `data` (a name floated: `puppet`, the 2D counterpart of a rigged `figure`);
+  one graph per character or per look (the cartoon and realistic Bards are two sets in one today);
+  and the choreography (which pose on which line, Overlore's) is a separate, `sequence`-like thing
+  that points at the graph.
 
 ## prompt parts (`shoot`), asked for by `@datadungeon`
 - **Under review (Thomas, 2026-10-14):** mj sends exactly the prompt it is given, and the calling app
