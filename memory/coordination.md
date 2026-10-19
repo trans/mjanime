@@ -378,8 +378,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   (`mail/sent/20261019-190037Z-@overlore--re-choreography-*`). **Every
   link and move goes both ways** (Thomas, 2026-10-19): a way that breaks
   physics (a glass unbreaking) is flagged `reverse: abnormal`, kept for a
-  rewind gag, taken only on purpose. Both cartoon moves are flagged (the
-  words would vanish off the scroll). Format, `graph.py`, `bard-walker.js`
+  rewind gag, taken only on purpose. Both cartoon moves were flagged
+  (mj assumed the words would vanish), then unflagged the same day:
+  Thomas, via Overlore, "in the images the bard holds the paper facing
+  him, so we see no writing" (frames checked: the scroll is blank;
+  `mail/received/20261019-194317Z-@overlore--the-quill-moves-*`), so both
+  play backwards too. Format, `graph.py`, `bard-walker.js`
   (`move(from, to, {abnormal})`) and the preview changed, tested in Node;
   **sent** (`mail/sent/20261019-191809Z-@overlore--the-bard-s-graph-*`).
   Overlore copied it into the landing (`landing/public/bard/`, uncommitted
