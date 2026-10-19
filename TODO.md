@@ -89,8 +89,9 @@
   tie it to the automata that have them, so an app's agent reads an automaton and a take's timed
   words and makes its own (as Rhubarb does mouths), maybe choosing among fitting poses each play,
   and keeps it in its own database. A script may still pin a required pose (`[pose=bow/]`).
-  Overlore's proposal, **open**: `pose` is the one body tag and every other tag is the voice's,
-  translated to the engine's own (v3's `[whispers]`) when the take is asked for; directions come
+  **Decided** (Overlore's proposal, approved by Thomas 2026-10-19): `pose` is the one body tag
+  and every other tag is the voice's, translated to the engine's own (v3's `[whispers]`) when the
+  take is asked for; directions come
   in three kinds, a moment (`[sighs/]`), a state until the next (a pose), a span with a close
   (`[whisper]…[/whisper]`). A take's word times and mouth cues go with the speech, not the script
   (DataDungeon's call how). For it, mj gave each pose a `means` line and rests and endings a `kind`
