@@ -7,6 +7,10 @@ module MJ
     include YAML::Serializable
 
     property prompt : String
+    # More pictures for the model to see after the template, as file names beside prop.yml. The
+    # prompt says what each is for (e.g. "the pose he ends in, in the second image"). Empty: the
+    # template alone, as before.
+    property references : Array(String) = [] of String
     # Background colour to render on. Name it in your prompt too. Default black (best for
     # bright subjects); use a contrasting colour (e.g. white [255,255,255] or chroma green
     # [0,255,0] / magenta [255,0,255]) when the subject itself is dark.

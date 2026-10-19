@@ -21,14 +21,22 @@ module MJ
     record Result, render : StumpyPNG::Canvas, prop : StumpyPNG::Canvas
 
     # Convenience: read the template from disk. Delegates to the in-memory form.
+    # The spec's extra `references` are read from beside the template.
     def self.generate(client : RunwareClient, template_path : String, spec : PropSpec) : Result
       raise "Template not found: #{template_path}" unless File.exists?(template_path)
-      generate(client, File.read(template_path).to_slice, spec)
+      extras = spec.references.map do |name|
+        path = File.join(File.dirname(template_path), name)
+        raise "Reference not found: #{path}" unless File.exists?(path)
+        File.read(path).to_slice
+      end
+      generate(client, File.read(template_path).to_slice, spec, extras)
     end
 
-    # Fully in-memory: template PNG bytes in, {render, prop} canvases out. No disk I/O.
-    def self.generate(client : RunwareClient, template_bytes : Bytes, spec : PropSpec) : Result
-      res = client.edit_references([template_bytes], spec.prompt, spec.width, spec.height, spec.model)
+    # Fully in-memory: template PNG bytes (and any further references) in, {render, prop} canvases
+    # out. No disk I/O.
+    def self.generate(client : RunwareClient, template_bytes : Bytes, spec : PropSpec,
+                      extras : Array(Bytes) = [] of Bytes) : Result
+      res = client.edit_references([template_bytes] + extras, spec.prompt, spec.width, spec.height, spec.model)
       render = CanvasUtil.from_png_bytes(res.image_data)
       prop = key_out(render, spec)
       Result.new(render, prop)

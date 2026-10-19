@@ -27,6 +27,8 @@ mj prop <name|dir> [--rekey]
 prompt: >-                       # required. Name the bg colour here too, and "floats isolated, no ground".
   A colourful wooden circus barrel with metal hoops, painted red and gold, clean cartoon
   game-prop style, centred, on a solid pure black background, nothing else in frame.
+references: [end.png]            # optional: more pictures beside prop.yml, sent after the template; the
+                                 # prompt says what each is for ("the pose he ends in, in the second image")
 background: [0, 0, 0]            # bg colour to render on. black=bright subjects; white/[0,255,0]/[255,0,255]=dark subjects
 auto_background: true            # key the ACTUAL sampled corner colour, not the requested one (keep true)
 key_low: 4                       # alpha ramp: below = transparent
