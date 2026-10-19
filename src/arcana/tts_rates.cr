@@ -2,12 +2,13 @@ require "json"
 
 module MJ
   module Arcana
-    # What a spoken line cost — the same per-provider knowledge `cameras.cr` holds for
-    # images, for speech.
+    # What an OpenAI spoken line cost — the same per-provider knowledge `cameras.cr` holds
+    # for images, for speech. ElevenLabs isn't here: it reports the characters it billed,
+    # and arcana-ai prices those (`VoiceService.elevenlabs_price`).
     #
-    # Unlike Runware, no TTS provider reports a price in the response, so this has to be
-    # computed. (ElevenLabs reports the credits it charged, in a header, but not dollars.)
-    # The trap is assuming one billing unit: the two providers do not share one.
+    # Unlike Runware, OpenAI reports no price in the response (and its token usage only on
+    # a streamed reply, which mj doesn't use), so this has to be computed. The trap is
+    # assuming one billing unit: its models do not share one.
     #
     #   OpenAI gpt-4o-mini-tts   billed per TOKEN — $0.60/1M input characters plus
     #                            $12.00/1M AUDIO OUTPUT tokens. Audio tokens track
@@ -15,13 +16,9 @@ module MJ
     #                            publishes a composite of ~$0.015/minute.
     #   OpenAI tts-1 / tts-1-hd  billed per CHARACTER, $15 / $30 per 1M. Exactly
     #                            computable from the text — no estimate needed.
-    #   ElevenLabs               billed per CHARACTER in credits. The character count is
-    #                            exact, but a credit's DOLLAR value depends on the
-    #                            subscription tier, so the dollar figure cannot be known
-    #                            here without being told the rate.
     #
-    # So: character-billed models get an EXACT price, duration-billed ones get an estimate
-    # from measured duration, and ElevenLabs gets a price only once a rate is configured.
+    # So: character-billed models get an EXACT price, and duration-billed ones get an
+    # estimate from measured duration.
     # Each result says which rule produced it rather than leaving the caller to guess.
     #
     # Published prices drift. Every figure here is overridable by environment variable,
@@ -39,23 +36,6 @@ module MJ
         "gpt-4o-mini-tts" => 0.015,
       }
 
-      # ElevenLabs bills credits per character, and the multiplier IS model-dependent:
-      # the Flash and Turbo families are half price per character. Only a fallback now:
-      # the credits charged come back in a header, and this table had eleven_v3 at 1.0
-      # where it was charged 0.4 (2026-10-17). The dollars-per-credit is still unknown.
-      ELEVENLABS_CREDITS_PER_CHAR  = 1.0
-      ELEVENLABS_HALF_PRICE_MODELS = ["flash", "turbo"]
-
-      def self.elevenlabs_credits_per_char(model : String) : Float64
-        ELEVENLABS_HALF_PRICE_MODELS.any? { |m| model.includes?(m) } ? 0.5 : ELEVENLABS_CREDITS_PER_CHAR
-      end
-
-      # The caller's plan rate, in USD per 1000 characters. Without it an ElevenLabs call
-      # is unpriced — which is the honest answer, not a reason to invent a number.
-      def self.elevenlabs_usd_per_1k : Float64?
-        ENV["MJ_ELEVENLABS_USD_PER_1K_CHARS"]?.try(&.to_f?)
-      end
-
       def self.openai_usd_per_minute(model : String) : Float64?
         if v = ENV["MJ_OPENAI_TTS_USD_PER_MINUTE"]?.try(&.to_f?)
           return v
@@ -69,9 +49,8 @@ module MJ
 
       # Returns {usd, exact?, basis}. `usd` nil means genuinely unknown — never a guess
       # dressed as a figure.
-      # `charged` is the credits ElevenLabs said it charged, when it said.
       def self.price(provider : String, model : String, characters : Int32,
-                     seconds : Float64?, charged : Float64? = nil) : {Float64?, Bool, String}
+                     seconds : Float64?) : {Float64?, Bool, String}
         case provider
         when "openai"
           # Character-billed models are exactly computable from the text alone.
@@ -92,19 +71,6 @@ module MJ
                     "be measured on this host (needs ffprobe)"}
           end
           {nil, false, "no rate known for model #{model}"}
-        when "elevenlabs"
-          mult = elevenlabs_credits_per_char(model)
-          credits = charged || characters * mult
-          charge = charged ? "ElevenLabs charged #{credits.round(1)} credits for #{characters} characters" :
-                             "#{model} bills #{mult} credit(s)/character = #{credits.round(1)} credits (estimated)"
-          if per_1k = elevenlabs_usd_per_1k
-            {credits * per_1k / 1000.0, false,
-             "#{charge}; priced at the configured $#{per_1k}/1k credits"}
-          else
-            {nil, false,
-             "#{charge}, but a credit's dollar value depends on your ElevenLabs plan. Set " \
-             "MJ_ELEVENLABS_USD_PER_1K_CHARS to have this priced, or bill on `credits` yourself"}
-          end
         else
           {nil, false, "unknown provider #{provider}"}
         end
@@ -128,7 +94,7 @@ module MJ
       # about piping.
       #
       # This is a probe-only write of ~50KB, not a round-trip of the synthesis itself —
-      # the audio still comes back in memory from arcana-ai 0.3.0 and is served from there.
+      # the audio still comes back in memory from arcana-ai and is served from there.
       ARGS = ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0"]
 
       def self.duration(audio : Bytes, format : String) : Float64?

@@ -162,10 +162,10 @@ else
       The providers do not share a billing unit. gpt-4o-mini-tts bills per TOKEN and audio
       tokens track duration, so it is estimated from measured length — do NOT estimate it
       from characters, which is 100% under on a slow delivery. tts-1/tts-1-hd bill per
-      character and come back exact. ElevenLabs reports the credits it charged (returned as
-      `credits`), but a credit's dollar value depends on the plan, so usd is null unless a
-      rate is configured here. `usd_basis` spells out which rule ran; null usd means
-      genuinely unknown, never zero.
+      character and come back exact. ElevenLabs reports the characters it billed, which
+      can be fewer than the text has (returned as `billed_characters`), and they're priced
+      at its published per-model rate, exact. `usd_basis` spells out which rule ran; null
+      usd means genuinely unknown, never zero.
 
       Omit `voice` to get the provider's own default — do not pass OpenAI's "alloy" to
       ElevenLabs, which expects a voice id. ElevenLabs takes any model name as given,
@@ -174,8 +174,9 @@ else
       {"tool":"music","composition_plan":{...}} or {"tool":"music","prompt":"...",
        "music_length_ms":30000} gives a sung song from Eleven Music (ElevenLabs key).
       It takes no voice id, so a song is sung in a voice's manner, described in the
-      styles, not in the voice itself. Reply as for speak, with credits null when
-      ElevenLabs reports no cost; "refused" carries its reason, often a suggested rewrite.
+      styles, not in the voice itself. Reply as for speak, with billed_characters and usd
+      null when ElevenLabs reports no cost; "refused" carries its reason, often a
+      suggested rewrite.
       GUIDE
     tags: ["tts", "voice", "speech", "audio", "music"],
   )
