@@ -459,4 +459,8 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   `mail/sent/20261019-192754Z-@arcana--re-arcana-ai-0.5.5-*` says mj is on
   0.5.5, uncommitted until Thomas has talked with @arcana, and that the
   12-or-30 check needs the account's usage page or a key with
-  `speech_history_read`.
+  `speech_history_read`. **Answered** the same day: Thomas gave the key
+  history access; the account counted 12 for each of the three 30-character
+  eleven_v3 lines of 2026-10-17 (history counters, matched by time), so the
+  header's figure is what's billed and 0.5.5's pricing stands
+  (`mail/sent/20261019-194229Z-@arcana--re-arcana-ai-0.5.5-the-account-*`).
