@@ -322,7 +322,28 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   present left out of the map until Thomas clears its marks. **Tin robot
   arms** tried for the robot line (Thomas: "it might be funny"):
   `bard-pitch/fantasy-tinrobot`, flipbook #413-419, in the graph as pose
-  `tinrobot`; not sent to Overlore yet, waiting on Thomas.
+  `tinrobot`. Thomas: "the robot arms look fine"; a gag, to slip in now and
+  then instead of every play-through. **Sent** 2026-10-19
+  (`mail/sent/20261019-000725Z-@overlore--the-pitch-tin-robot-arms-a-gag-pose-for-no-more-i.md`).
+  Thomas also asked why every frame of a pose has exactly the same body: a
+  little arm movement would help the realism ("no matter now"). **Open**:
+  a few small arm variants per pose, stepped between during a hold.
+  **Overlore wired the poses in** (2026-10-18,
+  `mail/received/20261018-231837Z-@overlore--re-the-realistic-bard-s-poses-for-the-salesman-pit-413bb513.md`):
+  each phrase cuts to its pose at its Whisper word time; stand before and
+  between lines; count steps at set times (the fast takes have few X cues).
+  Thomas: "pretty good", wants more facial expression in two or three
+  places. Changes on Overlore's side: "Speaking of which..." is finger,
+  secret comes in at "now", "top to bottom!" is cut. **Surprise** for
+  "What? WHAT?" (Thomas via Overlore,
+  `mail/received/20261018-233526Z-@overlore--the-pitch-a-wide-eyed-surprise-for-what-what-ce001b38.md`):
+  made 2026-10-19 ($0.14, flipbook #420-427), hands thrown up
+  (`fantasy-surprise`) with the eyes, brows and forehead of
+  `fantasy-surprise-face` laid over the six base heads (`compose.py`
+  EYES: diff mask in a box above the mouth, faded over its lowest 20 rows,
+  so the mouths match the other poses). In the graph as pose `surprise`;
+  package rebuilt (238 frames) and **sent**
+  (`mail/sent/20261019-001137Z-@overlore--the-pitch-surprise-is-in-the-package-for-what-what.md`).
   **Car-salesman skit** (Thomas and Overlore, script finished 2026-10-18):
   Overlore is making its voices itself; Thomas will come back to mj for the
   poses once they've heard them, possibly on the realistic Bard. mj's pose
