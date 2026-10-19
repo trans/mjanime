@@ -382,6 +382,10 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   words would vanish off the scroll). Format, `graph.py`, `bard-walker.js`
   (`move(from, to, {abnormal})`) and the preview changed, tested in Node;
   **sent** (`mail/sent/20261019-191809Z-@overlore--the-bard-s-graph-*`).
+  Overlore copied it into the landing (`landing/public/bard/`, uncommitted
+  there until Thomas says) and played both acts through headless, no
+  errors (`mail/received/20261019-192411Z-@overlore--re-the-bard-s-graph-*`);
+  `means` and `kind` wait for its choreographer.
   **Car-salesman skit** (Thomas and Overlore, script finished 2026-10-18):
   Overlore is making its voices itself; Thomas will come back to mj for the
   poses once they've heard them, possibly on the realistic Bard. mj's pose
