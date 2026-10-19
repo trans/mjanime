@@ -344,6 +344,11 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   so the mouths match the other poses). In the graph as pose `surprise`;
   package rebuilt (238 frames) and **sent**
   (`mail/sent/20261019-001137Z-@overlore--the-pitch-surprise-is-in-the-package-for-what-what.md`).
+  **Both on Overlore's page** (2026-10-19,
+  `mail/received/20261019-004113Z-@overlore--the-pitch-surprise-and-tinrobot-are-on-the-page-6d151ff0.md`):
+  surprise from the start of "What? WHAT?", cutting to spread at 1.40 s;
+  tinrobot replaces robot on die face 6 only (1 pitch in 6), and the
+  signup records the face, so Overlore can tell who saw the gag.
   **Car-salesman skit** (Thomas and Overlore, script finished 2026-10-18):
   Overlore is making its voices itself; Thomas will come back to mj for the
   poses once they've heard them, possibly on the realistic Bard. mj's pose
