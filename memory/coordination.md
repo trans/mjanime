@@ -349,6 +349,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   surprise from the start of "What? WHAT?", cutting to spread at 1.40 s;
   tinrobot replaces robot on die face 6 only (1 pitch in 6), and the
   signup records the face, so Overlore can tell who saw the gag.
+  Thomas on surprise: "much better". **Brows** (Thomas via Overlore,
+  `mail/received/20261019-005122Z-@overlore--the-pitch-a-raised-brows-step-before-surprise-from-9fc15c74.md`):
+  a step before surprise on the first "What?", #420's own raised brows
+  (`fantasy-surprise`) on the base heads with the hands-up body, by
+  `compose.py` EYES, no new edit; flipbook #428-433, in the graph as pose
+  `brows`; it differs from surprise only in the eye box. Package rebuilt
+  (244 frames) and **sent**
+  (`mail/sent/20261019-015519Z-@overlore--the-pitch-brows-is-in-the-package-before-surprise.md`).
   **Car-salesman skit** (Thomas and Overlore, script finished 2026-10-18):
   Overlore is making its voices itself; Thomas will come back to mj for the
   poses once they've heard them, possibly on the realistic Bard. mj's pose
