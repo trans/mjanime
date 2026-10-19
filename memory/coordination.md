@@ -464,3 +464,13 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   eleven_v3 lines of 2026-10-17 (history counters, matched by time), so the
   header's figure is what's billed and 0.5.5's pricing stands
   (`mail/sent/20261019-194229Z-@arcana--re-arcana-ai-0.5.5-the-account-*`).
+  **Committed** (`5ef3f14`, 2026-10-19): Thomas agreed it with @arcana
+  (`mail/received/20261019-193939Z-@arcana--go-ahead-*`). @arcana also says
+  `synthesize` prices gpt-4o-mini-tts without streaming (SSE for every
+  model but tts-1/tts-1-hd), so mj's own OpenAI rates can go; **Open:**
+  take gpt-4o-mini-tts's `cost` from arcana-ai after a test call, and mj
+  asked @arcana to price tts-1/tts-1-hd from the text length ($15/$30 per
+  1M characters) so all of mj's rates can go
+  (`mail/sent/20261019-194513Z-@arcana--re-0.5.5-committed-*`). arcana-ai
+  0.6.0 is out; its image `cost` change doesn't touch mj (no arcana-ai
+  images), mj stays on `~> 0.5.5` for now.
