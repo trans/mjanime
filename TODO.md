@@ -76,10 +76,27 @@
   each frame is a prop, linked from it with its node and mouth shape in the link's data, so copying
   the graph copies its frames (what `bard-overlore-graph/` does by hand now); Thomas's unusable marks
   become `flagged` on the frames; the walker stays app code, named by the graph's format and version.
-  Open: its own type or `data` (a name floated: `puppet`, the 2D counterpart of a rigged `figure`);
-  one graph per character or per look (the cartoon and realistic Bards are two sets in one today);
-  and the choreography (which pose on which line, Overlore's) is a separate, `sequence`-like thing
-  that points at the graph.
+  **Its own type, `automaton`** (Thomas, with DataDungeon's agreement, 2026-10-19): states and the
+  moves allowed between them, walked by input (speech cues, pauses), like a clockwork figure running
+  through its set positions; not only characters (a door, a torch). `puppet` is kept for a
+  marionette type to come, one worked continuously by a rig. An automaton is one set of frames that
+  can follow each other, so the cartoon and realistic Bards (two sets in one file today) would be two.
+  **Choreography is the app's, not the script's or DataDungeon's** (Thomas, 2026-10-19, via
+  `.ai/mail/received/20261019-174852Z-@overlore--re-choreography-*`): pose names in a script would
+  tie it to the automata that have them, so an app's agent reads an automaton and a take's timed
+  words and makes its own (as Rhubarb does mouths), maybe choosing among fitting poses each play,
+  and keeps it in its own database. A script may still pin a required pose (`[pose=bow/]`).
+  Overlore's proposal, **open**: `pose` is the one body tag and every other tag is the voice's,
+  translated to the engine's own (v3's `[whispers]`) when the take is asked for; directions come
+  in three kinds, a moment (`[sighs/]`), a state until the next (a pose), a span with a close
+  (`[whisper]…[/whisper]`). A take's word times and mouth cues go with the speech, not the script
+  (DataDungeon's call how). For it, mj gave each pose a `means` line and rests and endings a `kind`
+  (`bard-graph/graph.yml`, sent 2026-10-19). **Every link and move goes both ways** (Thomas,
+  2026-10-19); a way back that breaks physics is flagged `reverse: abnormal`, taken only on purpose.
+  **Under discussion (2026-10-19):**
+  - *Characters:* a character as an asset holding its sheet (description, reference pictures, voice
+    id), with assets linking to it (`depicts`, `voiced-by`); it would tie both Bards' automata
+    together. Thomas is leaning that way; it reopens his 2026-10-13 decision not to model characters.
 
 ## prompt parts (`shoot`), asked for by `@datadungeon`
 - **Under review (Thomas, 2026-10-14):** mj sends exactly the prompt it is given, and the calling app
@@ -165,6 +182,21 @@
   `archive/cattacula-yappy.mp4`. Then wire as `mj mouth` (CLI + bus) + an "AI auto-fill" button in the charter.
 
 ## cell animation / compositing
+- **Port the Bard's Python scripts to Crystal** (Thomas, 2026-10-19). They're Python only for
+  speed while experimenting (numpy and scipy do whole-image maths in a line), and live in
+  `outtake/`, not mj. Two parts:
+  - *The graph and its package* first, as an mj command: `bard-graph/graph.py` (compile `graph.yml`:
+    neighbour lists, moves, unusable marks) and `bard-overlore-graph/build.py` (cut each frame to
+    webp at its stage offset, write `graph.json`). YAML in, JSON out, crops by `magick`: a direct
+    port, and the way in for the `automaton` type in mj's DataDungeon store (above). The preview
+    page's builder (`bard-preview/build.py`) can follow. `bard-walker.js` stays JavaScript.
+  - *The compositing:* `bard-pitch/compose.py` (heads onto pose bodies; `EYES`, `HAND`),
+    `bard-poses/mend_neck.py` and `mend_write.py`, `bard-gesture/composite*.py`,
+    `bard-mouths/composite.py`, `align.py`, `measure.py`. Bind ImageMagick's C API (MagickWand) from
+    Crystal, as `just build` already does for the ONNX shim: it has the differences, thresholds,
+    morphology (dilate, open), Gaussian blur, connected components (dropping specks) and masked
+    blends these use. Filling holes in a mask isn't one call there; a flood from the border, as
+    `mj matte`'s Tier 1 does (`src/engine/matte.cr`), would do it.
 - **UV region editor** — port the in-canvas region tool into mj's web UI. Define a box/ellipse/(polygon)
   on an image by hand and read back normalized `{u,v,w/rx,h/ry}` numbers to paste into code — same UV
   works at any canvas size, in editor and renderer alike. Design doc copied to `notes/uv-region-editor.md`
