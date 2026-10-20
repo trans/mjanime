@@ -37,7 +37,7 @@ The **[`docs/`](docs/README.md)** wiki covers the tools, the techniques, and the
 
 ```sh
 shards install
-just build                     # compiles the ONNX C shim + the mj binary
+just build                     # compiles the ONNX C shim + the mj and mj-arcana binaries
 mj init                        # scaffolds .config/mj/config.yml
 set -a; . ./.env; set +a       # load RUNWARE_API_KEY (the .env is bash; shell may be fish)
 mj prop my-barrel              # …run a tool

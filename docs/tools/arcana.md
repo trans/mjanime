@@ -8,6 +8,9 @@ sfx) under the single address `mj`.
 mj-arcana                      # registers both services, blocks on the WebSocket loop
 ```
 
+`just build` makes it as `bin/mj-arcana`, beside `bin/mj` (since 2026-10-20; before, only by hand).
+The service keeps running the old one until it's restarted (`systemctl --user restart mj-arcana`).
+
 Each service registers only if its key is present: `RUNWARE_API_KEY` for `mj:camera`,
 `OPENAI_API_KEY` and/or `ELEVENLABS_API_KEY` for `mj:voice`. Bus URL comes from `ARCANA_WS_URL` /
 `ARCANA_URL`, default `ws://localhost:19118/bus`.

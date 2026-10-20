@@ -39,7 +39,8 @@ of work:
 
 - Source: `src/mj.cr` (CLI dispatch), `src/engine/` (tools), `src/models/` (`*_spec.cr` = the YAML
   config schemas), `src/api/runware_client.cr`, `src/config.cr`, `src/diorama.cr`, `src/bus_service.cr`.
-- Build: `just build` (compiles the ONNX C shim + binary). Run `./bin/mj …`.
+- Build: `just build` (compiles the ONNX C shim + `bin/mj` + `bin/mj-arcana`, the bus services;
+  restart `mj-arcana.service` to run a new one). Run `./bin/mj …`.
 - Keys from `ENV`: `set -a; . ./.env; set +a` first (the `.env` is bash; the shell is fish).
 - Libraries live at `~/.local/share/mj/{props,backdrops,scenes}`. Web port **21683** (`cyclops-port
   mj`). Bus `ws://localhost:19118/bus` (opt out with `MJ_BUS=0`).

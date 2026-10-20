@@ -8,20 +8,30 @@ default:
 deps:
     shards install
 
-# Build the binary
+# Build the binaries: mj, and mj-arcana (the bus services' daemon)
 build: deps shim
     mkdir -p bin
     crystal build src/mj.cr -o bin/mj
+    @just _arcana
 
-# Build the binary, do not update shards
+# Build the binaries, do not update shards
 compile: shim
     mkdir -p bin
     crystal build src/mj.cr -o bin/mj
+    @just _arcana
 
 # Build with optimizations
 release: deps shim
     mkdir -p bin
     crystal build src/mj.cr -o bin/mj --release
+    @just _arcana --release
+
+# mj-arcana is what the mj-arcana service runs, so `build` has to make it too, or a restart
+# runs old code. Built beside it and moved in, so the running service's file is never written
+# over; restart the service (`systemctl --user restart mj-arcana`) to pick it up.
+_arcana *flags:
+    crystal build src/mj-arcana.cr -o bin/mj-arcana.new {{flags}}
+    mv bin/mj-arcana.new bin/mj-arcana
 
 # Run in development mode
 run: deps shim

@@ -54,7 +54,7 @@ mj prop my-barrel             # …then run tools
 ## Build
 
 ```sh
-just build     # compiles the ONNX C shim (src/native/mjonnx.o) + the mj binary
+just build     # compiles the ONNX C shim (src/native/mjonnx.o) + the mj and mj-arcana binaries
 ./bin/mj …
 ```
 
