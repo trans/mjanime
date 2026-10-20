@@ -66,11 +66,12 @@ The fancier arcade rebuild (current one is complete and working):
 | **sfx `layers:[…]`** | proposed | Composite sounds need stacked voices. Plus filtered-random wobble, fit peaking-Q, pitch-sweep detection. `TODO.md`. |
 | **Tiled-world-evolver** | blocked on the Seamstress | Edit a snippet of a big image keeping its edges identical, so it drops back into place. Same primitive as the Seamstress. |
 
-### The FLUX dims bug
-`RunwareClient#generate` is **img2img only** (always sends a seed image — no pure text2img).
-`MJ.snap_dimensions` snaps FLUX models to a stale list of /32 (not /64) widths → Runware 400s. Low
-priority: Nano Banana 2's native wide aspects mean we rarely need FLUX text2img. If fixed: add a real
-text2img method or make the snap list /64. Details: memory `runware-client-flux-dims-bug`.
+### The FLUX dims bug (fixed)
+Both halves are fixed. Text-to-image: `RunwareClient#text_to_image` (2026-10-19, `f5f3bc6`), which
+mj:camera uses for shots without a reference; `generate` stays img2img. Sizes: `MJ.snap_dimensions`
+snapped FLUX.1 to a stale list of pairs with /32 sides, which Runware refused with a 400. It now
+rounds each side to a multiple of 64 from 128 to 2048, the rule Runware states for schnell and dev
+(checked live 2026-10-20).
 
 ## Working agreements (how the user wants me to work)
 
