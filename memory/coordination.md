@@ -475,6 +475,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   close, and only the hand just above the strings is missing; his wording,
   "touching the strings, most of the hand above them", left the hand in
   place on both sets, `outtake/bard-strum/prompt.txt`); inbetweens.
+- **`@ipck`**: the dot-ai spec and skill. **Heads-up 2026-10-20**
+  (`mail/received/20261020-025242Z-@ipck--intake-and-outtake-capitalized-*`):
+  Thomas decided (2026-10-19) the user's folders are `Intake/` and
+  `Outtake/`; lowercase keeps working, and each project renames when its
+  user says. mj's aren't renamed (**open**, for Thomas). When they are,
+  `src/flipbook.cr:29` must change (or set `MJ_FLIPBOOK_ROOT`), and paths
+  in mail already sent (`outtake/bard-overlore-graph/` and the like) go
+  stale.
 - **`@cyclops`**: secrets and deploy conventions. Settled 2026-10-13; the
   repo `.env` stays until cyclops ships a fish export format, and it will
   ping when it does (`TODO.md`, "secrets / deploy").
