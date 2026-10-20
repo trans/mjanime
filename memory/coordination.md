@@ -467,10 +467,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   #323 and `fantasy-bow-noneck` #322), its neck area pasted onto all 38
   frames (present: pose, gaze, 6 mouths, 3 gestures x 7; write: pose,
   gaze, 6 mouths; bow); originals kept as `prop-neck.png`. The frames line
-  up with their poses (1-3 levels of 255 around the patch). Thomas's
-  unusable marks are still on the present frames, for Thomas to clear.
-  Overlore's `graph.json` copy of the realistic frames predates this:
-  rebuild before the realistic Bard is used.
+  up with their poses (1-3 levels of 255 around the patch). **Cleared
+  2026-10-20:** Thomas took his unusable marks off the mended present
+  frames (54 marks down to 26). `graph.json` and the preview rebuilt (only
+  the `unusable` list changed; the frames already had the mended neck) and
+  sent, so the pitch can use `present` again
+  (`mail/sent/20261020-161437Z-@overlore--the-realistic-bard-s-present-*`).
   **Strums done** for the cartoon, the one that sings: two middles and two
   lows from Thomas's picks, walked on the song's beat (`play` in
   `Outtake/bard-graph/graph.yml`). The realistic Bard doesn't sing, so it
