@@ -6,10 +6,10 @@ module MJ
   # Flipbook: lay out the frames already made, put them in an order, and play them, so a person can
   # see which pictures move into one another cleanly and say which are unusable.
   #
-  # A frame is any folder under the outtake root holding a keyed `prop.png` drawn on the shared
+  # A frame is any folder under the Outtake root holding a keyed `prop.png` drawn on the shared
   # stage (848x1264 for the Bard), so frames line up when played. Each frame gets a number the first
   # time it's seen and keeps it, so it can be referred to by number. What the person decides (unusable
-  # frames, notes, named sequences) is saved in the outtake root's `flipbook.json`, where an agent can
+  # frames, notes, named sequences) is saved in the Outtake root's `flipbook.json`, where an agent can
   # read it.
   module Flipbook
     SLUG  = "flipbook"
@@ -24,9 +24,9 @@ module MJ
       TITLE
     end
 
-    # The frames live in the project's outtake/, next to where mj is served from.
+    # The frames live in the project's Outtake/, next to where mj is served from.
     def self.root : String
-      ENV["MJ_FLIPBOOK_ROOT"]? || File.join(Dir.current, "outtake")
+      ENV["MJ_FLIPBOOK_ROOT"]? || File.join(Dir.current, "Outtake")
     end
 
     def self.state_path : String

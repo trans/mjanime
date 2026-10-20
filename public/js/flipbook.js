@@ -1,5 +1,5 @@
 // Flipbook: browse the frames, mark the unusable ones, line some up and play them.
-// What's decided is posted to /flipbook/state and kept in the outtake's flipbook.json.
+// What's decided is posted to /flipbook/state and kept in the Outtake's flipbook.json.
 (() => {
   const $ = id => document.getElementById(id);
   // v is the frame's file time, so a frame that's been redrawn isn't shown from the browser's cache

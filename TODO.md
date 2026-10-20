@@ -68,15 +68,15 @@
   Bard cut-outs and their mouth frames, each linked to the picture it was edited from),
   each with its recipe. Moving an asset into another app's store is a transfer between stores, to be
   added: DataDungeon's side carries the bytes, recipe, wordings and links; Curio runs it across the
-  fleet. Until then deliveries stay files plus a manifest (`outtake/bard-overlore/`).
+  fleet. Until then deliveries stay files plus a manifest (`Outtake/bard-overlore/`).
 - **0.14.0 is tagged (2026-10-17, `401dd4a`):** a recipe keeps the prompt as sent, with the named
   wordings in it and hashed versions. There are no standard styles, so mj would name, word and tag
   its own. Open: where the
   store lives (Overlore's is `~/.local/share/overlore/assets.db`), and which types to register,
   since DataDungeon's standard types are still drafts.
 - **The Bard's animation graph as an asset** (Thomas, 2026-10-18: "another type of asset we should be
-  able to store in DD"). `outtake/bard-graph/graph.yml`, compiled to
-  `outtake/bard-overlore-graph/graph.json`, says which body frames may follow which, and is walked
+  able to store in DD"). `Outtake/bard-graph/graph.yml`, compiled to
+  `Outtake/bard-overlore-graph/graph.json`, says which body frames may follow which, and is walked
   fresh on each play (`bard-walker.js`). It isn't a timeline, so none of DataDungeon's draft types
   fit: `sequence` is one fixed timeline, 3D `motion` is skeletal, and a sprite sheet's
   `ImageAnimation` is a fixed loop. Today it could only be `data`. Sketch: the graph is one asset;
@@ -192,7 +192,7 @@
 ## cell animation / compositing
 - **Port the Bard's Python scripts to Crystal** (Thomas, 2026-10-19). They're Python only for
   speed while experimenting (numpy and scipy do whole-image maths in a line), and live in
-  `outtake/`, not mj. Two parts:
+  `Outtake/`, not mj. Two parts:
   - *The graph and its package* first, as an mj command: `bard-graph/graph.py` (compile `graph.yml`:
     neighbour lists, moves, unusable marks) and `bard-overlore-graph/build.py` (cut each frame to
     webp at its stage offset, write `graph.json`). YAML in, JSON out, crops by `magick`: a direct

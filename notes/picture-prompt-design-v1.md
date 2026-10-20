@@ -156,7 +156,7 @@ replaces the inherited value before the prompt is built. Each property has one v
 contradict itself, and the record says what was actually used.
 
 The evidence, the cow tests (2026-10-14, through `mj:camera`, 1024×1024, three runs per cell — small;
-`klein` seeds 31337, 8675309, 141421; `nano` and `flare` take no seed). Pictures in `outtake/`
+`klein` seeds 31337, 8675309, 141421; `nano` and `flare` take no seed). Pictures in `Outtake/`
 (not committed); harness `cow_order.py`.
 
 **v1, a contradiction in both orders** ($0.5347):
@@ -206,13 +206,13 @@ the `prompt_parts` and staging-order TODOs are moot.
 ## A prompt as a template (Thomas, 2026-10-16; being worked out)
 
 Thomas's first reason for the fields was storage: the same words repeated in every record. Measured
-on mj's own 459 prop prompts (`outtake/prompt-dedup/`), storing each distinct sentence once leaves
+on mj's own 459 prop prompts (`Outtake/prompt-dedup/`), storing each distinct sentence once leaves
 51%, and zlib with a 32 KB dictionary leaves 22%, so fields are not the best tool for bytes alone.
 Most of what fields hold is a registered choice anyway: rules (by rating), framing and the kind's
 own rules (by kind), style, flavor, theme, a stored character's appearance, and light (computed from
 the place's measured direction). What is written per picture (description, staging, an edit's
 change) is small. And a hand-written prompt (the Bard's, 2026-10-15) doesn't split into fields
-cleanly, though a rewrite in field order drew a usable picture (`outtake/bard-field-order/`).
+cleanly, though a rewrite in field order drew a usable picture (`Outtake/bard-field-order/`).
 
 So Thomas's idea: **one prompt field, with Mustache tags for the registered parts** (Mustache because
 DataDungeon already uses it for Overlore's decrees; `$` turns up in prompts). Code writes the bare
