@@ -471,10 +471,11 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   unusable marks are still on the present frames, for Thomas to clear.
   Overlore's `graph.json` copy of the realistic frames predates this:
   rebuild before the realistic Bard is used.
-  **Open:** strum positions (Thomas, 2026-10-18: the poses are
-  close, and only the hand just above the strings is missing; his wording,
-  "touching the strings, most of the hand above them", left the hand in
-  place on both sets, `Outtake/bard-strum/prompt.txt`); inbetweens.
+  **Strums done** for the cartoon, the one that sings: two middles and two
+  lows from Thomas's picks, walked on the song's beat (`play` in
+  `Outtake/bard-graph/graph.yml`). The realistic Bard doesn't sing, so it
+  needs none. Inbetweens gave way to the graph's moves (no crossfades,
+  Thomas).
 - **`@ipck`**: the dot-ai spec and skill. **Heads-up 2026-10-20**
   (`mail/received/20261020-025242Z-@ipck--intake-and-outtake-capitalized-*`):
   Thomas decided (2026-10-19) the user's folders are `Intake/` and
