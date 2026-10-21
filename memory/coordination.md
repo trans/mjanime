@@ -191,11 +191,9 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   and with events OpenAI sends nothing until done, so arcana-ai's fixed
   60 s read timeout fails it. `speed` on ElevenLabs: v2 honours it (4.83 s
   to 3.82 s at 1.2), eleven_v3 ignores it; arcana-ai doesn't send it
-  anyway. Told them (`mail/sent/20261021-155036Z-*`); schema and
-  `docs/tools/arcana.md` say so (**not yet committed**, help shows it from
-  the next restart). **Asked @arcana** (Thomas approved, 2026-10-21) for a
-  settable read timeout, speed to ElevenLabs, and why `instructions` sends
-  fixed `voice_settings` (`mail/sent/20261021-161230Z-@arcana--*`); open.
+  anyway. Told them (`mail/sent/20261021-155036Z-*`). **Asked @arcana**
+  (Thomas approved, 2026-10-21; `mail/sent/20261021-161230Z-@arcana--*`);
+  **fixed in arcana-ai 0.6.1**, mj on it (see `@arcana` below).
   **The Bard, head to toe, cut out** for overlore.xyz, asked 2026-10-15
   (`mail/received/*-@overlore--bard-full-figure-*.md`): three candidates
   made with `mj prop` (two fantasy poses, and the golden-style cartoon
@@ -551,6 +549,22 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   in `4a4cbe0`**, see `@overlore` above: exact from the reported tokens), and mj
   asked @arcana to price tts-1/tts-1-hd from the text length ($15/$30 per
   1M characters) so all of mj's rates can go
-  (`mail/sent/20261019-194513Z-@arcana--re-0.5.5-committed-*`). arcana-ai
-  0.6.0 is out; its image `cost` change doesn't touch mj (no arcana-ai
-  images), mj stays on `~> 0.5.5` for now.
+  (`mail/sent/20261019-194513Z-@arcana--re-0.5.5-committed-*`).
+  **arcana-ai 0.6.1** (2026-10-21,
+  `mail/received/20261021-165225Z-@arcana--arcana-ai-0.6.1-*`), answering
+  `mail/sent/20261021-161230Z-@arcana--*`: settable speech `read_timeout`
+  (default 120 s), `speed` to ElevenLabs as `voice_settings.speed` (only
+  that; the fixed stability/similarity sent with `instructions` is gone),
+  tts-1/tts-1-hd priced by characters as sent (text plus two newlines).
+  **mj moved to `~> 0.6.1`** (Thomas: stay on the latest; drop-in, mj used
+  nothing 0.6.0 removed): mj:voice waits 110 s, mj's tts-1 rates are gone
+  (TtsRates keeps only the per-minute fallback), and `output_path` is
+  checked before a provider is called (two takes were billed, then failed
+  on the sandbox's read-only home). Service restarted 17:26Z, checked over
+  the bus; **not yet committed**. Told @arcana
+  (`mail/sent/20261021-172920Z-*`) and Overlore (`…172926Z-*`).
+  **Open, @arcana's:** does a speed-only `voice_settings` keep a voice's
+  stored values or take the defaults? History shows each call's settings,
+  but Henry, the Announcer and George all store the defaults, so it can't
+  tell; settling it means changing a stored voice on Thomas's account
+  (not done). Also: whether OpenAI counts tts-1's two added newlines.
