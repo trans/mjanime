@@ -21,12 +21,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   `#datadungeon` (Thomas, 2026-10-19,
   `mail/received/20261019-215533Z-@datadungeon--*`); requests to one app
   still come as mail. Not subscribed (Thomas: later), so read it on "check
-  mail": **read through post 2.** Post 1, v0.15.2: the standard asset types,
+  mail": **read through post 7** (2026-10-21). Post 1, v0.15.2: the standard asset types,
   `subtype`, and `automaton` (the Bard graph); stores move onto the types
   one at a time, Overlore last. Post 2, v0.15.3: a take's tracks,
   `words` and `mouth` (`{start_ms, end_ms, value}` cues, naming the tool),
-  which mj:voice's word times could feed (`TODO.md`). mj has no DataDungeon
-  dependency, so neither needs anything here.
+  which mj:voice's word times could feed (`TODO.md`). Posts 3-5,
+  v0.15.4-6: TIFF masters, deleting a transcript, `map` renamed `pass`.
+  Post 6, v0.15.7: search by meaning (a type names what's embedded).
+  Post 7, v0.16.0: only standard type names. mj has no DataDungeon
+  dependency, so none of these needs anything here.
   Picture prompts. mj sent the design (order, groups,
   `framing`, `light`, `changes`) to them, `@overlore` and `@owl` on
   2026-10-14 (`mail/sent/*-picture-prompt-design.md`; the note is
@@ -180,6 +183,19 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   mostly in pauses. Told them
   (`mail/sent/20261019-221942Z-@overlore--re-mj-voice-s-openai-*`, with two
   corrections of my test calls' times and count after it).
+  **Timeouts and ElevenLabs speed** (Overlore, 2026-10-21,
+  `mail/received/20261021-153733Z-@overlore--mj-voice-times-out-*`): every
+  dated-snapshot `speak` failed "Read timed out" at 60 s, 14:05-14:35Z;
+  Overlore pins it for its narrators (moving to ElevenLabs anyway).
+  Direct, 15:43-15:48Z: dated and unpinned both 65-81 s for a 4-5 s clip,
+  and with events OpenAI sends nothing until done, so arcana-ai's fixed
+  60 s read timeout fails it. `speed` on ElevenLabs: v2 honours it (4.83 s
+  to 3.82 s at 1.2), eleven_v3 ignores it; arcana-ai doesn't send it
+  anyway. Told them (`mail/sent/20261021-155036Z-*`); schema and
+  `docs/tools/arcana.md` say so (**not yet committed**, help shows it from
+  the next restart). **Held for Thomas:** a draft to @arcana asking for a
+  settable read timeout, speed to ElevenLabs, and why `instructions` sends
+  fixed `voice_settings` (`mail/drafts/20261021-155300Z-@arcana--*`).
   **The Bard, head to toe, cut out** for overlore.xyz, asked 2026-10-15
   (`mail/received/*-@overlore--bard-full-figure-*.md`): three candidates
   made with `mj prop` (two fantasy poses, and the golden-style cartoon
