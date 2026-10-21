@@ -5,6 +5,7 @@ require "http/client"
 require "json"
 require "./tts_rates"
 require "./output_path"
+require "./voice_lanes"
 
 module MJ
   module Arcana
@@ -34,7 +35,8 @@ module MJ
           "speed":{"type":"number","description":"OpenAI 0.25-4.0; ElevenLabs 0.7-1.2, which eleven_v3 ignores."},
           "previous_text":{"type":"string","description":"Preceding line, for prosody continuity. ElevenLabs only, and not eleven_v3, which refuses it with a 400."},
           "next_text":{"type":"string","description":"Following line, for prosody continuity. ElevenLabs only."},
-          "output_path":{"type":"string","description":"Write the audio here instead of returning base64."}
+          "output_path":{"type":"string","description":"Write the audio here instead of returning base64."},
+          "wait_seconds":{"type":"number","description":"How long you will wait for the answer, default 120. A line still queued when less than 3 s of it is left comes back expired, unmade and unbilled."}
         }
       }>)
 
@@ -49,17 +51,106 @@ module MJ
           "music_length_ms":{"type":"integer","description":"With a prompt only: the length in ms."},
           "model":{"type":"string","description":"Default music_v1."},
           "format":{"type":"string","description":"ElevenLabs' output_format, default mp3_44100_128."},
-          "output_path":{"type":"string","description":"Write the audio here instead of returning base64."}
+          "output_path":{"type":"string","description":"Write the audio here instead of returning base64."},
+          "wait_seconds":{"type":"number","description":"How long you will wait for the song, default 600. A song still queued when less than 3 s of it is left comes back expired, unmade and unbilled."}
         }
       }>)
 
-      def self.register(ts : ::Arcana::Toolset)
+      def self.register(ts : ::Arcana::Toolset, limits = VoiceLanes.limits(nil))
+        # One lane per limit a provider enforces (see voice_lanes.cr), waited for BEFORE
+        # the request takes a toolset slot, as the camera's pools are.
+        limits.each { |lane, n| ts.lane(lane, max_concurrent: n) }
+        lane = ->(data : JSON::Any) { VoiceLanes.for(data) }
         ts.tool("voices", "List the speech providers available on this host and their voices.",
           input_schema: VOICES_SCHEMA) { |_, _ctx| handle_voices }
         ts.tool("speak", "Synthesize speech from text.",
-          input_schema: SPEAK_SCHEMA) { |data, _ctx| handle_speak(data) }
+          input_schema: SPEAK_SCHEMA, lane: lane) { |data, ctx| handle_speak(data, ctx.envelope.timestamp) }
         ts.tool("music", "A sung song from Eleven Music, from a composition plan or a prompt.",
-          input_schema: MUSIC_SCHEMA) { |data, _ctx| handle_music(data) }
+          input_schema: MUSIC_SCHEMA, lane: lane) { |data, ctx| handle_music(data, ctx.envelope.timestamp) }
+      end
+
+      # --- the queue ------------------------------------------------------------------------
+      #
+      # A request waits in its lane until there's room, so a burst queues here instead of
+      # being refused there. Two rules keep the queue honest.
+      #
+      # 1. What nobody waits for isn't made. The caller gives up after its own wait
+      #    (Overlore: 120 s for a line), but its request stays queued, and once made it is
+      #    billed all the same. So a request whose caller has less than MIN_LEFT of its wait
+      #    left when its turn comes is answered `expired`, unmade and unbilled. The wait runs
+      #    from the envelope's timestamp, the sender's clock: fine on one host.
+      # 2. ElevenLabs at its limit anyway is waited out. The lanes keep mj under the plan's
+      #    limit, so a 429 `concurrent_limit_exceeded` means someone else on the account
+      #    (the website, another program) has lines running. ElevenLabs refuses those at
+      #    once, unbilled; mj tries again after a pause while the caller still waits, then
+      #    answers `busy`.
+      SPEAK_WAIT = 120.seconds
+      MUSIC_WAIT = 600.seconds # a song takes minutes; the music read timeout
+      # The fastest line measured came back in 0.6 s (Flash); a v3 sentence takes 3-5 s.
+      MIN_LEFT     = 3.seconds
+      BUSY_BACKOFF = [0.5, 1.0, 2.0, 4.0, 8.0].map(&.seconds)
+
+      class Busy < Exception
+      end
+
+      def self.deadline(data : JSON::Any, sent_at : Time, default : Time::Span) : Time
+        wait = data["wait_seconds"]?.try { |v| v.as_f? || v.as_i64?.try(&.to_f) }
+        sent_at + (wait && wait > 0 ? wait.seconds : default)
+      end
+
+      def self.expired(provider : String, sent_at : Time, deadline : Time) : JSON::Any?
+        now = Time.utc
+        return nil if deadline - now >= MIN_LEFT
+        JSON::Any.new({
+          "status"         => JSON::Any.new("expired"),
+          "provider"       => JSON::Any.new(provider),
+          "usd"            => JSON::Any.new(0.0),
+          "waited_seconds" => JSON::Any.new((now - sent_at).total_seconds.round(1)),
+          "retry"          => JSON::Any.new(false),
+          "note"           => JSON::Any.new(
+            "Queued in mj:voice until less than #{MIN_LEFT.total_seconds.to_i} s of your wait " \
+            "was left (wait_seconds), so it wasn't made. Not billed. Pass a longer " \
+            "wait_seconds if you will wait longer."),
+        } of String => JSON::Any)
+      end
+
+      def self.busy(provider : String, reason : String) : JSON::Any
+        JSON::Any.new({
+          "status"   => JSON::Any.new("busy"),
+          "provider" => JSON::Any.new(provider),
+          "usd"      => JSON::Any.new(0.0),
+          "reason"   => JSON::Any.new(reason[0, 400]),
+          "retry"    => JSON::Any.new(true),
+          "note"     => JSON::Any.new(
+            "ElevenLabs is at the plan's limit of requests at once, and stayed there while " \
+            "mj:voice retried. Not billed. Try again shortly."),
+        } of String => JSON::Any)
+      end
+
+      def self.at_limit?(ex : ::Arcana::AI::APIError) : Bool
+        return false unless ex.status_code == 429
+        body = ex.response_body
+        body.includes?("concurrent_limit_exceeded") ||
+          body.includes?("too_many_concurrent_requests") || body.includes?("system_busy")
+      end
+
+      # Runs the provider call, trying again while ElevenLabs is at its limit and the
+      # caller still has time; raises Busy when it doesn't.
+      def self.with_room(deadline : Time, &)
+        tries = 0
+        loop do
+          begin
+            return yield
+          rescue ex : ::Arcana::AI::APIError
+            raise ex unless at_limit?(ex)
+            pause = BUSY_BACKOFF[tries]?
+            if pause.nil? || Time.utc + pause + MIN_LEFT > deadline
+              raise Busy.new(ex.response_body)
+            end
+            tries += 1
+            sleep pause
+          end
+        end
       end
 
       def self.available : Array(String)
@@ -108,8 +199,12 @@ module MJ
       # A plan or prompt it won't take comes back as one of these, often with a suggestion.
       MUSIC_REFUSALS = ["bad_prompt", "bad_composition_plan"]
 
-      def self.handle_music(data : JSON::Any) : JSON::Any
+      def self.handle_music(data : JSON::Any, sent_at : Time = Time.utc) : JSON::Any
         key = ENV["ELEVENLABS_API_KEY"]? || raise "ELEVENLABS_API_KEY is not set on this host"
+        due = deadline(data, sent_at, MUSIC_WAIT)
+        if late = expired("elevenlabs", sent_at, due)
+          return late
+        end
         plan = data["composition_plan"]?
         prompt = data["prompt"]?.try(&.as_s?)
         raise "music takes a composition_plan or a prompt, not both" if plan && prompt
@@ -134,7 +229,15 @@ module MJ
         client.read_timeout = 600.seconds # a song takes far longer than a spoken line
         headers = HTTP::Headers{"xi-api-key" => key, "Content-Type" => "application/json"}
         data["output_path"]?.try(&.as_s?).try { |path| OutputPath.check!(path) }
-        response = client.post(uri.request_target, headers: headers, body: body.to_json)
+        response = begin
+          with_room(due) do
+            r = client.post(uri.request_target, headers: headers, body: body.to_json)
+            raise ::Arcana::AI::APIError.new(r.status_code, r.body, "elevenlabs:music") if r.status_code == 429
+            r
+          end
+        rescue ex : Busy
+          return busy("elevenlabs", ex.message || "")
+        end
 
         unless response.success?
           msg = response.body
@@ -262,10 +365,14 @@ module MJ
       # Overlore waits, rather than after it has given up.
       READ_TIMEOUT = 110.seconds
 
-      def self.handle_speak(data : JSON::Any) : JSON::Any
+      def self.handle_speak(data : JSON::Any, sent_at : Time = Time.utc) : JSON::Any
         text = data["text"]?.try(&.as_s?) || raise "speak requires 'text'"
         provider = data["provider"]?.try(&.as_s?) || "openai"
         format = data["format"]?.try(&.as_s?) || "opus"
+        due = deadline(data, sent_at, SPEAK_WAIT)
+        if late = expired(provider, sent_at, due)
+          return late
+        end
 
         tts =
           case provider
@@ -319,7 +426,7 @@ module MJ
         data["output_path"]?.try(&.as_s?).try { |path| OutputPath.check!(path) }
         begin
           if path = data["output_path"]?.try(&.as_s?)
-            result = tts.synthesize(req, path)
+            result = with_room(due) { tts.synthesize(req, path) }
             JSON::Any.new(ok_result(provider, result, effective_voice, format, text,
               TtsRates.duration(path)).tap { |h|
               h["output_path"] = JSON::Any.new(result.output_path)
@@ -327,12 +434,14 @@ module MJ
           else
             # arcana-ai 0.3.0 added the in-memory overload, so the temp file is gone.
             # ffprobe measures duration straight off the bytes through a pipe.
-            result = tts.synthesize(req)
+            result = with_room(due) { tts.synthesize(req) }
             JSON::Any.new(ok_result(provider, result, effective_voice, format, text,
               TtsRates.duration(result.audio, format)).tap { |h|
               h["audio_base64"] = JSON::Any.new(Base64.strict_encode(result.audio))
             })
           end
+        rescue ex : Busy
+          busy(provider, ex.message || "")
         rescue ex
           msg = ex.message || "unknown"
           raise ex unless refusal?(msg)

@@ -25,7 +25,10 @@
   - **Whether per-step notification is even available.** Gemini's batch goes straight from `RUNNING` to
     `SUCCEEDED` with no partial completion, so for that lane the honest answer may be one message when
     the whole lot lands.
-- **`mj:voice` concurrency** — unmeasured; needs the ElevenLabs plan tier and a key on this host.
+- **`mj:voice` concurrency** — **done 2026-10-21** (not yet committed): a lane per provider limit
+  (ElevenLabs v3/v2 and Flash sized to the plan, songs 1, OpenAI 6), `expired` for requests
+  whose caller has given up, retry on ElevenLabs' 429. See docs/tools/arcana.md "Queueing".
+  **At Pro:** restart `mj-arcana.service`; it reads the plan at start (Pro: 10 and 20).
 - **Word times from `mj:voice`** (candidate, 2026-10-19): ElevenLabs' `with-timestamps` speech
   endpoint returns each character's start and end; untested with `eleven_v3`. Returned as cues in
   the shape of DataDungeon's `words` track (`{start_ms, end_ms, value}`, v0.15.3), an app could

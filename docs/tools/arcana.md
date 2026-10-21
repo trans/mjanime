@@ -421,6 +421,48 @@ Never substitute one provider's default for another's.
 Audio comes back in memory — arcana-ai's `synthesize(req)` overload (since 0.3.0) returns
 `result.audio`, so there is no temp-file round-trip for delivery.
 
+### Queueing: a lane per limit
+
+ElevenLabs refuses a request over the plan's limit at once (429 `concurrent_limit_exceeded`)
+rather than queueing it as Runware does, so mj:voice queues instead. A lane is one limit a
+provider enforces, not one provider (`src/arcana/voice_lanes.cr`):
+
+| lane | what | Starter | Creator | Pro | Scale |
+| --- | --- | --- | --- | --- | --- |
+| `elevenlabs` | v3, multilingual v2 | 3 | 5 | 10 | 15 |
+| `elevenlabs-flash` | Flash, Turbo | 6 | 10 | 20 | 30 |
+| `elevenlabs-music` | songs (the plan allows 2, Scale 5) | 1 | 1 | 1 | 1 |
+| `openai` | OpenAI speech (limited per minute, not at once) | 6 | 6 | 6 | 6 |
+
+The ElevenLabs numbers are a table in the code (`ELEVENLABS_PLANS`), from ElevenLabs' models page
+and TTS FAQ. mj:voice asks ElevenLabs for the account's plan when it starts (the `tier` of
+`/v1/user/subscription`) and sizes the lanes from it; the startup line says which
+(`ElevenLabs starter: 3 at once, 6 Flash`). A plan not in the table, or one that can't be read,
+gets Starter's. **After changing plan, restart `mj-arcana.service`.** The ElevenLabs families
+are separate limits, measured 2026-10-21: with three v3 lines running a fourth was refused, while a
+Flash line went through, its `current-concurrent-requests` header counting only itself against a
+maximum of 6. A lane is waited for before the request takes one of the toolset's 16 slots, so a v3
+backlog never holds up Flash.
+
+Two rules keep the queue honest:
+
+- **What nobody waits for isn't made.** A caller says how long it waits (`wait_seconds`, default
+  120 for `speak`, 600 for `music`), counted from the envelope's timestamp. A request still queued
+  when less than 3 s of that is left is answered `expired`, unmade and unbilled; once made, the
+  provider would have billed it with nobody waiting.
+- **ElevenLabs at its limit anyway is waited out.** The lanes keep mj under the limit, so a 429 means
+  someone else on the account (the website, another program). mj tries again after 0.5, 1, 2, 4 and
+  8 s while the caller still has time, then answers `busy` (unbilled, `retry: true`).
+
+Measured through the bus on 2026-10-21 (Starter): 8 v3 lines and 2 Flash lines sent at once all came
+back made, the v3 lines in waves of three finishing at about 2, 4 and 6 s, the Flash lines in 0.7 s.
+With ElevenLabs' three places filled from outside mj, a line sent through it waited until one
+finished and was made.
+
+Lanes are per toolset. No provider serves mj:camera and mj:voice under one limit today (OpenAI is in
+both, but limits each model on its own); one that did, Runware for speech as well as pictures, would
+need a lane the two toolsets share.
+
 ### Costing a spoken line
 
 No TTS provider reports a price in the response — there is no `includeCost` equivalent — so this is

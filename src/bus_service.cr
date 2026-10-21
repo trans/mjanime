@@ -93,9 +93,9 @@ module MJ
 
     # The live bus client, kept so web routes can make OUTBOUND calls to other
     # services (e.g. openai:tts) over the same connection. Set by setup().
-    @@client : Arcana::Client? = nil
+    @@client : ::Arcana::Client? = nil
 
-    def self.client : Arcana::Client?
+    def self.client : ::Arcana::Client?
       @@client
     end
 
@@ -118,7 +118,7 @@ module MJ
       payload["speed"] = JSON::Any.new(speed) if speed
 
       # openai is a single-address Toolset (post-0.24); `openai:tts` is a dead pre-0.24 ghost.
-      env = Arcana::Envelope.new(from: "mj", to: "openai",
+      env = ::Arcana::Envelope.new(from: "mj", to: "openai",
         payload: JSON::Any.new(payload))
       reply = client.request(env, 60.seconds)
       raise "tts request timed out (is openai:tts on #{bus_url}?)" unless reply
@@ -126,10 +126,10 @@ module MJ
       # The reply may be a Protocol result envelope ({_status:"result", data:{...}})
       # or a bare payload — unwrap to the inner data either way.
       raw = reply.payload
-      if Arcana::Protocol.error?(raw)
-        raise "tts error: #{Arcana::Protocol.message(raw) || raw.to_json}"
+      if ::Arcana::Protocol.error?(raw)
+        raise "tts error: #{::Arcana::Protocol.message(raw) || raw.to_json}"
       end
-      data = Arcana::Protocol.data(raw) || raw
+      data = ::Arcana::Protocol.data(raw) || raw
       b64 = data["audio_base64"]?.try(&.as_s?)
       raise "tts returned no audio: #{raw.to_json}" unless b64
       ctype = data["content_type"]?.try(&.as_s?) || "audio/#{format}"
@@ -167,17 +167,17 @@ module MJ
 
     # Build the client + toolset and register the tools. Returns the client
     # (ts is kept alive by the on_message closure ts.start installs on it).
-    private def self.setup(rw : RunwareClient) : Arcana::Client
-      client = Arcana::Client.new(
+    private def self.setup(rw : RunwareClient) : ::Arcana::Client
+      client = ::Arcana::Client.new(
         url: bus_url,
         address: "mj", # a single-address Toolset (dispatches on payload["tool"]); NOT owner:capability
         name: "mj",
         description: "Media-jockey image studio — pixel-art restyle, transparent props, structural bases.",
-        kind: Arcana::Directory::Kind::Service,
+        kind: ::Arcana::Directory::Kind::Service,
         tags: ["image", "pixel-art", "game-assets"],
       )
       @@client = client
-      ts = Arcana::Toolset.new(client: client, name: "mj",
+      ts = ::Arcana::Toolset.new(client: client, name: "mj",
         description: "Media-jockey image studio.")
       ts.tool("pixelize", "AI pixel-art restyle (8-bit/16-bit) of a reference image.",
         input_schema: PIXELIZE_SCHEMA) { |data| handle_pixelize(rw, data) }

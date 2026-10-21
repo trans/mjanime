@@ -158,6 +158,14 @@ else
       output_path. "refused" means the provider declined the text: unbilled, with a reason
       and retry:true. A provider is NEVER silently substituted for another.
 
+      QUEUE: requests beyond what a provider takes at once wait here, in a lane per limit
+      (ElevenLabs v3/v2, ElevenLabs Flash/Turbo, songs, OpenAI), the ElevenLabs lanes sized
+      to the account's plan. Say how long you will wait
+      with `wait_seconds` (default 120 for speak, 600 for music): a request still queued
+      when less than 3 s of that is left comes back "expired", unmade and unbilled. "busy"
+      means ElevenLabs stayed at the plan's limit while mj retried (someone else on the
+      account): unbilled, retry:true.
+
       COST: no TTS provider reports a price, so `usd` is computed and `usd_exact` says how.
       The providers do not share a billing unit. gpt-4o-mini-tts bills per TOKEN, and the
       tokens OpenAI reports are priced exact; a reply without them is estimated from
@@ -180,17 +188,26 @@ else
       GUIDE
     tags: ["tts", "voice", "speech", "audio", "music"],
   )
-  # Deliberately low until the ElevenLabs plan tier is known: that provider caps
-  # CONCURRENT requests per account (10/20/30 by plan) and answers an overrun with a hard
-  # 429 too_many_concurrent_requests, unlike Runware's queue. Raise it once the tier is
-  # confirmed; queueing here beats being refused there.
+  # A backstop, as for the camera: the per-LANE caps do the limiting (arcana/voice_lanes.cr),
+  # one per limit a provider enforces. ElevenLabs caps requests at once per model family
+  # and plan, sized here from the plan it reports, and refuses an overrun with a hard 429,
+  # unlike Runware's queue; queueing here beats being refused there.
   voice_ts = Arcana::Toolset.new(client: voice_client, name: "mj:voice",
     description: "Text to speech, and songs.",
-    max_concurrent: 4)
-  MJ::Arcana::VoiceService.register(voice_ts)
+    max_concurrent: 16)
+  tier = MJ::Arcana::VoiceLanes.elevenlabs_tier if voices.includes?("elevenlabs")
+  limits = MJ::Arcana::VoiceLanes.limits(tier)
+  MJ::Arcana::VoiceService.register(voice_ts, limits)
   toolsets << voice_ts
   clients << voice_client
-  log "#{GREEN}●#{RESET} #{BOLD}mj:voice#{RESET} #{DIM}— #{voices.join(", ")}#{RESET}"
+  plan = if !voices.includes?("elevenlabs")
+           ""
+         elsif tier && MJ::Arcana::VoiceLanes::ELEVENLABS_PLANS.has_key?(tier)
+           "; ElevenLabs #{tier}: #{limits["elevenlabs"]} at once, #{limits["elevenlabs-flash"]} Flash"
+         else
+           "; ElevenLabs plan #{tier || "unread"}, so Starter's limits"
+         end
+  log "#{GREEN}●#{RESET} #{BOLD}mj:voice#{RESET} #{DIM}— #{voices.join(", ")}#{plan}#{RESET}"
 end
 
 if clients.empty?
