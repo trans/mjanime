@@ -193,9 +193,9 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   to 3.82 s at 1.2), eleven_v3 ignores it; arcana-ai doesn't send it
   anyway. Told them (`mail/sent/20261021-155036Z-*`); schema and
   `docs/tools/arcana.md` say so (**not yet committed**, help shows it from
-  the next restart). **Held for Thomas:** a draft to @arcana asking for a
+  the next restart). **Asked @arcana** (Thomas approved, 2026-10-21) for a
   settable read timeout, speed to ElevenLabs, and why `instructions` sends
-  fixed `voice_settings` (`mail/drafts/20261021-155300Z-@arcana--*`).
+  fixed `voice_settings` (`mail/sent/20261021-161230Z-@arcana--*`); open.
   **The Bard, head to toe, cut out** for overlore.xyz, asked 2026-10-15
   (`mail/received/*-@overlore--bard-full-figure-*.md`): three candidates
   made with `mj prop` (two fantasy poses, and the golden-style cartoon
