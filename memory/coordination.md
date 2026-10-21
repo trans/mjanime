@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-19*
+*Updated 2026-10-21*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -425,13 +425,19 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   `mail/received/20261019-194317Z-@overlore--the-quill-moves-*`), so both
   play backwards too. Overlore copied it in and played talk a: after the
   written line the move runs backwards (f145 to f073), then the bow, no
-  errors; uncommitted on its side until Thomas says
-  (`mail/received/20261019-200627Z-@overlore--re-the-quill-moves-*`). Format, `graph.py`, `bard-walker.js`
+  errors (`mail/received/20261019-200627Z-@overlore--re-the-quill-moves-*`);
+  **committed** with the graph and walker, below. Format, `graph.py`, `bard-walker.js`
   (`move(from, to, {abnormal})`) and the preview changed, tested in Node;
   **sent** (`mail/sent/20261019-191809Z-@overlore--the-bard-s-graph-*`).
-  Overlore copied it into the landing (`landing/public/bard/`, uncommitted
-  there until Thomas says) and played both acts through headless, no
-  errors (`mail/received/20261019-192411Z-@overlore--re-the-bard-s-graph-*`);
+  Overlore copied it into the landing (`landing/public/bard/`) and played
+  both acts through headless, no errors
+  (`mail/received/20261019-192411Z-@overlore--re-the-bard-s-graph-*`).
+  **Committed** on Overlore's side as `12a3b84` (2026-10-19, on GitHub):
+  graph, walker and the backwards quill move. mj's records wrongly had it
+  waiting; Overlore corrected it 2026-10-21
+  (`mail/received/20261021-024936Z-@overlore--the-landing-s-graph-*`).
+  The 2026-10-20 `graph.json` (present cleared, unusable 54 to 26) is
+  checked by Overlore and goes in when Thomas says;
   `means` and `kind` wait for its choreographer.
   **Car-salesman skit** (Thomas and Overlore, script finished 2026-10-18):
   Overlore is making its voices itself; Thomas will come back to mj for the
