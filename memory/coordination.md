@@ -563,6 +563,16 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   on the sandbox's read-only home). Service restarted 17:26Z, checked over
   the bus; **not yet committed**. Told @arcana
   (`mail/sent/20261021-172920Z-*`) and Overlore (`…172926Z-*`).
+  **Voices at scale** (Thomas, 2026-10-21): ElevenLabs is on Starter, 3 at
+  once for v3/v2 (its `maximum-concurrent-requests` header), 6 for Flash;
+  Thomas will upgrade to Pro (10 / 20 Flash) before launch, hoping for 100
+  to 1,000 players at once. Overlore already caches every repeatable line
+  by paragraph, so only fresh paragraphs reach mj:voice. **Open (mj):**
+  lanes per provider (ElevenLabs at the plan's cap, OpenAI, music at 1),
+  expire queued requests whose caller has given up (unbilled), retry
+  ElevenLabs' 429; today mj:voice is one queue of 4, unbounded, no expiry.
+  **Unknown:** Overlore's cache hit rate and fresh paragraph length, and
+  Flash's generation time.
   **Open, @arcana's:** does a speed-only `voice_settings` keep a voice's
   stored values or take the defaults? History shows each call's settings,
   but Henry, the Announcer and George all store the defaults, so it can't
