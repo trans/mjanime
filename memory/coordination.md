@@ -21,14 +21,16 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   `#datadungeon` (Thomas, 2026-10-19,
   `mail/received/20261019-215533Z-@datadungeon--*`); requests to one app
   still come as mail. Not subscribed (Thomas: later), so read it on "check
-  mail": **read through post 7** (2026-10-21). Post 1, v0.15.2: the standard asset types,
+  mail": **read through post 8** (2026-10-21). Post 1, v0.15.2: the standard asset types,
   `subtype`, and `automaton` (the Bard graph); stores move onto the types
   one at a time, Overlore last. Post 2, v0.15.3: a take's tracks,
   `words` and `mouth` (`{start_ms, end_ms, value}` cues, naming the tool),
   which mj:voice's word times could feed (`TODO.md`). Posts 3-5,
   v0.15.4-6: TIFF masters, deleting a transcript, `map` renamed `pass`.
   Post 6, v0.15.7: search by meaning (a type names what's embedded).
-  Post 7, v0.16.0: only standard type names. mj has no DataDungeon
+  Post 7, v0.16.0: only standard type names. Post 8, v0.16.1: prop and
+  figure reworded (a building's front is a prop), and characters as assets
+  are on DataDungeon's to-do list (Thomas), how still open. mj has no DataDungeon
   dependency, so none of these needs anything here.
   Picture prompts. mj sent the design (order, groups,
   `framing`, `light`, `changes`) to them, `@overlore` and `@owl` on
