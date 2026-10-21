@@ -573,6 +573,13 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   ElevenLabs' 429; today mj:voice is one queue of 4, unbounded, no expiry.
   **Unknown:** Overlore's cache hit rate and fresh paragraph length, and
   Flash's generation time.
+  **OpenAI is retiring its speech models** (its deprecations page, notice
+  2026-10-01, checked 2026-10-21): tts-1, tts-1-hd,
+  gpt-4o-mini-tts-2025-03-20 and -2025-12-15 are removed 2027-01-06; the
+  replacement named is gpt-realtime-2.1-mini (the Realtime API, not the
+  speech endpoint). The page doesn't list the unpinned gpt-4o-mini-tts.
+  Overlore's narrators pin -2025-12-15 (voice fable), so moving them to
+  ElevenLabs now has that deadline. OpenAI is no overflow for voices.
   **Open, @arcana's:** does a speed-only `voice_settings` keep a voice's
   stored values or take the defaults? History shows each call's settings,
   but Henry, the Announcer and George all store the defaults, so it can't
