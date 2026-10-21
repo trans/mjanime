@@ -159,13 +159,13 @@ else
       and retry:true. A provider is NEVER silently substituted for another.
 
       COST: no TTS provider reports a price, so `usd` is computed and `usd_exact` says how.
-      The providers do not share a billing unit. gpt-4o-mini-tts bills per TOKEN and audio
-      tokens track duration, so it is estimated from measured length — do NOT estimate it
-      from characters, which is 100% under on a slow delivery. tts-1/tts-1-hd bill per
-      character and come back exact. ElevenLabs reports the characters it billed, which
-      can be fewer than the text has (returned as `billed_characters`), and they're priced
-      at its published per-model rate, exact. `usd_basis` spells out which rule ran; null
-      usd means genuinely unknown, never zero.
+      The providers do not share a billing unit. gpt-4o-mini-tts bills per TOKEN, and the
+      tokens OpenAI reports are priced exact; a reply without them is estimated from
+      measured length — do NOT estimate it from characters, which is 100% under on a slow
+      delivery. tts-1/tts-1-hd bill per character and come back exact. ElevenLabs reports
+      the characters it billed, which can be fewer than the text has (returned as
+      `billed_characters`), and they're priced at its published per-model rate, exact.
+      `usd_basis` spells out which rule ran; null usd means genuinely unknown, never zero.
 
       Omit `voice` to get the provider's own default — do not pass OpenAI's "alloy" to
       ElevenLabs, which expects a voice id. ElevenLabs takes any model name as given,

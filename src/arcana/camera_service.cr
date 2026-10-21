@@ -8,6 +8,7 @@ require "./convert"
 require "./view"
 require "./pool_limit"
 require "./fetch_reference"
+require "./output_path"
 
 module MJ
   module Arcana
@@ -225,6 +226,7 @@ module MJ
           extra["seed"] = JSON::Any.new(seed) if cam.seeds
         end
 
+        data["output_path"]?.try(&.as_s?).try { |path| OutputPath.check!(path) }
         begin
           # An empty reference list means "no reference"; each transport decides what
           # that requires of it, since the providers differ on whether text-to-image

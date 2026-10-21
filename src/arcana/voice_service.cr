@@ -4,6 +4,7 @@ require "base64"
 require "http/client"
 require "json"
 require "./tts_rates"
+require "./output_path"
 
 module MJ
   module Arcana
@@ -30,7 +31,7 @@ module MJ
           "model":{"type":"string","description":"Override the provider's default model."},
           "format":{"type":"string","description":"mp3, wav, aac, flac, opus, pcm (default opus)."},
           "instructions":{"type":"string","description":"Style/persona direction. OpenAI only."},
-          "speed":{"type":"number","description":"0.25-4.0. OpenAI only."},
+          "speed":{"type":"number","description":"OpenAI 0.25-4.0; ElevenLabs 0.7-1.2, which eleven_v3 ignores."},
           "previous_text":{"type":"string","description":"Preceding line, for prosody continuity. ElevenLabs only, and not eleven_v3, which refuses it with a 400."},
           "next_text":{"type":"string","description":"Following line, for prosody continuity. ElevenLabs only."},
           "output_path":{"type":"string","description":"Write the audio here instead of returning base64."}
@@ -81,7 +82,8 @@ module MJ
             "default" => ::Arcana::AI::TTS::ElevenLabs::DEFAULT_VOICE,
             "models"  => ELEVENLABS_MODELS,
             "note"    => "Supports `previous_text` / `next_text` for prosody continuity " \
-                      "across consecutive lines — useful when narrating in sequence.",
+                      "across consecutive lines — useful when narrating in sequence — and " \
+                      "`speed` (0.7-1.2), which eleven_v3 ignores.",
           },
           "music" => {
             "available" => !ENV["ELEVENLABS_API_KEY"]?.nil?,
@@ -131,6 +133,7 @@ module MJ
         client.connect_timeout = 30.seconds
         client.read_timeout = 600.seconds # a song takes far longer than a spoken line
         headers = HTTP::Headers{"xi-api-key" => key, "Content-Type" => "application/json"}
+        data["output_path"]?.try(&.as_s?).try { |path| OutputPath.check!(path) }
         response = client.post(uri.request_target, headers: headers, body: body.to_json)
 
         unless response.success?
@@ -193,7 +196,7 @@ module MJ
                                  voice : String, format : String, text : String,
                                  seconds : Float64?)
         model = result.model
-        usd, exact, basis = price(provider, result, text.size, seconds)
+        usd, exact, basis = price(provider, result, seconds)
         h = {
           "status"     => JSON::Any.new("ok"),
           "provider"   => JSON::Any.new(provider),
@@ -203,9 +206,8 @@ module MJ
           "characters" => JSON::Any.new(text.size.to_i64),
           # The provider returns no price, so this is computed. `usd_exact` is the whole
           # point of reporting it: true means the billing unit is one we hold exactly
-          # (the characters or tokens the provider reported, or tts-1's characters, against
-          # a published rate), false means it was derived from measured duration or a
-          # configured rate. nil usd means genuinely unknown —
+          # (the characters or tokens the provider reported, against a published rate),
+          # false means it was derived from measured duration or a configured rate. nil usd means genuinely unknown —
           # a guess is never dressed up as a figure, because it would land in someone
           # else's ledger as fact.
           "usd"       => usd ? JSON::Any.new(usd) : JSON::Any.new(nil),
@@ -227,12 +229,13 @@ module MJ
       # arcana-ai prices what the provider reports billing, at the published per-model
       # rate, so this is exact when priced: ElevenLabs' characters (its `character-cost`
       # header), and OpenAI's input and audio tokens (the event stream's last event, on
-      # every model but tts-1 and tts-1-hd). It prices a dated snapshot at its model's
-      # rates, so a caller pinning gpt-4o-mini-tts-2025-12-15 gets a price too (it got
-      # none from TtsRates, 2026-10-19). OpenAI without usage falls back to TtsRates:
-      # exact for tts-1's characters, an estimate from duration otherwise.
+      # every model but tts-1 and tts-1-hd), and tts-1's characters as sent (from
+      # 0.6.1). It prices a dated snapshot at its model's rates, so a caller pinning
+      # gpt-4o-mini-tts-2025-12-15 gets a price too (it got none from TtsRates,
+      # 2026-10-19). OpenAI without usage falls back to TtsRates, an estimate from
+      # duration.
       private def self.price(provider : String, result : ::Arcana::AI::TTS::Result,
-                             characters : Int32, seconds : Float64?) : {Float64?, Bool, String}
+                             seconds : Float64?) : {Float64?, Bool, String}
         case cost = result.cost
         when ::Arcana::AI::Pricing::Cost
           who = provider == "elevenlabs" ? "ElevenLabs" : "OpenAI"
@@ -246,12 +249,18 @@ module MJ
           {cost.total.to_f, true, "#{basis} (#{cost.rates})"}
         else
           if provider == "openai"
-            TtsRates.price(provider, result.model, characters, seconds)
+            TtsRates.price(provider, result.model, seconds)
           else
             {nil, false, cost.detail}
           end
         end
       end
+
+      # How long to wait for the provider to send something. OpenAI's gpt-4o-mini-tts
+      # sends its events only once the clip is done, which took 65-81 s for a 4-5 s clip
+      # on 2026-10-21, past arcana-ai's old fixed 60 s. 110 s answers inside the 120 s
+      # Overlore waits, rather than after it has given up.
+      READ_TIMEOUT = 110.seconds
 
       def self.handle_speak(data : JSON::Any) : JSON::Any
         text = data["text"]?.try(&.as_s?) || raise "speak requires 'text'"
@@ -279,6 +288,7 @@ module MJ
           else
             raise "unknown provider #{provider.inspect} — expected openai or elevenlabs"
           end
+        tts.read_timeout = READ_TIMEOUT
 
         # Empty means "the provider's own default" — arcana-ai 0.3.0 changed these from
         # OpenAI's defaults to "" precisely because the old ones leaked across providers:
@@ -306,6 +316,7 @@ module MJ
             "alloy"
           end
 
+        data["output_path"]?.try(&.as_s?).try { |path| OutputPath.check!(path) }
         begin
           if path = data["output_path"]?.try(&.as_s?)
             result = tts.synthesize(req, path)

@@ -3,37 +3,25 @@ require "json"
 module MJ
   module Arcana
     # What an OpenAI spoken line cost when OpenAI reported no usage — the same per-provider
-    # knowledge `cameras.cr` holds for images, for speech. Usage is the usual case: from
-    # arcana-ai 0.5.5 on, every model but tts-1 and tts-1-hd answers in events whose last
-    # one reports its tokens, and arcana-ai prices those (`VoiceService.price`), as it
-    # does ElevenLabs' billed characters. This is the fallback: tts-1's characters, and a
-    # token-billed reply that came back without usage.
-    #
-    # Unlike Runware, OpenAI reports no price in the response, so this has to be computed.
-    # The trap is assuming one billing unit: its models do not share one.
+    # knowledge `cameras.cr` holds for images, for speech. Usage is the usual case, and
+    # arcana-ai prices it (`VoiceService.price`): from 0.5.5 every model but tts-1 and
+    # tts-1-hd answers in events whose last one reports its tokens, and from 0.6.1 tts-1's
+    # characters are counted as sent, as ElevenLabs' billed characters are read. This is
+    # the fallback for a token-billed reply that came back without usage.
     #
     #   OpenAI gpt-4o-mini-tts   billed per TOKEN — $0.60/1M input characters plus
     #                            $12.00/1M AUDIO OUTPUT tokens. Audio tokens track
     #                            duration, so DURATION is the cost driver and OpenAI
     #                            publishes a composite of ~$0.015/minute.
-    #   OpenAI tts-1 / tts-1-hd  billed per CHARACTER, $15 / $30 per 1M. Exactly
-    #                            computable from the text — no estimate needed.
     #
-    # So: character-billed models get an EXACT price, and duration-billed ones get an
-    # estimate from measured duration.
-    # Each result says which rule produced it rather than leaving the caller to guess.
+    # So the fallback is an estimate from measured duration, and says so.
     #
     # Published prices drift. Every figure here is overridable by environment variable,
     # and `basis` names the rule so a stale number is visible rather than silent.
     module TtsRates
-      # Published rates, as of 2026-10. NOT measured — unlike the camera costs, which come
-      # from Runware's includeCost. Treat as a default to be overridden, not as truth.
-      USD_PER_1M_CHARS = {
-        "tts-1"    => 15.0,
-        "tts-1-hd" => 30.0,
-      }
-
-      # Duration-billed models: OpenAI's own composite figure for text + audio tokens.
+      # Duration-billed models: OpenAI's own composite figure for text + audio tokens, as
+      # of 2026-10. NOT measured — unlike the camera costs, which come from Runware's
+      # includeCost. Treat as a default to be overridden, not as truth.
       USD_PER_MINUTE = {
         "gpt-4o-mini-tts" => 0.015,
       }
@@ -45,10 +33,6 @@ module MJ
         USD_PER_MINUTE[model]? || USD_PER_MINUTE[undated(model)]?
       end
 
-      def self.openai_usd_per_1m_chars(model : String) : Float64?
-        USD_PER_1M_CHARS[model]? || USD_PER_1M_CHARS[undated(model)]?
-      end
-
       # A dated snapshot (gpt-4o-mini-tts-2025-12-15) is billed at its model's rates.
       def self.undated(model : String) : String
         model.sub(/-\d{4}-\d{2}-\d{2}\z/, "")
@@ -56,15 +40,10 @@ module MJ
 
       # Returns {usd, exact?, basis}. `usd` nil means genuinely unknown — never a guess
       # dressed as a figure.
-      def self.price(provider : String, model : String, characters : Int32,
+      def self.price(provider : String, model : String,
                      seconds : Float64?) : {Float64?, Bool, String}
         case provider
         when "openai"
-          # Character-billed models are exactly computable from the text alone.
-          if per_1m = openai_usd_per_1m_chars(model)
-            return {characters * per_1m / 1_000_000.0, true,
-                    "#{model} bills per character at $#{per_1m}/1M — exact from #{characters} characters"}
-          end
           # Token-billed models: audio output tokens track duration, so duration is the
           # estimator. Characters alone would miss how long the model chose to take.
           if per_min = openai_usd_per_minute(model)

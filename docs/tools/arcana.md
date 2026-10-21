@@ -342,7 +342,11 @@ We never set `outputQuality`, so the encoder runs at Runware's default.
 
 **Returns base64 by default**, not a path: bus services are filesystem-isolated. The `runware`
 service reports success writing to a `/tmp` nobody else can see. `output_path` works only where
-caller and service genuinely share a filesystem.
+caller and service genuinely share a filesystem. mj-arcana runs sandboxed (`ProtectHome=read-only`)
+and writes only under `~/.local/share/mj`, so `shoot`, `speak` and `music` check `output_path`
+before calling the provider and refuse one they can't write, unbilled. Before that check
+(2026-10-21), two ElevenLabs takes asked to write elsewhere were billed and then failed
+"Read-only file system".
 
 ## XCF and deduplication
 
@@ -391,6 +395,21 @@ wired to the bus), and it accepts **`previous_text` / `next_text`** for prosody 
 consecutive lines — the thing that stops synthesized narration sounding like a list of sentences.
 `eleven_v3` refuses `previous_text` with a 400 (Overlore, 2026-10-18).
 
+**`speed`** goes to OpenAI (0.25-4.0) and, from arcana-ai 0.6.1, to ElevenLabs as
+`voice_settings.speed` (0.7-1.2; ElevenLabs refuses values outside that). `eleven_v3` ignores it.
+Tried directly on 2026-10-21 (Henry, a 91-character line, speech timed with silence trimmed):
+`eleven_multilingual_v2` went from 4.83 s at 1.0 to 3.82 s at 1.2, and `eleven_v3` didn't change
+(5.47 and 5.74 s at 1.0, 5.49 and 5.72 s at 1.2, 5.00 s at 0.7). For `eleven_v3`, speed up on
+playback instead, as the landing plays Henry at 1.1x. A request with `speed` is the only one that
+sends ElevenLabs `voice_settings`, and then only `speed`; before 0.6.1, arcana-ai sent fixed
+`stability` and `similarity_boost` whenever `instructions` were given.
+
+**mj:voice waits 110 s** for the provider to send something (`VoiceService::READ_TIMEOUT`, from
+arcana-ai 0.6.1; it was a fixed 60 s). On 2026-10-21 `gpt-4o-mini-tts` took 65-81 s for a 4-5 s clip
+(direct, 15:43-15:48Z), and with `stream_format: sse`, which arcana-ai asks for to get the tokens,
+OpenAI sent nothing until the clip was done, so every call failed "Read timed out". 110 s answers
+inside the 120 s Overlore waits.
+
 Returns `audio_base64` unless `output_path` is given. **Omit `voice` to get the provider's own
 default** — arcana-ai 0.3.0 changed `TTS::Request`'s defaults to `""` for this reason: the old
 OpenAI-shaped defaults leaked across providers, so ElevenLabs was sent model `gpt-4o-mini-tts` and
@@ -410,7 +429,7 @@ computed, and the trap is assuming one billing unit. **The two providers do not 
 | model | billed on | what we report |
 | --- | --- | --- |
 | `gpt-4o-mini-tts` (OpenAI default), and its dated snapshots | tokens — $0.60/1M input **+ $12/1M audio output tokens** | **exact** — the tokens OpenAI reports, priced by arcana-ai; a snapshot (`gpt-4o-mini-tts-2025-12-15`) at its model's rates |
-| `tts-1` / `tts-1-hd` | characters, $15 / $30 per 1M | **exact** — computable from the text alone |
+| `tts-1` / `tts-1-hd` | characters, $15 / $30 per 1M | **exact** — the characters as sent, counted and priced by arcana-ai (0.6.1 on) |
 | ElevenLabs | the characters it bills, at a rate per model | **exact** — `billed_characters` from ElevenLabs' `character-cost` header, priced by arcana-ai |
 
 OpenAI reports a call's tokens only when it answers in events (`stream_format: "sse"`), which
@@ -447,8 +466,8 @@ counter by 12 (checked 2026-10-19 in the speech history, `character_count_change
 item; the key needs `speech_history_read`).
 
 Published rates drift. The rates for reported usage are arcana-ai's table, and `usd_basis` names
-its version; the fallback's are mj's own (`TtsRates`, the per-minute one overridable with
-`MJ_OPENAI_TTS_USD_PER_MINUTE`). Unlike the camera costs — which are
+its version; the fallback's is mj's own (`TtsRates`, per minute, overridable with
+`MJ_OPENAI_TTS_USD_PER_MINUTE`). mj's tts-1 rates went with arcana-ai 0.6.1, which prices tts-1. Unlike the camera costs — which are
 *measured* from Runware's `includeCost` — these are quoted from published price lists and should be
 re-checked.
 
