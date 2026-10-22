@@ -34,6 +34,9 @@ Environment=HOME=%S/mj
 EnvironmentFile=/etc/mj/env
 
 # --- sandbox -----------------------------------------------------------------
+# Never add MemoryDenyWriteExecute= or ProcSubset=pid: on another droplet they broke a
+# Crystal binary, the first by killing PCRE2's regex JIT (NOMEMORY), the second by hiding
+# /proc/stat from Boehm's GC (@cyclops, 2026-10-22). ProtectProc=invisible leaves it.
 # DynamicUser= already implies ProtectSystem=strict, PrivateTmp, NoNewPrivileges and
 # RestrictSUIDSGID; they are stated anyway, so the unit reads whole.
 NoNewPrivileges=true

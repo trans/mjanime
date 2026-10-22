@@ -173,9 +173,8 @@
     system unit: that needs root, which this workstation's session hasn't.
 - **Deploying mj-arcana to a server:** `just install-server`, as root, builds only mj-arcana
   and installs the system unit (deploy/README.md, "On a server"). Handed to @cyclops, who
-  deploys, 2026-10-22. **Thomas's to do:** copy `OPENAI_API_KEY`, `RUNWARE_API_KEY` and
-  `GEMINI_API_KEY` from `mj/local` into `mj/production` (@cyclops, 2026-10-22: prod reuses
-  local's values); `ELEVENLABS_API_KEY` is already there.
+  deploys, 2026-10-22; it signed the unit off the same day, and `mj/production`'s keys are
+  all set (prod reuses local's values).
 - **Retiring the repo `.env` is blocked on a fish export format.** `@cyclops` settled the four open
   questions (2026-10-13): `local` secrets are delivered by `cyclops-env export mj local > file`
   redirect (an ssh-less `push` is a wishlist item, not a gap); `production`/`local` are the only

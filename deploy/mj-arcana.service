@@ -45,6 +45,8 @@ RestartSec=2
 # It needs very little: the bus over loopback, the provider APIs over TLS, and one
 # directory of its own. Any bus participant can send it a request, so it is held to that
 # (the security review, 2026-10-21; `systemd-analyze --user security mj-arcana` scores it).
+# Never add MemoryDenyWriteExecute= or ProcSubset=pid: they break Crystal's regex JIT and
+# its GC (server/mj-arcana.service says how).
 NoNewPrivileges=true
 # Covers the short-lived temp files: the GIMP scratch dir for `format: "xcf"` and the
 # probe file ffprobe measures audio duration from.
