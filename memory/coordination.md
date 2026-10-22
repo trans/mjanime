@@ -587,11 +587,28 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   bm_fable acceptable, Flash only marginally better; they suspect Kokoro
   on a cloud server will cost more than Flash. Thomas thinks Flash may do
   for the DMs during a quest, and suggests players could choose a higher
-  voice quality and pay for it (2026-10-22); put to @overlore. Not decided.
-  **Paid only** (Thomas, 2026-10-22): nothing should be generated unless
-  someone paid tokens for it; this replaces a spending cap. Overlore can
-  only deduct once mj reports the cost (Thomas, 2026-10-22). No price limit
-  in mj, since one set too low would stop the game (Thomas, 2026-10-22), so
+  voice quality and pay for it (2026-10-22). **Voice quality, after
+  launch  **Paid only** (Thomas, 2026-10-22): nothing should be generated unless
+  someone paid for it. No price limit in mj, since one set too low would
+  stop the game (Thomas, 2026-10-22). **Overlore already works this way**
+  (@overlore, 2026-10-22, `mail/received/20261022-062817Z-*`): a coin is 5
+  cents, a player pays twice mj's `usd`, and every paid request (a turn, a
+  portrait, a snapshot) is checked first, refused once the player is 20
+  coins (-$1) below zero. Room pictures are the house's cost (a player
+  pays 2 cents a room). A lost reply is recorded nowhere and charged to
+  no one; Thomas decided it isn't worth handling yet, so request ids in
+  mj's ledger aren't asked for. Its sizes are far under mj's limits: the
+  longest voiced line so far is 441 characters, a typed command at most
+  500, a description 600, a voice note 60; no songs. Overlore takes
+  pictures and clips back as base64, so `76e6f1e` changes nothing for it.
+  Receipts per request were dropped (Thomas, 2026-10-22): an exploited
+  Overlore sends, and would sign, as Overlore regardless.
+  **`wait_seconds` on `shoot`, asked** (@overlore for Thomas, 2026-10-22,
+  `mail/received/20261022-063221Z-*`): when Overlore stops waiting, mj
+  should drop the shot unmade and unbilled, as `speak` does. Overlore
+  waits 150 s for a picture, and now sends `wait_seconds: 120` with every
+  line. It will send it on `shoot` once mj says it's taken. Not built.
+so
   holds and ceilings were dropped. Proposed: Overlore checks the player can
   pay, asks, deducts mj's `usd`; request ids in mj's ledger for lost
   replies. Sent 2026-10-22 with the voice-quality idea
