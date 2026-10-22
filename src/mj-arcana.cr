@@ -97,7 +97,8 @@ if key = ENV["RUNWARE_API_KEY"]?
 
       Pass references as reference_base64 or reference_url; reference_path is refused, since
       bus services do not share a filesystem. output_path writes a new file inside
-      ~/.local/share/mj/out and never overwrites one.
+      ~/.local/share/mj/out and never overwrites one. A prompt over 10,000 characters, or
+      more than 16 references, is refused unbilled: limits only no game would meet.
       Prefer format webp — 26x smaller on the wire than png. If you pass a reference, say
       "in the same style" rather than describing the style; an over-specified style fights
       the reference image.
@@ -168,6 +169,9 @@ else
       when less than 3 s of that is left comes back "expired", unmade and unbilled. "busy"
       means ElevenLabs stayed at the plan's limit while mj retried (someone else on the
       account): unbilled, retry:true.
+
+      LIMITS, only what no game would meet, refused unbilled: any one text field over
+      10,000 characters, a song over 10 minutes, wait_seconds over 3600.
 
       COST: no TTS provider reports a price, so `usd` is computed and `usd_exact` says how.
       The providers do not share a billing unit. gpt-4o-mini-tts bills per TOKEN, and the

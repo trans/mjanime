@@ -5,8 +5,11 @@ require "../../src/arcana/output_path"
 describe MJ::Arcana::OutputPath do
   out = MJ::Arcana::OutputPath
   home = File.tempname("mj-out-spec")
-  Spec.before_each { Dir.mkdir_p(home); ENV["XDG_DATA_HOME"] = home }
-  Spec.after_each { FileUtils.rm_rf(home) }
+  # Scoped to this describe: Spec.before_each would point every spec in the suite at
+  # `home`, and a live spec's ledger row went there and was deleted (2026-10-22).
+  real = ENV["XDG_DATA_HOME"]?
+  before_each { Dir.mkdir_p(home); ENV["XDG_DATA_HOME"] = home }
+  after_each { FileUtils.rm_rf(home); ENV["XDG_DATA_HOME"] = real }
 
   it "writes a new file inside the out directory, and never over one" do
     full = out.check!("take.mp3")

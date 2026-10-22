@@ -10,6 +10,7 @@ require "./view"
 require "./pool_limit"
 require "./fetch_reference"
 require "./output_path"
+require "./limits"
 
 module MJ
   module Arcana
@@ -166,6 +167,8 @@ module MJ
 
       def self.handle_shoot(transports : Hash(String, Transport), data : JSON::Any) : JSON::Any
         prompt = data["prompt"]?.try(&.as_s?) || raise "shoot requires 'prompt'"
+        Limits.text!(data, "prompt")
+        Limits.references!(data)
         id = data["camera"]?.try(&.as_s?) || "klein"
         cam = Cameras.find(id) || raise "unknown camera #{id.inspect} — call `cameras` for the list"
 

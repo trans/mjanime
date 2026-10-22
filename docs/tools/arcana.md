@@ -368,6 +368,19 @@ participant can name the URL, so an unchecked fetch reached the droplet's metada
 - **A failure says why without echoing what came back,** and shows the URL without its query
   string, which holds a presigned link's signature.
 
+## Limits: only the outrageous
+
+Overlore caps request sizes itself, and a limit tight enough to meet a real request would stop
+the game (Thomas, 2026-10-22). So mj refuses only what no game would send, before anything is
+queued or billed (`src/arcana/limits.cr`):
+
+| What | Refused over |
+| --- | --- |
+| Any one text field: `text`, `instructions`, `previous_text`, `next_text`, a `prompt` | 10,000 characters |
+| A song: its plan's sections added up, or `music_length_ms` | 10 minutes |
+| References in one shot | 16, and 32 MB each as base64 |
+| `wait_seconds` | 3,600 |
+
 ## XCF and deduplication
 
 `format: "xcf"` converts locally through headless GIMP 3 (~1.4 s; GIMP 3 needs

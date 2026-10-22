@@ -7,6 +7,7 @@ require "../api/spend"
 require "./tts_rates"
 require "./output_path"
 require "./voice_lanes"
+require "./limits"
 
 module MJ
   module Arcana
@@ -202,6 +203,9 @@ module MJ
 
       def self.handle_music(data : JSON::Any, sent_at : Time = Time.utc) : JSON::Any
         key = ENV["ELEVENLABS_API_KEY"]? || raise "ELEVENLABS_API_KEY is not set on this host"
+        Limits.text!(data, "prompt")
+        Limits.song!(data)
+        Limits.wait!(data)
         due = deadline(data, sent_at, MUSIC_WAIT)
         if late = expired("elevenlabs", sent_at, due)
           return late
@@ -249,7 +253,7 @@ module MJ
               "reason"   => (JSON.parse(msg) rescue JSON::Any.new(msg[0, 400])),
               "retry"    => JSON::Any.new(true),
               "note"     => JSON::Any.new("ElevenLabs declined this plan or prompt; its reason " \
-                                          "may carry a suggested rewrite. Not billed."),
+                                      "may carry a suggested rewrite. Not billed."),
             } of String => JSON::Any)
           end
           raise "Eleven Music error (#{response.status_code}): #{msg[0, 400]}"
@@ -268,8 +272,8 @@ module MJ
           "billed_characters" => billed ? JSON::Any.new(billed) : JSON::Any.new(nil),
           "usd"               => JSON::Any.new(nil),
           "usd_basis"         => JSON::Any.new("Eleven Music returned no cost; see the account's usage page"),
-          "content_type"   => JSON::Any.new(response.headers["Content-Type"]? || ""),
-          "content_length" => JSON::Any.new(audio.size.to_i64),
+          "content_type"      => JSON::Any.new(response.headers["Content-Type"]? || ""),
+          "content_length"    => JSON::Any.new(audio.size.to_i64),
         } of String => JSON::Any
         if song = response.headers["song-id"]?
           h["song_id"] = JSON::Any.new(song)
@@ -372,6 +376,8 @@ module MJ
         text = data["text"]?.try(&.as_s?) || raise "speak requires 'text'"
         provider = data["provider"]?.try(&.as_s?) || "openai"
         format = data["format"]?.try(&.as_s?) || "opus"
+        Limits.text!(data, "text", "instructions", "previous_text", "next_text")
+        Limits.wait!(data)
         due = deadline(data, sent_at, SPEAK_WAIT)
         if late = expired(provider, sent_at, due)
           return late

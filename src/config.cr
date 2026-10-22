@@ -1,3 +1,5 @@
+require "yaml"
+
 module MJ
   module Config
     CONFIG_DIR  = ".config/mj"

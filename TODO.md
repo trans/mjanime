@@ -153,12 +153,20 @@
   - **Senders aren't authenticated on the bus** (Arcana's server; mail sent to `@arcana`
     2026-10-22). Until fixed, mj can't tell Overlore from anything else on the bus.
   - **Paid only:** Thomas's rule (2026-10-22) is that nothing is generated unless someone
-    paid tokens for it. A receipt per request, signed by whatever deducts the tokens, was
-    proposed; it needs Thomas's decision and Overlore's half. This replaces a spending cap.
+    paid tokens for it; this replaces a spending cap. Overlore can only deduct once mj
+    reports the cost (Thomas, 2026-10-22). No price limit in mj: one set too low would stop
+    the game (Thomas, 2026-10-22), so holds and ceilings were dropped. Proposed instead:
+    Overlore checks the player can pay, asks, and deducts mj's `usd`; mj puts each
+    request's id in the ledger, so a lost reply can be charged. Sent to @overlore
+    2026-10-22, with the voice-quality idea.
+    Receipts per request were proposed and dropped (Thomas, 2026-10-22): an exploited
+    Overlore would send, and sign, as Overlore regardless.
   - **A bound on queued requests** in arcana-core's dispatcher (not yet asked).
-  - **Sanity limits** on text, instructions, context, song length, references and
-    `wait_seconds`, and a model allowlist (proposed 2026-10-21, not built). The queue's
-    expiry also trusts the sender's clock.
+  - **Outrageous-only limits** (Thomas, 2026-10-22: Overlore caps request sizes, so mj
+    refuses only the obviously outrageous; a tight limit would stop the game). Proposed:
+    10,000 characters of text, instructions or context; songs up to 10 minutes; 16
+    references; `wait_seconds` up to an hour. **Built, not yet committed**
+    (`src/arcana/limits.cr`). The queue's expiry also trusts the sender's clock.
   - **The `mj` bus service** (`src/bus_service.cr`) still trusts every path it's given,
     when it runs.
   - **A dedicated service user** would isolate mj-arcana further than the user unit can.
