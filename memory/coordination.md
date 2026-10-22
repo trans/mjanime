@@ -581,14 +581,23 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   costs $1.58 on v3 and $0.43 on Flash. Flash made each line in 0.6-1.3 s,
   against v3's 3-4.5 s. Thomas is weighing what to do about voice cost
   (2026-10-22), and wants Flash tried.
+  **Kokoro** (Kokoro-82M ONNX, tried 2026-10-22, `Outtake/kokoro-test/`):
+  preset voices only, no cloning. One CPU core makes about 1.7 s of speech
+  a second (2.0 int8), four about 5. Thomas: better than expected,
+  bm_fable acceptable, Flash only marginally better; they suspect Kokoro
+  on a cloud server will cost more than Flash. Thomas thinks Flash may do
+  for the DMs during a quest, and suggests players could choose a higher
+  voice quality and pay for it (2026-10-22); put to @overlore. Not decided.
   **Paid only** (Thomas, 2026-10-22): nothing should be generated unless
   someone paid tokens for it; this replaces a spending cap. Overlore can
-  only deduct once mj reports the cost (Thomas, 2026-10-22); mj proposed a
-  hold for the most a request can cost, settled to mj's `usd`, with mj
-  giving the ceiling before the call and request ids in its ledger (not
-  decided). mj's proposed receipts per request were dropped (Thomas,
-  2026-10-22): an exploited Overlore sends, and would sign, as Overlore
-  regardless.
+  only deduct once mj reports the cost (Thomas, 2026-10-22). No price limit
+  in mj, since one set too low would stop the game (Thomas, 2026-10-22), so
+  holds and ceilings were dropped. Proposed: Overlore checks the player can
+  pay, asks, deducts mj's `usd`; request ids in mj's ledger for lost
+  replies. Sent 2026-10-22 with the voice-quality idea
+  (`mail/sent/20261022-061653Z-@overlore--paying-*`). mj's proposed
+  receipts per request were dropped (Thomas, 2026-10-22): an exploited
+  Overlore sends, and would sign, as Overlore regardless.
   **Senders aren't checked on the bus** (found in the security review,
   2026-10-22): the server takes a REST message's `from` if it is registered,
   or empty, and a WebSocket's as written. Sent to @arcana at Thomas's word
