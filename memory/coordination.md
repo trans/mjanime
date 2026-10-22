@@ -588,7 +588,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   on a cloud server will cost more than Flash. Thomas thinks Flash may do
   for the DMs during a quest, and suggests players could choose a higher
   voice quality and pay for it (2026-10-22). **Voice quality, after
-  launch  **Paid only** (Thomas, 2026-10-22): nothing should be generated unless
+  launch** (@overlore, 2026-10-22, Thomas wants it): a character's setting,
+  Flash by default, v3 for a player who chooses and pays; each request
+  names its `model`, nothing new in mj. A stored v3 take plays for
+  everyone, a Flash take only for Flash players. Overlore strips audio
+  tags before Flash; none of its lines has any yet. **Flash reads tags
+  aloud** (tested 2026-10-22, `Outtake/flash-tags-test/`: Whisper heard
+  "laughs", "whispers" and "sighs" in every tagged take, none in the
+  plain); Overlore told.
+  **Paid only** (Thomas, 2026-10-22): nothing should be generated unless
   someone paid for it. No price limit in mj, since one set too low would
   stop the game (Thomas, 2026-10-22). **Overlore already works this way**
   (@overlore, 2026-10-22, `mail/received/20261022-062817Z-*`): a coin is 5
@@ -603,18 +611,13 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   pictures and clips back as base64, so `76e6f1e` changes nothing for it.
   Receipts per request were dropped (Thomas, 2026-10-22): an exploited
   Overlore sends, and would sign, as Overlore regardless.
-  **`wait_seconds` on `shoot`, asked** (@overlore for Thomas, 2026-10-22,
+  **`wait_seconds` on `shoot`** (asked by @overlore for Thomas, 2026-10-22,
   `mail/received/20261022-063221Z-*`): when Overlore stops waiting, mj
-  should drop the shot unmade and unbilled, as `speak` does. Overlore
-  waits 150 s for a picture, and now sends `wait_seconds: 120` with every
-  line. It will send it on `shoot` once mj says it's taken. Not built.
-so
-  holds and ceilings were dropped. Proposed: Overlore checks the player can
-  pay, asks, deducts mj's `usd`; request ids in mj's ledger for lost
-  replies. Sent 2026-10-22 with the voice-quality idea
-  (`mail/sent/20261022-061653Z-@overlore--paying-*`). mj's proposed
-  receipts per request were dropped (Thomas, 2026-10-22): an exploited
-  Overlore sends, and would sign, as Overlore regardless.
+  drops the shot unmade and unbilled, as `speak` does. **Done in
+  `1c33360`** (v0.13.0): no attempt or retry starts once less than the
+  camera's typical time is left. Overlore waits 150 s for a picture and
+  sends `wait_seconds: 120` with every line; told 2026-10-22
+  (`mail/sent/20261022-064446Z-*`).
   **Senders aren't checked on the bus** (found in the security review,
   2026-10-22): the server takes a REST message's `from` if it is registered,
   or empty, and a WebSocket's as written. Sent to @arcana at Thomas's word
