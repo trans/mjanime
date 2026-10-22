@@ -29,6 +29,10 @@
   (ElevenLabs v3/v2 and Flash sized to the plan, songs 1, OpenAI 6), `expired` for requests
   whose caller has given up, retry on ElevenLabs' 429. See docs/tools/arcana.md "Queueing".
   **At Pro:** restart `mj-arcana.service`; it reads the plan at start (Pro: 10 and 20).
+- **`wait_seconds` on `shoot`** (asked by @overlore for Thomas, 2026-10-22): a shot still queued
+  when less than a few seconds of the caller's wait is left comes back `expired`, unmade and
+  unbilled, as `speak` does. **Done in `1c33360`:** no attempt, nor retry, starts once
+  less than the camera's typical time is left. Overlore waits 150 s and will send it once told.
 - **Word times from `mj:voice`** (candidate, 2026-10-19): ElevenLabs' `with-timestamps` speech
   endpoint returns each character's start and end; untested with `eleven_v3`. Returned as cues in
   the shape of DataDungeon's `words` track (`{start_ms, end_ms, value}`, v0.15.3), an app could
@@ -136,7 +140,7 @@
 
 ## secrets / deploy
 - **Security review before deployment** (Codex, 2026-10-21; `Intake/codex-review.md`, brief in
-  `Outtake/review-brief.md`). **Fixed 2026-10-22, not yet committed:**
+  `Outtake/review-brief.md`). **Fixed in `76e6f1e`:**
   - `reference_path` is refused;
   - `reference_url` only fetches public addresses, or loopback under `/media/`, pinned, with
     each redirect checked and the cap applied while reading;
@@ -152,24 +156,27 @@
   **Open:**
   - **Senders aren't authenticated on the bus** (Arcana's server; mail sent to `@arcana`
     2026-10-22). Until fixed, mj can't tell Overlore from anything else on the bus.
-  - **Paid only:** Thomas's rule (2026-10-22) is that nothing is generated unless someone
-    paid tokens for it; this replaces a spending cap. Overlore can only deduct once mj
-    reports the cost (Thomas, 2026-10-22). No price limit in mj: one set too low would stop
-    the game (Thomas, 2026-10-22), so holds and ceilings were dropped. Proposed instead:
-    Overlore checks the player can pay, asks, and deducts mj's `usd`; mj puts each
-    request's id in the ledger, so a lost reply can be charged. Sent to @overlore
-    2026-10-22, with the voice-quality idea.
-    Receipts per request were proposed and dropped (Thomas, 2026-10-22): an exploited
-    Overlore would send, and sign, as Overlore regardless.
+  - **Paid only: settled, nothing to change** (@overlore, 2026-10-22). Overlore checks a
+    player's balance before every paid request and charges twice mj's `usd`; no price limit
+    in mj, since one set too low would stop the game (Thomas, 2026-10-22). Lost replies
+    aren't worth handling yet (Thomas), so request ids in the ledger aren't needed.
   - **A bound on queued requests** in arcana-core's dispatcher (not yet asked).
   - **Outrageous-only limits** (Thomas, 2026-10-22: Overlore caps request sizes, so mj
     refuses only the obviously outrageous; a tight limit would stop the game). Proposed:
     10,000 characters of text, instructions or context; songs up to 10 minutes; 16
-    references; `wait_seconds` up to an hour. **Built, not yet committed**
-    (`src/arcana/limits.cr`). The queue's expiry also trusts the sender's clock.
+    references; `wait_seconds` up to an hour. **Done in `230c1d8`**. Overlore's largest
+    are far under (a 441-character line). The queue's expiry also trusts the sender's clock.
   - **The `mj` bus service** (`src/bus_service.cr`) still trusts every path it's given,
     when it runs.
-  - **A dedicated service user** would isolate mj-arcana further than the user unit can.
+  - **A dedicated service user** would isolate mj-arcana further than the user unit can. It
+    would also match the droplets' other services, which are system units reading
+    `/etc/<svc>/…` at `root:<group>` 640, restarted by `cyclops-env push --restart`;
+    mj-arcana is a user unit there too, so a push is followed by a restart over ssh.
+- **Deploying mj-arcana to a server:** `just install-server` builds only mj-arcana and
+  installs the unit (deploy/README.md, "On a server"). **Thomas's to do:** `mj/production`
+  holds only `ELEVENLABS_API_KEY` (mj:camera needs `RUNWARE_API_KEY`; OpenAI while
+  Overlore's narrators use fable; Gemini for the Google cameras), and it has no push target
+  yet (which droplet, which user).
 - **Retiring the repo `.env` is blocked on a fish export format.** `@cyclops` settled the four open
   questions (2026-10-13): `local` secrets are delivered by `cyclops-env export mj local > file`
   redirect (an ssh-less `push` is a wishlist item, not a gap); `production`/`local` are the only

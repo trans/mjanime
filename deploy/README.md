@@ -22,6 +22,43 @@ just uninstall-service    # leaves your keys and project overrides in place
 `install-service` substitutes the checkout path into the unit, so the shipped file carries
 `@MJ_DIR@` rather than one machine's layout and this works from any clone.
 
+## On a server
+
+`install-service` is for the workstation: it builds all of mj, the ONNX shim included, and
+pulls the `local` keys from the cyclops store on this machine. A server uses
+`just install-server`, from its own checkout, which builds only mj-arcana and takes its keys
+from a file cyclops pushes.
+
+1. **Packages:** Crystal and shards; ffmpeg, whose `ffprobe` measures each spoken line (and
+   prices OpenAI speech that comes back without usage); GIMP only for `format: "xcf"`. A cold
+   release build of mj-arcana peaked at 759 MB and took 18 s here (2026-10-22), so a 1 GB
+   droplet needs swap.
+2. **Keys, from the workstation.** `mj/production` must hold every key the server is to use:
+   without `RUNWARE_API_KEY`, mj:camera doesn't start. Make the directory on the server
+   (`mkdir -p ~/.config/mj`), set the push target once, and push:
+
+   ```sh
+   cyclops-env config mj production --host=<user>@<droplet> --key=~/.ssh/<key> \
+     --path=/home/<user>/.config/mj/env
+   cyclops-env push mj production       # writes the file, mode 600
+   ```
+
+   Leave `--restart` unset: cyclops runs `systemctl restart`, which doesn't reach a user unit.
+   If the bus isn't at `ws://localhost:19118/bus`, add `ARCANA_WS_URL` to the scope.
+3. **On the server**, as `<user>`:
+
+   ```sh
+   sudo loginctl enable-linger <user>   # or mj-arcana stops when you log out
+   git clone https://github.com/trans/mjanime.git && cd mjanime && git checkout v<version>
+   just install-server
+   ```
+
+   It refuses to start without the key file, and warns if ffprobe is missing or lingering is
+   off.
+4. **Later:** a new release is `git checkout v<version> && just install-server`; new keys are
+   `cyclops-env push mj production`, then `ssh <user>@<droplet> systemctl --user restart
+   mj-arcana`.
+
 ## Where the keys live: the cyclops store
 
 **Same mechanism as the cloud servers.** `cyclops-env` keeps secrets in an encrypted SQLite
