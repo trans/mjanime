@@ -582,8 +582,10 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   against v3's 3-4.5 s. Thomas is weighing what to do about voice cost
   (2026-10-22), and wants Flash tried.
   **Paid only** (Thomas, 2026-10-22): nothing should be generated unless
-  someone paid tokens for it; this replaces a spending cap. mj proposed a
-  receipt per request, signed by whatever deducts the tokens; not decided.
+  someone paid tokens for it; this replaces a spending cap. Overlore deducts
+  before it asks. mj's proposed receipts per request were dropped (Thomas,
+  2026-10-22): an exploited Overlore sends, and would sign, as Overlore
+  regardless.
   **Senders aren't checked on the bus** (found in the security review,
   2026-10-22): the server takes a REST message's `from` if it is registered,
   or empty, and a WebSocket's as written. Sent to @arcana at Thomas's word
@@ -600,8 +602,8 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   Proving the sender (a key pair per project, a signed challenge at `join`,
   signed REST, a `verified` stamp) is designed in Arcana's `memory/keys.md`
   but not settled. Until then @arcana suggests a service's own check, such
-  as a secret the game server passes in the payload; mj's receipt proposal
-  is that, per request.
+  as a secret the game server passes in the payload; not pursued, for the
+  same reason as receipts.
   **OpenAI is retiring its speech models** (its deprecations page, notice
   2026-10-01, checked 2026-10-21): tts-1, tts-1-hd,
   gpt-4o-mini-tts-2025-03-20 and -2025-12-15 are removed 2027-01-06; the
