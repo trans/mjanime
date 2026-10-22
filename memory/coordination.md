@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-21*
+*Updated 2026-10-22*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -569,12 +569,25 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   once for v3/v2 (its `maximum-concurrent-requests` header), 6 for Flash;
   Thomas will upgrade to Pro (10 / 20 Flash) before launch, hoping for 100
   to 1,000 players at once. Overlore already caches every repeatable line
-  by paragraph, so only fresh paragraphs reach mj:voice. **Open (mj):**
-  lanes per provider (ElevenLabs at the plan's cap, OpenAI, music at 1),
-  expire queued requests whose caller has given up (unbilled), retry
-  ElevenLabs' 429; today mj:voice is one queue of 4, unbounded, no expiry.
-  **Unknown:** Overlore's cache hit rate and fresh paragraph length, and
-  Flash's generation time.
+  by paragraph, so only fresh paragraphs reach mj:voice. **Queueing done
+  in `54d74a9`:** a lane per limit, sized from the plan ElevenLabs reports
+  at start, expiry, and a retry on 429. **Unknown:** Overlore's cache hit
+  rate and fresh paragraph length.
+  **What a voice costs** (measured 2026-10-22, Bard lines a-1, a-2, b-1,
+  b-3; `Outtake/flash-test/` has Flash and the delivered v3 takes side by
+  side for Thomas): ElevenLabs bills about 39% of the text's characters on
+  v3 and 20% on Flash, consistently. Why is unknown, and it could change.
+  At arcana-ai's $0.08 / $0.04 per 1,000 billed, an hour of fresh speech
+  costs $1.58 on v3 and $0.43 on Flash. Flash made each line in 0.6-1.3 s,
+  against v3's 3-4.5 s. Thomas is weighing what to do about voice cost
+  (2026-10-22), and wants Flash tried.
+  **Paid only** (Thomas, 2026-10-22): nothing should be generated unless
+  someone paid tokens for it; this replaces a spending cap. mj proposed a
+  receipt per request, signed by whatever deducts the tokens; not decided.
+  **Senders aren't checked on the bus** (found in the security review,
+  2026-10-22): the server takes a REST message's `from` if it is registered,
+  or empty, and a WebSocket's as written. Sent to @arcana at Thomas's word
+  (`mail/sent/20261022-034813Z-@arcana--senders-aren-t-checked-*`).
   **OpenAI is retiring its speech models** (its deprecations page, notice
   2026-10-01, checked 2026-10-21): tts-1, tts-1-hd,
   gpt-4o-mini-tts-2025-03-20 and -2025-12-15 are removed 2027-01-06; the
