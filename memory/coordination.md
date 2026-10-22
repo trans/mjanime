@@ -510,6 +510,11 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
 - **`@cyclops`**: secrets and deploy conventions. Settled 2026-10-13; the
   repo `.env` stays until cyclops ships a fish export format, and it will
   ping when it does (`TODO.md`, "secrets / deploy").
+  **cyclops deploys, not mj** (Thomas, 2026-10-22). mj-arcana is the only
+  part on the cloud server. v0.13.0 handed over for deploy 2026-10-22
+  (`mail/sent/20261022-065331Z-@cyclops--mjanime-v0.13.0-*`): `just
+  install-server`, the user unit, the keys `mj/production` still lacks,
+  and an offer of a system unit with its own user if cyclops prefers.
 - **`@arcana`**: the bus, arcana-core and arcana-ai (now under
   `~/Projects/Arcana/`). Camera concurrency rides on arcana-core 0.17.1
   (`c7181a7`). **Asked 2026-10-17** (Thomas;
