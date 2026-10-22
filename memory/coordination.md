@@ -515,6 +515,20 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   (`mail/sent/20261022-065331Z-@cyclops--mjanime-v0.13.0-*`): `just
   install-server`, the user unit, the keys `mj/production` still lacks,
   and an offer of a system unit with its own user if cyclops prefers.
+  **@cyclops took the offer** (2026-10-22, 13:15Z, by bus; the message
+  names the server's address, so it is summarized here, not filed): the
+  Overlore box (Debian 13, Crystal 1.21.1, 1.9 GiB RAM and 4 GiB swap) has
+  no login user, and every service there is a system unit, so a user unit
+  with lingering is the fragile option. It wants a system unit, with a
+  dedicated user or DynamicUser and StateDirectory (`/var/lib/mj` is fine),
+  and the key file somewhere like `/etc/mj/env`, mode 600. `mj/production`
+  reuses `mj/local`'s values: Thomas copies OpenAI, Runware and Gemini in.
+  It'll deploy from `v0.13.0` (`ced768c`), with ffmpeg, just and cmake on
+  the box. **mj's answer, not yet committed or sent:**
+  `deploy/server/mj-arcana.service` (DynamicUser, `/var/lib/mj` via
+  `XDG_DATA_HOME=%S`, `/etc/mj/env`, already carries MemoryMax=1G and
+  TasksMax=256) and `just install-server` rewritten for it, as root. Needs
+  a release, since `v0.13.0` doesn't have it.
 - **`@arcana`**: the bus, arcana-core and arcana-ai (now under
   `~/Projects/Arcana/`). Camera concurrency rides on arcana-core 0.17.1
   (`c7181a7`). **Asked 2026-10-17** (Thomas;
