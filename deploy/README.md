@@ -1,12 +1,14 @@
 # deploy/
 
-Running mj's long-lived pieces as systemd **user** services, matching the convention the
-other Silicon Circus services use (`curio`, `camelot`): user units under
-`~/.config/systemd/user`, hardened, with every path stated explicitly.
+Running mj's long-lived pieces as systemd services. On the workstation they are **user**
+units, matching the convention the other Silicon Circus services use (`curio`, `camelot`):
+under `~/.config/systemd/user`, hardened, with every path stated explicitly. On a server,
+where every service is a system unit, mj-arcana is one too ([On a server](#on-a-server)).
 
 | unit | what it is |
 | --- | --- |
 | [`mj-arcana.service`](mj-arcana.service) | `mj:camera` and `mj:voice` on the Arcana bus — see [docs/tools/arcana.md](../docs/tools/arcana.md) |
+| [`server/mj-arcana.service`](server/mj-arcana.service) | the same, as a system unit for a server ([On a server](#on-a-server)) |
 
 `mj bus` (the prop/pixelize/base/decorate/sfx engines) and `mj serve` (the web UI on port
 21683) have no unit yet; ask if you want them.
@@ -26,38 +28,52 @@ just uninstall-service    # leaves your keys and project overrides in place
 
 `install-service` is for the workstation: it builds all of mj, the ONNX shim included, and
 pulls the `local` keys from the cyclops store on this machine. A server uses
-`just install-server`, from its own checkout, which builds only mj-arcana and takes its keys
+`just install-server`, from its own checkout, which builds only mj-arcana and installs it as
+a **system** unit, [`server/mj-arcana.service`](server/mj-arcana.service), taking its keys
 from a file cyclops pushes.
 
-1. **Packages:** Crystal and shards; ffmpeg, whose `ffprobe` measures each spoken line (and
-   prices OpenAI speech that comes back without usage); GIMP only for `format: "xcf"`. A cold
-   release build of mj-arcana peaked at 759 MB and took 18 s here (2026-10-22), so a 1 GB
-   droplet needs swap.
+| | workstation (user unit) | server (system unit) |
+| --- | --- | --- |
+| runs as | you | a dynamic user, made when it starts |
+| binary | `<checkout>/bin/mj-arcana` | `/usr/local/bin/mj-arcana` |
+| keys | `~/.config/mj/env` | `/etc/mj/env`, root, mode 600 |
+| ledger, `out/` | `~/.local/share/mj` | `/var/lib/mj` |
+
+1. **Packages:** Crystal, shards and git; just; ffmpeg, whose `ffprobe` measures each spoken
+   line (and prices OpenAI speech that comes back without usage); GIMP only for
+   `format: "xcf"`. No cmake or ONNX Runtime: the server build has no shim. A cold release
+   build of mj-arcana peaked at 759 MB and took 18 s here (2026-10-22), so a 1 GB droplet
+   needs swap.
 2. **Keys, from the workstation.** `mj/production` must hold every key the server is to use:
    without `RUNWARE_API_KEY`, mj:camera doesn't start. Make the directory on the server
-   (`mkdir -p ~/.config/mj`), set the push target once, and push:
+   private (`mkdir -m 700 /etc/mj`): cyclops writes the file, then sets it to mode 600, so a
+   first push is readable for that moment unless its directory isn't. Set the push target
+   once, and push:
 
    ```sh
-   cyclops-env config mj production --host=<user>@<droplet> --key=~/.ssh/<key> \
-     --path=/home/<user>/.config/mj/env
+   cyclops-env config mj production --host=root@<droplet> --key=~/.ssh/<key> \
+     --path=/etc/mj/env --restart=mj-arcana
    cyclops-env push mj production       # writes the file, mode 600
    ```
 
-   Leave `--restart` unset: cyclops runs `systemctl restart`, which doesn't reach a user unit.
    If the bus isn't at `ws://localhost:19118/bus`, add `ARCANA_WS_URL` to the scope.
-3. **On the server**, as `<user>`:
+3. **On the server**, as root:
 
    ```sh
-   sudo loginctl enable-linger <user>   # or mj-arcana stops when you log out
    git clone https://github.com/trans/mjanime.git && cd mjanime && git checkout v<version>
    just install-server
    ```
 
-   It refuses to start without the key file, and warns if ffprobe is missing or lingering is
-   off.
+   It refuses to start without the key file, and warns if ffprobe is missing.
 4. **Later:** a new release is `git checkout v<version> && just install-server`; new keys are
-   `cyclops-env push mj production`, then `ssh <user>@<droplet> systemctl --user restart
-   mj-arcana`.
+   `cyclops-env push mj production`, which restarts the unit.
+
+The system unit keeps the user unit's hardening, less what has no meaning there (the home
+and runtime directories), plus an empty capability set and other processes hidden:
+`systemd-analyze security` scores it 1.5 (2026-10-22, offline). It has not run as a system
+unit yet, since that needs root here; `format: "xcf"` under it is untested. `output_path`
+writes under `/var/lib/mj/out`, private to the service's user, so a caller on the same box
+can't read the file there; take the base64 reply instead.
 
 ## Where the keys live: the cyclops store
 

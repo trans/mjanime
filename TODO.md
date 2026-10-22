@@ -168,15 +168,14 @@
     are far under (a 441-character line). The queue's expiry also trusts the sender's clock.
   - **The `mj` bus service** (`src/bus_service.cr`) still trusts every path it's given,
     when it runs.
-  - **A dedicated service user** would isolate mj-arcana further than the user unit can. It
-    would also match the droplets' other services, which are system units reading
-    `/etc/<svc>/…` at `root:<group>` 640, restarted by `cyclops-env push --restart`;
-    mj-arcana is a user unit there too, so a push is followed by a restart over ssh.
-- **Deploying mj-arcana to a server:** `just install-server` builds only mj-arcana and
-  installs the unit (deploy/README.md, "On a server"). **Thomas's to do:** `mj/production`
-  holds only `ELEVENLABS_API_KEY` (mj:camera needs `RUNWARE_API_KEY`; OpenAI while
-  Overlore's narrators use fable; Gemini for the Google cameras), and it has no push target
-  yet (which droplet, which user).
+  - **A dedicated service user:** the server now gets a system unit with a dynamic user
+    (`deploy/server/mj-arcana.service`), as @cyclops asked (2026-10-22). Not yet run as a
+    system unit: that needs root, which this workstation's session hasn't.
+- **Deploying mj-arcana to a server:** `just install-server`, as root, builds only mj-arcana
+  and installs the system unit (deploy/README.md, "On a server"). Handed to @cyclops, who
+  deploys, 2026-10-22. **Thomas's to do:** copy `OPENAI_API_KEY`, `RUNWARE_API_KEY` and
+  `GEMINI_API_KEY` from `mj/local` into `mj/production` (@cyclops, 2026-10-22: prod reuses
+  local's values); `ELEVENLABS_API_KEY` is already there.
 - **Retiring the repo `.env` is blocked on a fish export format.** `@cyclops` settled the four open
   questions (2026-10-13): `local` secrets are delivered by `cyclops-env export mj local > file`
   redirect (an ssh-less `push` is a wishlist item, not a gap); `production`/`local` are the only

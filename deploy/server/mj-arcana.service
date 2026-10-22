@@ -1,0 +1,68 @@
+[Unit]
+Description=mj-arcana — mj's camera and voice services on the Arcana bus
+Documentation=https://github.com/trans/mjanime/blob/main/docs/tools/arcana.md
+# Ordering only: if the bus is down the connect fails, the unit restarts, and it joins
+# whenever the bus appears. arcana need not be a unit on this host at all.
+After=network-online.target arcana.service
+Wants=network-online.target
+# Keep restarting however long the bus is away.
+StartLimitIntervalSec=0
+
+# The system unit, for a server (`just install-server`). The workstation runs the user
+# unit, ../mj-arcana.service, whose comments explain the hardening shared here.
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/mj-arcana
+Restart=always
+RestartSec=2
+
+# A user made for the service when it starts, owning nothing but its state directory,
+# /var/lib/mj: the spend ledger (spend.jsonl) and output_path's out/. Kept across restarts.
+DynamicUser=yes
+StateDirectory=mj
+StateDirectoryMode=0700
+WorkingDirectory=%S/mj
+# mj keeps its data in $XDG_DATA_HOME/mj, so this makes it /var/lib/mj. HOME is there too,
+# for gimp-console's own config if `format: "xcf"` is used and GIMP is installed.
+Environment=XDG_DATA_HOME=%S
+Environment=HOME=%S/mj
+
+# Pushed by cyclops (`cyclops-env push mj production`), root-owned, mode 600; systemd reads
+# it before dropping to the service's user. Not `-` prefixed: without keys mj registers
+# nothing, so fail loudly.
+EnvironmentFile=/etc/mj/env
+
+# --- sandbox -----------------------------------------------------------------
+# DynamicUser= already implies ProtectSystem=strict, PrivateTmp, NoNewPrivileges and
+# RestrictSUIDSGID; they are stated anyway, so the unit reads whole.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectProc=invisible
+CapabilityBoundingSet=
+UMask=0077
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+RestrictNamespaces=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+SystemCallArchitectures=native
+# @system-service alone: GIMP's plug-ins need calls in @privileged (see the user unit).
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+# Measured: 14 MB at peak on the workstation (2026-10-22). Sized for a 2 GB host, so a
+# flood of queued requests takes the service down, not the machine; tune with a drop-in.
+MemoryMax=1G
+TasksMax=256
+
+[Install]
+WantedBy=multi-user.target

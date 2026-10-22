@@ -129,26 +129,27 @@ install-service: build env-pull
      tr '\0' '\n' < /proc/$pid/environ 2>/dev/null | grep -q '^RUNWARE_API_KEY=' || \
         echo "!! RUNWARE_API_KEY did not reach the service, so mj:camera is NOT registered." 
 
-# From a checkout on the server. Builds only mj-arcana (no ONNX shim, web UI or CLI, which a
-# server doesn't need). Keys aren't pulled here: push them from the workstation first,
+# As root, from a checkout on the server. Builds only mj-arcana (no ONNX shim, web UI or CLI,
+# which a server doesn't need) and installs it as a system unit under its own dynamic user,
+# data in /var/lib/mj. Keys aren't pulled here: push them from the workstation first,
 # `cyclops-env push mj production` (deploy/README.md, "On a server").
-# Install mj-arcana on a server: build it, then install and start the unit
+# Install mj-arcana on a server: build it, then install and start the system unit
 install-server:
+    @test "$(id -u)" = 0 || { echo "!! run as root: it installs to /usr/local/bin and /etc/systemd/system"; exit 1; }
     @command -v crystal >/dev/null && command -v shards >/dev/null || { echo "!! needs crystal and shards"; exit 1; }
-    @test -s ~/.config/mj/env || { echo "!! no ~/.config/mj/env: run cyclops-env push mj production on the workstation, then this again"; exit 1; }
-    @test "$(stat -c %a ~/.config/mj/env)" = 600 || { echo "!! ~/.config/mj/env must be mode 600"; exit 1; }
+    @test -s /etc/mj/env || { echo "!! no /etc/mj/env: run cyclops-env push mj production on the workstation, then this again"; exit 1; }
+    @test "$(stat -c %a /etc/mj/env)" = 600 || { echo "!! /etc/mj/env must be mode 600"; exit 1; }
     @command -v ffprobe >/dev/null || echo "!! no ffprobe (ffmpeg): spoken lines will carry no duration, and OpenAI speech without usage no price"
-    @test "$(loginctl show-user "$USER" -p Linger --value 2>/dev/null)" = yes || echo "!! lingering is off, so mj-arcana stops when you log out: sudo loginctl enable-linger $USER"
     shards install --production
     mkdir -p bin
     @just _arcana --release
-    @mkdir -p ~/.config/systemd/user ~/.local/share/mj
-    @sed 's|@MJ_DIR@|{{justfile_directory()}}|g' deploy/mj-arcana.service > ~/.config/systemd/user/mj-arcana.service
-    systemctl --user daemon-reload
-    systemctl --user enable mj-arcana.service
-    systemctl --user restart mj-arcana.service
+    install -m 755 bin/mj-arcana /usr/local/bin/mj-arcana
+    install -m 644 deploy/server/mj-arcana.service /etc/systemd/system/mj-arcana.service
+    systemctl daemon-reload
+    systemctl enable mj-arcana.service
+    systemctl restart mj-arcana.service
     @sleep 3
-    systemctl --user --no-pager --lines=5 status mj-arcana.service
+    systemctl --no-pager --lines=5 status mj-arcana.service
 
 # Remove the service (leaves keys in environment.d and ~/.config/mj/env untouched).
 uninstall-service:
