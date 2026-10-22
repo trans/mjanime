@@ -20,9 +20,11 @@ module MJ
         end
       end
 
-      def self.wait!(data : JSON::Any)
+      # The caller's wait_seconds, checked; nil if it gave none (or none above zero).
+      def self.wait!(data : JSON::Any) : Time::Span?
         wait = data["wait_seconds"]?.try { |v| v.as_f? || v.as_i64?.try(&.to_f) }
         refuse "wait_seconds is #{wait == wait.to_i ? wait.to_i : wait}, over #{WAIT.total_seconds.to_i}" if wait && wait > WAIT.total_seconds
+        wait.seconds if wait && wait > 0
       end
 
       # A plan's length is its sections' lengths; a prompt's is music_length_ms, if given.

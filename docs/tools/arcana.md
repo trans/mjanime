@@ -290,6 +290,17 @@ When the retries are exhausted the caller gets a third outcome, `status: "overlo
 `retry: true`, and explicitly *not* a refusal, because the prompt is fine and rewording it is the
 wrong response.
 
+## A deadline: `wait_seconds`
+
+What nobody waits for isn't made (Thomas, 2026-10-22). A shot that finishes after its caller gave
+up is billed all the same, so `shoot` takes `wait_seconds`, as `speak` does, counted from the
+envelope's timestamp. No attempt starts once less than the camera's typical time (its `seconds` in
+`cameras`) is left: a shot whose turn comes that late is answered `expired`, unmade and unbilled,
+and a retry of an overloaded pool that couldn't finish in time isn't started (the last answer,
+usually `overloaded`, comes back instead). The deadline reaches the transports' retry loops on the
+request's fiber (`MJ::Retry.within`). Without `wait_seconds` a shot waits as long as it takes, as
+before. Overlore waits 150 s for a picture.
+
 ## Refusals are an outcome, not an error
 
 A content filter saying no is unbilled, probabilistic — Nano refuses prompts it accepted minutes

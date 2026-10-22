@@ -96,8 +96,7 @@ module MJ
       end
 
       def self.deadline(data : JSON::Any, sent_at : Time, default : Time::Span) : Time
-        wait = data["wait_seconds"]?.try { |v| v.as_f? || v.as_i64?.try(&.to_f) }
-        sent_at + (wait && wait > 0 ? wait.seconds : default)
+        sent_at + (Limits.wait!(data) || default)
       end
 
       def self.expired(provider : String, sent_at : Time, deadline : Time) : JSON::Any?
@@ -205,7 +204,6 @@ module MJ
         key = ENV["ELEVENLABS_API_KEY"]? || raise "ELEVENLABS_API_KEY is not set on this host"
         Limits.text!(data, "prompt")
         Limits.song!(data)
-        Limits.wait!(data)
         due = deadline(data, sent_at, MUSIC_WAIT)
         if late = expired("elevenlabs", sent_at, due)
           return late
@@ -377,7 +375,6 @@ module MJ
         provider = data["provider"]?.try(&.as_s?) || "openai"
         format = data["format"]?.try(&.as_s?) || "opus"
         Limits.text!(data, "text", "instructions", "previous_text", "next_text")
-        Limits.wait!(data)
         due = deadline(data, sent_at, SPEAK_WAIT)
         if late = expired(provider, sent_at, due)
           return late

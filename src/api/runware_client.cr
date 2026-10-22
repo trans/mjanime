@@ -448,12 +448,17 @@ module MJ
             STDERR.puts "[runware] #{what} got #{response.status_code}, provider asked for #{asked.try(&.round) || "?"}s — not retrying"
             return response
           end
+          unless Retry.in_time?(delay)
+            STDERR.puts "[runware] #{what} got #{response.status_code}, not retrying: the caller stops waiting first"
+            return response
+          end
           STDERR.puts "[runware] #{what} got #{response.status_code}, retrying in #{delay.total_seconds.round(1)}s (#{attempt + 1}/#{max})"
           attempt += 1
           sleep delay
         rescue ex : IO::TimeoutError | IO::Error | Socket::Error
           raise ex if attempt >= max
           delay = Retry.backoff(attempt + 1)
+          raise ex unless Retry.in_time?(delay)
           STDERR.puts "[runware] #{what} #{ex.class}: #{ex.message}, retrying in #{delay.total_seconds.round(1)}s (#{attempt + 1}/#{max})"
           attempt += 1
           sleep delay

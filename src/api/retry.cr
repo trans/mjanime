@@ -1,6 +1,13 @@
 require "http/client"
 require "json"
 
+# The latest a retry may start for the request this fiber serves, set by `MJ::Retry.within`.
+# Kept on the fiber, as Log::Context is, so the transports' retry loops can honour a
+# caller's deadline without every signature down to them carrying it.
+class Fiber
+  property retry_start_by : Time?
+end
+
 module MJ
   # When to try again, and how long to wait — in one place, because two transports need
   # identical answers and a divergence here is invisible until a launch.
@@ -76,6 +83,26 @@ module MJ
     def self.requested_delay(response : HTTP::Client::Response?) : Float64?
       return nil unless r = response
       from_header(r) || from_body(r.body)
+    end
+
+    # Runs the block with no retry starting after `start_by` (nil: no limit). A retry
+    # that would start later is skipped and the last answer returned, since the caller has
+    # stopped waiting by then and a success would be billed for nothing (Thomas, 2026-10-22).
+    def self.within(start_by : Time?, &)
+      fiber = Fiber.current
+      before = fiber.retry_start_by
+      fiber.retry_start_by = start_by
+      begin
+        yield
+      ensure
+        fiber.retry_start_by = before
+      end
+    end
+
+    # Whether a retry after `delay` still starts in time.
+    def self.in_time?(delay : Time::Span) : Bool
+      start_by = Fiber.current.retry_start_by
+      start_by.nil? || Time.utc + delay <= start_by
     end
 
     def self.backoff(attempt : Int32) : Time::Span

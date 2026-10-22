@@ -83,7 +83,12 @@ if key = ENV["RUNWARE_API_KEY"]?
       caches on it.
 
       {"tool":"shoot","camera":"klein","prompt":"...","reference_base64":"...",
-       "width":768,"height":1024,"format":"webp","seed":123,"output_path":"..."}
+       "width":768,"height":1024,"format":"webp","seed":123,"wait_seconds":150,
+       "output_path":"..."}
+
+      Pass `wait_seconds`, how long you will wait: a shot whose turn comes with less than
+      the camera's typical time left comes back "expired", unmade and unbilled, and no
+      retry starts that couldn't finish in time. Without it a shot waits as long as it takes.
 
       Reply always carries `status`. "ok" gives camera, version, model, width, height
       (the size SNAPPED to — the service never resamples, so this may differ from what you

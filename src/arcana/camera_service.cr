@@ -11,6 +11,7 @@ require "./pool_limit"
 require "./fetch_reference"
 require "./output_path"
 require "./limits"
+require "../api/retry"
 
 module MJ
   module Arcana
@@ -37,7 +38,8 @@ module MJ
           "view":{"description":"Where the camera stands, as a unit vector {x,y,z}, or the readable form {side:'front'|'back',yaw:-1..1,pitch:-1..1} (quarter turns). Rendered into prompt words — these models take a prompt, not a camera matrix, so this is AS ASKED and not exact. Echoed back."},
           "view_roll":{"type":"number","description":"Image turned in its own plane, quarter turns, -2..2."},
           "light":{"description":"Where the light comes FROM, in the picture's frame, same shapes as `view`. Also as-asked."},
-          "output_path":{"type":"string","description":"Write the image here instead of returning base64: a new file inside ~/.local/share/mj/out (a bare name goes there). Never overwrites."}
+          "output_path":{"type":"string","description":"Write the image here instead of returning base64: a new file inside ~/.local/share/mj/out (a bare name goes there). Never overwrites."},
+          "wait_seconds":{"type":"number","description":"How long you will wait for the picture. A shot whose turn comes with less than the camera's typical time left comes back expired, unmade and unbilled, and no retry starts that couldn't finish in time. Without it, a shot waits as long as it takes."}
         }
       }>)
 
@@ -67,7 +69,7 @@ module MJ
           lane: ->(data : JSON::Any) {
             id = data["camera"]?.try(&.as_s?) || "klein"
             Cameras.find(id).try(&.provider)
-          }) { |data, _ctx| handle_shoot(transports, data) }
+          }) { |data, ctx| handle_shoot(transports, data, ctx.envelope.timestamp) }
       end
 
       # A provider's content filter refusing is NOT an error: it is unbilled, it is
@@ -165,12 +167,20 @@ module MJ
         }.to_json)
       end
 
-      def self.handle_shoot(transports : Hash(String, Transport), data : JSON::Any) : JSON::Any
+      def self.handle_shoot(transports : Hash(String, Transport), data : JSON::Any,
+                            sent_at : Time = Time.utc) : JSON::Any
         prompt = data["prompt"]?.try(&.as_s?) || raise "shoot requires 'prompt'"
         Limits.text!(data, "prompt")
         Limits.references!(data)
         id = data["camera"]?.try(&.as_s?) || "klein"
         cam = Cameras.find(id) || raise "unknown camera #{id.inspect} — call `cameras` for the list"
+        # What nobody waits for isn't made (Thomas, 2026-10-22), as for mj:voice: no
+        # attempt starts once less than the camera's typical time is left of the caller's
+        # wait, since it would most likely finish, and be billed, after the caller gave up.
+        start_by = Limits.wait!(data).try { |w| sent_at + w - cam.seconds.seconds }
+        if late = expired(cam, sent_at, start_by)
+          return late
+        end
 
         # Staging, if asked for. Kept OUT of the prompt unless given: an over-specified
         # prompt drifts the concept, and these phrases are instructions the model will try
@@ -236,7 +246,11 @@ module MJ
           # exists at all.
           # No pool limiting here any more: the toolset's lane for this camera's pool was
           # acquired before the request took a slot (see register).
-          result = tx.edit(refs, prompt, w, h, cam.model, extra, wire_fmt.upcase)
+          # Fetching references can take a while, so the deadline is checked again here.
+          if late = expired(cam, sent_at, start_by)
+            return late
+          end
+          result = Retry.within(start_by) { tx.edit(refs, prompt, w, h, cam.model, extra, wire_fmt.upcase) }
         rescue ex
           msg = ex.message || "unknown"
           if overloaded?(msg)
@@ -376,6 +390,26 @@ module MJ
             end)
         end
         JSON::Any.new(res)
+      end
+
+      def self.expired(cam : Camera, sent_at : Time, start_by : Time?) : JSON::Any?
+        return nil unless start_by
+        now = Time.utc
+        return nil if now <= start_by
+        JSON::Any.new({
+          "status"         => JSON::Any.new("expired"),
+          "camera"         => JSON::Any.new(cam.id),
+          "pool"           => JSON::Any.new(cam.provider),
+          "model"          => JSON::Any.new(cam.model),
+          "version"        => JSON::Any.new(cam.version.to_i64),
+          "usd"            => JSON::Any.new(0.0),
+          "waited_seconds" => JSON::Any.new((now - sent_at).total_seconds.round(1)),
+          "retry"          => JSON::Any.new(false),
+          "note"           => JSON::Any.new(
+            "Queued in mj:camera until less than #{cam.label}'s typical #{cam.seconds} s " \
+            "was left of your wait (wait_seconds), so it wasn't made. Not billed. Pass a " \
+            "longer wait_seconds if you will wait longer."),
+        } of String => JSON::Any)
       end
 
       # References in the order the caller gave them. Every provider here weights the
