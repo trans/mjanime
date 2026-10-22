@@ -622,7 +622,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   `1c33360`** (v0.13.0): no attempt or retry starts once less than the
   camera's typical time is left. Overlore waits 150 s for a picture and
   sends `wait_seconds: 120` with every line; told 2026-10-22
-  (`mail/sent/20261022-064446Z-*`).
+  (`mail/sent/20261022-064446Z-*`). **Overlore sends `wait_seconds: 150`
+  on every shot** now (@overlore, 2026-10-22, `mail/received/20261022-070023Z-*`),
+  and an overloaded reply's one try on the twin camera sends its own 150.
+  Thomas questioned the typical-time margin (2026-10-22); mj explained it
+  only drops a shot whose turn comes after ~140 s queued, and offered a
+  fixed 3 s instead. Not changed.
   **Senders aren't checked on the bus** (found in the security review,
   2026-10-22): the server takes a REST message's `from` if it is registered,
   or empty, and a WebSocket's as written. Sent to @arcana at Thomas's word
