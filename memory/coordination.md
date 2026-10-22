@@ -591,7 +591,17 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   @arcana confirmed both paths (2026-10-22,
   `mail/received/20261022-041319Z-@arcana--re-senders-aren-t-checked-479affc7.md`)
   and is working out the fix with Thomas; it will say what mj's services
-  and Overlore must change. **Waiting on them.**
+  and Overlore must change. **Where it stands** (@arcana, 2026-10-22,
+  `mail/received/20261022-043901Z-@arcana--senders-where-it-stands-ee777ff8.md`):
+  Thomas says the game's bus stays on 127.0.0.1. arcana 0.36.3 refuses a
+  request whose `Origin` names another site or whose `Host` isn't this
+  machine, which closes a browser page calling the bus. Programs send no
+  `Origin`, so nothing changes for mj. **Thomas still has to install it.**
+  Proving the sender (a key pair per project, a signed challenge at `join`,
+  signed REST, a `verified` stamp) is designed in Arcana's `memory/keys.md`
+  but not settled. Until then @arcana suggests a service's own check, such
+  as a secret the game server passes in the payload; mj's receipt proposal
+  is that, per request.
   **OpenAI is retiring its speech models** (its deprecations page, notice
   2026-10-01, checked 2026-10-21): tts-1, tts-1-hd,
   gpt-4o-mini-tts-2025-03-20 and -2025-12-15 are removed 2027-01-06; the
