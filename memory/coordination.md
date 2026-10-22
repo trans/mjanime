@@ -588,6 +588,10 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   2026-10-22): the server takes a REST message's `from` if it is registered,
   or empty, and a WebSocket's as written. Sent to @arcana at Thomas's word
   (`mail/sent/20261022-034813Z-@arcana--senders-aren-t-checked-*`).
+  @arcana confirmed both paths (2026-10-22,
+  `mail/received/20261022-041319Z-@arcana--re-senders-aren-t-checked-479affc7.md`)
+  and is working out the fix with Thomas; it will say what mj's services
+  and Overlore must change. **Waiting on them.**
   **OpenAI is retiring its speech models** (its deprecations page, notice
   2026-10-01, checked 2026-10-21): tts-1, tts-1-hd,
   gpt-4o-mini-tts-2025-03-20 and -2025-12-15 are removed 2027-01-06; the
