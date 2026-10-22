@@ -23,7 +23,7 @@
             if (g) { g.setAttribute('hx-trigger','load'); htmx.process(g); }
           </script>
         <% elsif j.status == MJ::RenderJob::Status::Error %>
-          Error: <%= j.error_message %>
+          Error: <%= HTML.escape(j.error_message.to_s) %>
         <% end %>
       </span>
     </div>

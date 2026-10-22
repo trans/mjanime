@@ -1,8 +1,29 @@
+require "html"
 require "kemal"
+require "./guard"
 
 module MJ
   module Routes
     def self.register
+      # This machine only, and no other site's pages (see WebGuard).
+      before_all do |env|
+        unless WebGuard.local_host?(env.request.headers["Host"]?, Config.port)
+          halt env, status_code: 403, response: "mj serve answers this machine only"
+        end
+        if WebGuard.cross_site?(env.request, Config.port)
+          halt env, status_code: 403, response: "requests from other sites are refused"
+        end
+      end
+
+      # A cut's slug becomes a directory name, and Kemal decodes %2F in a URL parameter,
+      # so a crafted one could step out of the cuts directory. Checked on the raw path,
+      # for every route under /cuts/.
+      before_all "/cuts/*" do |env|
+        if (seg = env.request.path.split('/')[2]?) && !CutStore.valid_slug?(seg)
+          halt env, status_code: 400, response: "not a cut"
+        end
+      end
+
       # -- Dashboard --
       get "/" do |env|
         cuts = CutStore.list_cuts
@@ -58,6 +79,7 @@ module MJ
       post "/cuts" do |env|
         name = env.params.body["name"].as(String)
         slug = name.downcase.gsub(/[^a-z0-9]+/, "-").strip("-")
+        halt env, status_code: 400, response: "a cut's name needs a letter or digit" if slug.empty?
 
         cut = CutStore.create_cut(slug, name)
         cut_path = CutStore.cut_path(slug)

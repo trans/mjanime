@@ -15,9 +15,13 @@ when "serve", nil
   MJ::Diorama.register
   MJ::Flipbook.register
 
-  # Join the Arcana bus alongside the web server (opt out with MJ_BUS=0).
-  MJ::BusService.start_background unless ENV["MJ_BUS"]? == "0"
+  # Join the Arcana bus alongside the web server only when asked (MJ_BUS=1): the `mj`
+  # service reads and writes whatever paths a request names, unsandboxed, and anything
+  # on the bus can send it one (the security review, 2026-10-21).
+  MJ::BusService.start_background if ENV["MJ_BUS"]? == "1"
 
+  # This machine only: Kemal would otherwise listen on every interface.
+  Kemal.config.host_binding = "127.0.0.1"
   Kemal.config.port = MJ::Config.port
   Kemal.config.serve_static = {"dir_listing" => false}
   Kemal.run

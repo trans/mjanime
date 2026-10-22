@@ -3,6 +3,7 @@ require "arcana-ai"
 require "base64"
 require "http/client"
 require "json"
+require "../api/spend"
 require "./tts_rates"
 require "./output_path"
 require "./voice_lanes"
@@ -35,7 +36,7 @@ module MJ
           "speed":{"type":"number","description":"OpenAI 0.25-4.0; ElevenLabs 0.7-1.2, which eleven_v3 ignores."},
           "previous_text":{"type":"string","description":"Preceding line, for prosody continuity. ElevenLabs only, and not eleven_v3, which refuses it with a 400."},
           "next_text":{"type":"string","description":"Following line, for prosody continuity. ElevenLabs only."},
-          "output_path":{"type":"string","description":"Write the audio here instead of returning base64."},
+          "output_path":{"type":"string","description":"Write the audio here instead of returning base64: a new file inside ~/.local/share/mj/out (a bare name goes there). Never overwrites."},
           "wait_seconds":{"type":"number","description":"How long you will wait for the answer, default 120. A line still queued when less than 3 s of it is left comes back expired, unmade and unbilled."}
         }
       }>)
@@ -51,7 +52,7 @@ module MJ
           "music_length_ms":{"type":"integer","description":"With a prompt only: the length in ms."},
           "model":{"type":"string","description":"Default music_v1."},
           "format":{"type":"string","description":"ElevenLabs' output_format, default mp3_44100_128."},
-          "output_path":{"type":"string","description":"Write the audio here instead of returning base64."},
+          "output_path":{"type":"string","description":"Write the audio here instead of returning base64: a new file inside ~/.local/share/mj/out (a bare name goes there). Never overwrites."},
           "wait_seconds":{"type":"number","description":"How long you will wait for the song, default 600. A song still queued when less than 3 s of it is left comes back expired, unmade and unbilled."}
         }
       }>)
@@ -228,7 +229,7 @@ module MJ
         client.connect_timeout = 30.seconds
         client.read_timeout = 600.seconds # a song takes far longer than a spoken line
         headers = HTTP::Headers{"xi-api-key" => key, "Content-Type" => "application/json"}
-        data["output_path"]?.try(&.as_s?).try { |path| OutputPath.check!(path) }
+        target = data["output_path"]?.try(&.as_s?).try { |path| OutputPath.check!(path) }
         response = begin
           with_room(due) do
             r = client.post(uri.request_target, headers: headers, body: body.to_json)
@@ -273,9 +274,11 @@ module MJ
         if song = response.headers["song-id"]?
           h["song_id"] = JSON::Any.new(song)
         end
-        if path = data["output_path"]?.try(&.as_s?)
-          File.write(path, audio)
-          h["output_path"] = JSON::Any.new(path)
+        # No price came back, so the ledger counts it unpriced, never as free.
+        Spend.record("music", model, nil, provider: "elevenlabs")
+        if target
+          OutputPath.write(target, audio)
+          h["output_path"] = JSON::Any.new(target)
         else
           h["audio_base64"] = JSON::Any.new(Base64.strict_encode(audio))
         end
@@ -423,23 +426,22 @@ module MJ
             "alloy"
           end
 
-        data["output_path"]?.try(&.as_s?).try { |path| OutputPath.check!(path) }
+        target = data["output_path"]?.try(&.as_s?).try { |path| OutputPath.check!(path) }
         begin
-          if path = data["output_path"]?.try(&.as_s?)
-            result = with_room(due) { tts.synthesize(req, path) }
-            JSON::Any.new(ok_result(provider, result, effective_voice, format, text,
-              TtsRates.duration(path)).tap { |h|
-              h["output_path"] = JSON::Any.new(result.output_path)
-            })
+          # Always made in memory: a file, when asked for, is written here by OutputPath,
+          # confined and never over an existing one, not by arcana-ai. ffprobe measures
+          # duration straight off the bytes through a pipe.
+          result = with_room(due) { tts.synthesize(req) }
+          h = ok_result(provider, result, effective_voice, format, text,
+            TtsRates.duration(result.audio, format))
+          Spend.record("speak", result.model, h["usd"].as_f?, provider: provider)
+          if target
+            OutputPath.write(target, result.audio)
+            h["output_path"] = JSON::Any.new(target)
           else
-            # arcana-ai 0.3.0 added the in-memory overload, so the temp file is gone.
-            # ffprobe measures duration straight off the bytes through a pipe.
-            result = with_room(due) { tts.synthesize(req) }
-            JSON::Any.new(ok_result(provider, result, effective_voice, format, text,
-              TtsRates.duration(result.audio, format)).tap { |h|
-              h["audio_base64"] = JSON::Any.new(Base64.strict_encode(result.audio))
-            })
+            h["audio_base64"] = JSON::Any.new(Base64.strict_encode(result.audio))
           end
+          JSON::Any.new(h)
         rescue ex : Busy
           busy(provider, ex.message || "")
         rescue ex

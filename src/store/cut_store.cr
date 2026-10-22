@@ -6,7 +6,16 @@ module MJ
       File.join(Config.data_dir, "cuts")
     end
 
+    # What `POST /cuts` makes of a name: lowercase letters and digits, joined by single
+    # hyphens. Nothing else is a cut, so no slug can name a path outside cuts_dir.
+    SLUG = /\A[a-z0-9]+(-[a-z0-9]+)*\z/
+
+    def self.valid_slug?(slug : String) : Bool
+      SLUG.matches?(slug)
+    end
+
     def self.cut_path(slug : String) : String
+      raise ArgumentError.new("not a cut: #{slug.inspect}") unless valid_slug?(slug)
       File.join(cuts_dir, slug)
     end
 

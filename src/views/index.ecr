@@ -10,7 +10,7 @@
     <div class="project-list">
       <% cuts.each do |cut| %>
         <a href="/cuts/<%= cut.slug %>" class="project-card">
-          <h2><%= cut.name %></h2>
+          <h2><%= HTML.escape(cut.name.to_s) %></h2>
           <span class="project-slug"><%= cut.slug %></span>
         </a>
       <% end %>

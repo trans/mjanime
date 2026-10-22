@@ -4,12 +4,12 @@
     <div class="frame-meta">
       <h3>Frame <%= number %></h3>
       <dl>
-        <dt>Scene</dt><dd><%= metadata.not_nil!.scene %></dd>
-        <dt>Prompt</dt><dd><%= metadata.not_nil!.prompt %></dd>
-        <dt>Model</dt><dd><%= metadata.not_nil!.model %></dd>
+        <dt>Scene</dt><dd><%= HTML.escape(metadata.not_nil!.scene.to_s) %></dd>
+        <dt>Prompt</dt><dd><%= HTML.escape(metadata.not_nil!.prompt.to_s) %></dd>
+        <dt>Model</dt><dd><%= HTML.escape(metadata.not_nil!.model.to_s) %></dd>
         <dt>Strength</dt><dd><%= metadata.not_nil!.strength %></dd>
-        <dt>Seed</dt><dd><%= metadata.not_nil!.seed_image %></dd>
-        <dt>Generated</dt><dd><%= metadata.not_nil!.generated_at %></dd>
+        <dt>Seed</dt><dd><%= HTML.escape(metadata.not_nil!.seed_image.to_s) %></dd>
+        <dt>Generated</dt><dd><%= HTML.escape(metadata.not_nil!.generated_at.to_s) %></dd>
         <dt>Time</dt><dd><%= metadata.not_nil!.generation_time_ms %>ms</dd>
       </dl>
       <form action="/cuts/<%= slug %>/frames/<%= number %>/regenerate" method="post">

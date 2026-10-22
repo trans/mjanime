@@ -43,7 +43,7 @@ of work:
   restart `mj-arcana.service` to run a new one). Run `./bin/mj …`.
 - Keys from `ENV`: `set -a; . ./.env; set +a` first (the `.env` is bash; the shell is fish).
 - Libraries live at `~/.local/share/mj/{props,backdrops,scenes}`. Web port **21683** (`cyclops-port
-  mj`). Bus `ws://localhost:19118/bus` (opt out with `MJ_BUS=0`).
+  mj`). Bus `ws://localhost:19118/bus`; `mj serve` joins it only with `MJ_BUS=1`.
 - **Finished venue art is in another repo:** `~/Projects/siliconcircus.lol/archive/media/boardwalk/
   used/venues/{real,pixel-32,pixel-16,pixel-8}/`.
 - **Cost**: Runware is prepaid; every billed call prints `cost=$…` and is appended to

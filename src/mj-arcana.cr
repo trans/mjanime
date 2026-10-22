@@ -95,7 +95,9 @@ if key = ENV["RUNWARE_API_KEY"]?
       pass on a retry. Real errors are raised as errors; a camera is NEVER silently
       substituted for another.
 
-      Prefer reference_base64 over reference_path: bus services do not share a filesystem.
+      Pass references as reference_base64 or reference_url; reference_path is refused, since
+      bus services do not share a filesystem. output_path writes a new file inside
+      ~/.local/share/mj/out and never overwrites one.
       Prefer format webp — 26x smaller on the wire than png. If you pass a reference, say
       "in the same style" rather than describing the style; an over-specified style fights
       the reference image.
@@ -149,7 +151,8 @@ else
        "format":"opus","instructions":"...","speed":1.0,
        "previous_text":"...","next_text":"...","output_path":"..."}
 
-      `instructions` and `speed` are OpenAI only. `previous_text`/`next_text` are ElevenLabs
+      `instructions` is OpenAI only. `speed` is both: OpenAI 0.25-4.0, ElevenLabs 0.7-1.2,
+      which eleven_v3 ignores. `previous_text`/`next_text` are ElevenLabs
       only and give prosody continuity across consecutive lines — worth using when a passage
       is synthesized as several clips, or each reads as if it were the only sentence.
 

@@ -91,27 +91,50 @@ reads `active (running)` while `mj:camera` is quietly absent from the bus direct
 
 ## What the sandbox allows, and why
 
-`ProtectSystem=strict` plus `ProtectHome=read-only`, so the writable set is stated rather
-than inherited:
+Any bus participant can send the service a request, so it is held to what it needs (the
+security review, 2026-10-21). `systemd-analyze --user security mj-arcana` scored it 8.0
+("exposed") before and 3.7 after.
 
-- **`%h/.local/share/mj`** — every billed call appends to `spend.jsonl`. Omit this and
-  generation fails *after* the provider has already charged you.
-- **`%h/.config/GIMP`, `%h/.cache/GIMP`** (`-` prefixed, so absence is fine) — `format:
+**The home directory is an empty tmpfs** (`ProtectHome=tmpfs`), with three things bound back:
+
+- **`@MJ_DIR@/bin`, read-only**: the binary, and nothing else of the checkout, so neither its
+  `.env` nor `.ai/arcana.token` is in reach. The working directory is `~/.local/share/mj`.
+- **`%h/.local/share/mj`**: every billed call appends to `spend.jsonl`, and `output_path`
+  writes under `mj/out`. Omit this and generation fails *after* the provider has already
+  charged you.
+- **`%h/.config/GIMP`, `%h/.cache/GIMP`** (`-` prefixed, so absence is fine): `format:
   "xcf"` shells out to `gimp-console`, which insists on writing its own config.
-- **`PrivateTmp=true`** covers the short-lived scratch files: GIMP's conversion dir, and
-  the probe file `ffprobe` measures audio duration from.
 
-Verified under the running sandbox: both services register, a billed `shoot` succeeds and
-lands in the ledger, `speak` returns a measured duration, and `format: "xcf"` converts.
+`ProtectHome=read-only`, the earlier setting, left every file the user can read readable:
+`~/.ssh`, `~/.config/mj/env` and cyclops' store. Checked from inside the running service
+(2026-10-22): those, the checkout's `.env` and the user's runtime directory are hidden.
 
-**`output_path` is restricted by this, by design.** A caller asking `shoot` or `speak` to
-write into the home directory gets a permission error — bus services are
-filesystem-isolated and base64 is the portable answer. If you want a drop directory, add it
-to the unit explicitly:
+**The user's runtime directory is hidden** (`InaccessiblePaths=-%t`). It holds the session bus
+and the user manager's socket, through which a compromised process could ask systemd to start
+an unsandboxed one.
 
-```ini
-ReadWritePaths=%h/Pictures/Intake
-```
+**The rest:**
+- devices, kernel settings, clock and hostname are off limits;
+- no new namespaces, realtime scheduling or SUID;
+- sockets for IP, Unix and netlink only;
+- system calls limited to `@system-service`, with others failing as EPERM;
+- files created private (`UMask=0077`);
+- `MemoryMax=2G` and `TasksMax=256`, so a flood of queued requests takes the service down,
+  not the machine.
+
+**GIMP needs `@privileged`'s calls.** Excluding them as well (`~@privileged`) kills
+`gimp-console`'s plug-ins with "Bad system call", so `format: "xcf"` fails after the shot is
+billed. Tested setting by setting, 2026-10-22. Re-test `xcf` after any change here.
+
+`PrivateTmp=true` covers the short-lived scratch files: GIMP's conversion dir, and the probe
+file `ffprobe` measures audio duration from.
+
+Verified under this sandbox (2026-10-22): both services register, a Flash line and an OpenAI
+picture were made and written with `output_path`, a Runware shot with a public `reference_url`
+converted to `xcf`, and every one is in the ledger.
+
+**`output_path` is confined by the service itself**, whatever the unit allows: a new file
+inside `~/.local/share/mj/out`, never over an existing one (`src/arcana/output_path.cr`).
 
 ## The bus is not a dependency
 

@@ -48,7 +48,7 @@ mj prop my-barrel             # …then run tools
   straight from `ENV` — mj does not parse `.env` itself.
 - **Cost**: every billed call prints its price and is appended to `~/.local/share/mj/spend.jsonl`
   (`$MJ_SPEND_LOG` relocates it, `MJ_SPEND_LOG=0` disables). See [spend](spend.md).
-- **Bus**: opt out of the bus during `mj serve` with `MJ_BUS=0`. Bus URL from `ARCANA_WS_URL` /
+- **Bus**: `mj serve` joins the bus only with `MJ_BUS=1`. Bus URL from `ARCANA_WS_URL` /
   `ARCANA_URL`, default `ws://localhost:19118/bus`.
 
 ## Build

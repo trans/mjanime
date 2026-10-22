@@ -7,8 +7,9 @@ Join the running Arcana daemon and serve mj's engines as a single bus service, s
 mj bus                         # standalone: connect and block on the receive loop
 ```
 
-Also started automatically alongside `mj serve` (opt out with `MJ_BUS=0`); if `RUNWARE_API_KEY` is
-unset it logs and disables the bus rather than failing the web server.
+Also started alongside `mj serve`, but only with `MJ_BUS=1` (from 2026-10-22; before, it started
+unless `MJ_BUS=0`). It trusts every path a request names, so keep it off a bus others use. If
+`RUNWARE_API_KEY` is unset it logs and disables the bus rather than failing the web server.
 
 ## Address & dispatch
 

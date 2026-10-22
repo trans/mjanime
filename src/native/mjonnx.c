@@ -90,22 +90,42 @@ int mjonnx_matte(const char *model_path,
                          out_names, 1, &out_val));
   }
 
-  /* mask dims = last two dims of the output tensor */
+  /* mask dims = last two dims of the output tensor. A model supplied with --model is
+   * not trusted to be the one we expect (the security review, 2026-10-21): the output
+   * must be FLOAT, every dimension positive, and hold at least the h*w copied, or the
+   * memcpy below would read past the tensor. */
   ORT_CHECK(g_ort->GetTensorTypeAndShape(out_val, &tsi));
   {
-    size_t ndim = 0;
-    ORT_CHECK(g_ort->GetDimensionsCount(tsi, &ndim));
-    int64_t dims[8] = {0};
-    if (ndim > 8) ndim = 8;
-    ORT_CHECK(g_ort->GetDimensions(tsi, dims, ndim));
-    int64_t oh = ndim >= 2 ? dims[ndim - 2] : 0;
-    int64_t ow = ndim >= 1 ? dims[ndim - 1] : 0;
-    int64_t n = oh * ow;
-    if (n <= 0 || n > mask_cap) {
-      snprintf(err, errlen, "unexpected output size %lldx%lld (cap %lld)",
-               (long long)oh, (long long)ow, (long long)mask_cap);
+    ONNXTensorElementDataType type = ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED;
+    ORT_CHECK(g_ort->GetTensorElementType(tsi, &type));
+    if (type != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
+      snprintf(err, errlen, "model output is element type %d, not float", (int)type);
       goto cleanup;
     }
+    size_t ndim = 0;
+    ORT_CHECK(g_ort->GetDimensionsCount(tsi, &ndim));
+    if (ndim < 2 || ndim > 8) {
+      snprintf(err, errlen, "model output has %zu dimensions, not 2 to 8", ndim);
+      goto cleanup;
+    }
+    int64_t dims[8] = {0};
+    ORT_CHECK(g_ort->GetDimensions(tsi, dims, ndim));
+    for (size_t i = 0; i < ndim; i++) {
+      if (dims[i] <= 0) {
+        snprintf(err, errlen, "model output dimension %zu is %lld", i, (long long)dims[i]);
+        goto cleanup;
+      }
+    }
+    size_t count = 0;
+    ORT_CHECK(g_ort->GetTensorShapeElementCount(tsi, &count));
+    int64_t oh = dims[ndim - 2];
+    int64_t ow = dims[ndim - 1];
+    if (oh > mask_cap / ow || (size_t)(oh * ow) > count) {
+      snprintf(err, errlen, "unexpected output size %lldx%lld (cap %lld, %zu elements)",
+               (long long)oh, (long long)ow, (long long)mask_cap, count);
+      goto cleanup;
+    }
+    int64_t n = oh * ow;
     float *od = NULL;
     ORT_CHECK(g_ort->GetTensorMutableData(out_val, (void **)&od));
     memcpy(mask_out, od, (size_t)n * sizeof(float));

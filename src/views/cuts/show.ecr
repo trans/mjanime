@@ -31,7 +31,7 @@
     <div class="panel script-panel">
       <h2>Motion Script</h2>
       <form hx-put="/cuts/<%= slug %>/script" hx-target="#script-status" hx-swap="innerHTML">
-        <textarea name="script_content" rows="20" class="script-editor"><%= script_content %></textarea>
+        <textarea name="script_content" rows="20" class="script-editor"><%= HTML.escape(script_content.to_s) %></textarea>
         <div class="script-actions">
           <button type="submit" class="btn">Save Script</button>
           <span id="script-status"></span>
@@ -69,7 +69,7 @@
             <% elsif j.status == MJ::RenderJob::Status::Done %>
               Complete! (<%= j.total_frames %> frames)
             <% elsif j.status == MJ::RenderJob::Status::Error %>
-              Error: <%= j.error_message %>
+              Error: <%= HTML.escape(j.error_message.to_s) %>
             <% end %>
           </span>
         </div>

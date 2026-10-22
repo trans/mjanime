@@ -135,6 +135,33 @@
   ("two-wheeled", "folded") through the slot positions.
 
 ## secrets / deploy
+- **Security review before deployment** (Codex, 2026-10-21; `Intake/codex-review.md`, brief in
+  `Outtake/review-brief.md`). **Fixed 2026-10-22, not yet committed:**
+  - `reference_path` is refused;
+  - `reference_url` only fetches public addresses, or loopback under `/media/`, pinned, with
+    each redirect checked and the cap applied while reading;
+  - `output_path` is confined to `~/.local/share/mj/out` and never overwrites;
+  - every paid call is in `spend.jsonl`;
+  - the unit is sandboxed (home a tmpfs, runtime dir hidden, syscall filter, memory cap;
+    exposure 8.0 → 3.7);
+  - `mj serve` listens on loopback, checks Host and cross-site requests, escapes what it
+    prints, and checks slugs; it joins the bus only with `MJ_BUS=1`;
+  - `just env-pull` writes the key file privately;
+  - the ONNX shim checks the model's output.
+
+  **Open:**
+  - **Senders aren't authenticated on the bus** (Arcana's server; mail sent to `@arcana`
+    2026-10-22). Until fixed, mj can't tell Overlore from anything else on the bus.
+  - **Paid only:** Thomas's rule (2026-10-22) is that nothing is generated unless someone
+    paid tokens for it. A receipt per request, signed by whatever deducts the tokens, was
+    proposed; it needs Thomas's decision and Overlore's half. This replaces a spending cap.
+  - **A bound on queued requests** in arcana-core's dispatcher (not yet asked).
+  - **Sanity limits** on text, instructions, context, song length, references and
+    `wait_seconds`, and a model allowlist (proposed 2026-10-21, not built). The queue's
+    expiry also trusts the sender's clock.
+  - **The `mj` bus service** (`src/bus_service.cr`) still trusts every path it's given,
+    when it runs.
+  - **A dedicated service user** would isolate mj-arcana further than the user unit can.
 - **Retiring the repo `.env` is blocked on a fish export format.** `@cyclops` settled the four open
   questions (2026-10-13): `local` secrets are delivered by `cyclops-env export mj local > file`
   redirect (an ssh-less `push` is a wishlist item, not a gap); `production`/`local` are the only

@@ -1,6 +1,7 @@
 require "arcana-core"
 require "base64"
 require "json"
+require "../api/spend"
 require "./cameras"
 require "./transport"
 require "./xcf"
@@ -29,14 +30,13 @@ module MJ
           "references_base64":{"type":"array","items":{"type":"string"},"description":"SEVERAL references, base64. Order is preserved exactly as given; whether providers weight the first most heavily is NOT verified here, so do not rely on it. Use for a recurring character plus the scene to edit, or a room plus its neighbours. Measured: klein, kontext, dflare, dnano and dlite all accept at least 4."},
           "reference_url":{"type":"string","description":"One reference fetched by URL (http/https) — keeps image bytes off the bus entirely. A loopback URL like http://127.0.0.1:PORT/media/KEY works because the service fetches it here; it is NOT handed to the provider, which could not reach it."},
           "references_url":{"type":"array","items":{"type":"string"},"description":"SEVERAL references by URL, order preserved. Same fetching as reference_url. Max 32MB each, http/https only, up to 2 redirects."},
-          "reference_path":{"type":"string","description":"Reference image path — ONLY works if the caller shares a filesystem with this service. Prefer reference_base64 or reference_url."},
           "width":{"type":"integer","description":"Desired width; snapped to the camera's nearest supported aspect. Default 1024."},
           "height":{"type":"integer","description":"Desired height; snapped. Default 1024."},
           "format":{"type":"string","enum":["webp","png","jpg","xcf"],"description":"Default webp: ~26x smaller on the wire than png for the same picture, and unlike jpg it keeps hard ink edges clean. Note Runware returns LOSSY webp with NO alpha channel (verified: a VP8 chunk, no VP8X) — it is the right default for serve-and-display, but do not plan on transparency or re-key a webp. Use png for lossless and for anything with an alpha channel; jpg only for photographic subjects (its ringing lands on the black outlines comic art is made of). xcf is GIMP's TILED format — far bigger, but two revisions of the same picture share ~98% of their chunks under content-defined chunking, so it is the right choice for art that will be edited repeatedly and stored in a deduplicating store. Adds ~1.4s for the GIMP conversion."},
           "view":{"description":"Where the camera stands, as a unit vector {x,y,z}, or the readable form {side:'front'|'back',yaw:-1..1,pitch:-1..1} (quarter turns). Rendered into prompt words — these models take a prompt, not a camera matrix, so this is AS ASKED and not exact. Echoed back."},
           "view_roll":{"type":"number","description":"Image turned in its own plane, quarter turns, -2..2."},
           "light":{"description":"Where the light comes FROM, in the picture's frame, same shapes as `view`. Also as-asked."},
-          "output_path":{"type":"string","description":"Write the image here instead of returning base64."}
+          "output_path":{"type":"string","description":"Write the image here instead of returning base64: a new file inside ~/.local/share/mj/out (a bare name goes there). Never overwrites."}
         }
       }>)
 
@@ -226,7 +226,7 @@ module MJ
           extra["seed"] = JSON::Any.new(seed) if cam.seeds
         end
 
-        data["output_path"]?.try(&.as_s?).try { |path| OutputPath.check!(path) }
+        target = data["output_path"]?.try(&.as_s?).try { |path| OutputPath.check!(path) }
         begin
           # An empty reference list means "no reference"; each transport decides what
           # that requires of it, since the providers differ on whether text-to-image
@@ -275,6 +275,10 @@ module MJ
               "different camera also works."),
           } of String => JSON::Any)
         end
+
+        # Runware's client records its own calls; the others are recorded here, so every
+        # billed shot is in the ledger. nil is counted unpriced, never as free.
+        Spend.record("shoot", cam.model, result.cost, w, h, provider: cam.provider) unless cam.provider == "runware"
 
         img = result.image_data
         # Providers do not agree on what they return: Google ignores the format request
@@ -355,9 +359,9 @@ module MJ
             "truth for compositing.")
         end
 
-        if path = data["output_path"]?.try(&.as_s?)
-          File.write(path, img)
-          res["output_path"] = JSON::Any.new(path)
+        if target
+          OutputPath.write(target, img)
+          res["output_path"] = JSON::Any.new(target)
         else
           res["image_base64"] = JSON::Any.new(Base64.strict_encode(img))
           res["content_type"] = JSON::Any.new(
@@ -392,12 +396,10 @@ module MJ
         if b64 = data["reference_base64"]?.try(&.as_s?)
           return [Base64.decode(b64)]
         end
-        if path = data["reference_path"]?.try(&.as_s?)
-          unless File.exists?(path)
-            raise "reference_path #{path.inspect} is not visible to this service. Bus services " \
-                  "are filesystem-isolated — pass reference_base64 instead."
-          end
-          return [File.read(path).to_slice]
+        # reference_path is gone (the security review, 2026-10-21): it read any file the
+        # service could, keys included, and sent the bytes on to a provider.
+        if data["reference_path"]?
+          raise "reference_path is not accepted: pass reference_base64 or reference_url"
         end
         [] of Bytes
       end

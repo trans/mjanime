@@ -108,10 +108,10 @@ keys:
 # the file is delivered (redirect here, ssh push there). Secrets live encrypted in
 # ~/.config/cyclops/secrets.db, scoped service x environment.
 # Pull mj's env from the cyclops store and restart the service
+# Private from its first byte (mktemp, under umask 077) and moved into place whole, so no
+# one can open it while it is being written, and a failed export leaves the old file.
 env-pull:
-    @mkdir -p ~/.config/mj
-    @~/Projects/cyclops/bin/cyclops-env export mj local --format=systemd > ~/.config/mj/env
-    @chmod 600 ~/.config/mj/env
+    @umask 077 && mkdir -p ~/.config/mj && tmp=$(mktemp ~/.config/mj/.env.XXXXXX) && { ~/Projects/cyclops/bin/cyclops-env export mj local --format=systemd > "$tmp" && mv "$tmp" ~/.config/mj/env || { rm -f "$tmp"; exit 1; }; }
     @echo "wrote ~/.config/mj/env ($(grep -c . ~/.config/mj/env) vars) from cyclops mj/local"
     -@systemctl --user restart mj-arcana.service 2>/dev/null && echo "restarted mj-arcana"
 

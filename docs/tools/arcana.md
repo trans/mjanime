@@ -341,12 +341,32 @@ path for this reason.
 We never set `outputQuality`, so the encoder runs at Runware's default.
 
 **Returns base64 by default**, not a path: bus services are filesystem-isolated. The `runware`
-service reports success writing to a `/tmp` nobody else can see. `output_path` works only where
-caller and service genuinely share a filesystem. mj-arcana runs sandboxed (`ProtectHome=read-only`)
-and writes only under `~/.local/share/mj`, so `shoot`, `speak` and `music` check `output_path`
-before calling the provider and refuse one they can't write, unbilled. Before that check
+service reports success writing to a `/tmp` nobody else can see. `output_path` writes **a new
+file inside `~/.local/share/mj/out`** (a bare name goes there) and never overwrites one
+(`src/arcana/output_path.cr`). `shoot`, `speak` and `music` check it before calling the provider
+and refuse one outside, through a symlink or already there, unbilled. Before the first check
 (2026-10-21), two ElevenLabs takes asked to write elsewhere were billed and then failed
-"Read-only file system".
+"Read-only file system". Before the confinement (the security review, 2026-10-21), a caller
+could overwrite the spend ledger or the libraries.
+
+## References: by base64 or by URL
+
+**`reference_path` is refused** (the security review, 2026-10-21). It read any file the
+service could, keys included, and sent the bytes to a provider. Pass `reference_base64` or
+`reference_url`.
+
+**`reference_url` fetches only from public addresses, or from loopback over http under
+`/media/`**, the shape of DataDungeon's local store (`src/arcana/fetch_reference.cr`). Any bus
+participant can name the URL, so an unchecked fetch reached the droplet's metadata service at
+169.254.169.254 and anything on loopback. How it's checked:
+
+- **Each address is checked, then pinned.** The host is resolved, and the connection goes to
+  an address that passed, never to a second lookup that could answer differently (DNS
+  rebinding). HTTPS is verified against the hostname.
+- **Each redirect is checked the same way,** up to two.
+- **The 32 MB cap applies while reading,** and the whole fetch has 60 s.
+- **A failure says why without echoing what came back,** and shows the URL without its query
+  string, which holds a presigned link's signature.
 
 ## XCF and deduplication
 

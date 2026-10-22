@@ -34,7 +34,10 @@ One JSON object per line, appended at `$XDG_DATA_HOME/mj/spend.jsonl` (i.e.
 ```
 
 - `cmd` — the mj subcommand that spent it, so cost is attributable per tool.
-- `task` — `imageInference` / `inpaint` / `edit` / `backgroundRemoval`.
+- `task` — `imageInference` / `inpaint` / `edit` / `backgroundRemoval` from Runware; from the
+  bus services (cmd `mj`), also `shoot` (OpenAI and Google pictures), `speak` (ElevenLabs and
+  OpenAI) and `music` (Eleven Music, always `null`: it returns no price). Before 2026-10-22
+  only Runware's calls were recorded.
 - `cost` — USD, **or `null`** if the API reported no price. Unpriced calls are counted separately
   and never silently treated as free.
 - `$MJ_SPEND_LOG` relocates the file; `MJ_SPEND_LOG=0` disables writing it (the run tally still
