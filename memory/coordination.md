@@ -582,8 +582,11 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   against v3's 3-4.5 s. Thomas is weighing what to do about voice cost
   (2026-10-22), and wants Flash tried.
   **Paid only** (Thomas, 2026-10-22): nothing should be generated unless
-  someone paid tokens for it; this replaces a spending cap. Overlore deducts
-  before it asks. mj's proposed receipts per request were dropped (Thomas,
+  someone paid tokens for it; this replaces a spending cap. Overlore can
+  only deduct once mj reports the cost (Thomas, 2026-10-22); mj proposed a
+  hold for the most a request can cost, settled to mj's `usd`, with mj
+  giving the ceiling before the call and request ids in its ledger (not
+  decided). mj's proposed receipts per request were dropped (Thomas,
   2026-10-22): an exploited Overlore sends, and would sign, as Overlore
   regardless.
   **Senders aren't checked on the bus** (found in the security review,
