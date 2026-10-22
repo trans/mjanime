@@ -532,11 +532,16 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   (`mail/sent/20261022-145822Z-@cyclops--re-mj-arcana-deploy-*`), with the
   steps and what to check on the first start. Not yet run as a system unit
   anywhere.
-  **Waiting on @cyclops's sign-off** (Thomas, 2026-10-22): asked to review
-  the unit, recipe and steps, and to say whether DynamicUser, the paths,
-  MemoryMax=1G and the `arcana.service` name suit the box
-  (`mail/sent/20261022-153853Z-@cyclops--please-check-*`). Thomas tags the
-  next version only once cyclops signs off.
+  **@cyclops signed it off** (2026-10-22,
+  `mail/received/20261022-154130Z-@cyclops--mj-arcana-system-unit-signed-off-*`):
+  DynamicUser and the paths stay; it will cap memory at 256M with a drop-in
+  on the box (the bus, the game and others share 1.9 GiB), and is standing
+  up the bus as `arcana.service`. `mj/production`'s keys are all set. It
+  warned that `MemoryDenyWriteExecute=` and `ProcSubset=pid` break Crystal
+  binaries (regex JIT, GC), so both units now say so (`dbccacc`).
+  **Tagged `v0.13.2`** (`877547d`, Thomas asked) and sent to @cyclops to
+  deploy (`mail/sent/20261022-154332Z-*`). Its next step is the deploy and
+  the first start as a system unit.
 - **`@arcana`**: the bus, arcana-core and arcana-ai (now under
   `~/Projects/Arcana/`). Camera concurrency rides on arcana-core 0.17.1
   (`c7181a7`). **Asked 2026-10-17** (Thomas;
