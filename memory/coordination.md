@@ -524,11 +524,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   and the key file somewhere like `/etc/mj/env`, mode 600. `mj/production`
   reuses `mj/local`'s values: Thomas copies OpenAI, Runware and Gemini in.
   It'll deploy from `v0.13.0` (`ced768c`), with ffmpeg, just and cmake on
-  the box. **mj's answer, not yet committed or sent:**
-  `deploy/server/mj-arcana.service` (DynamicUser, `/var/lib/mj` via
+  the box. **mj's answer, released as `v0.13.1`** (`bad0e9e`, Thomas
+  asked): `deploy/server/mj-arcana.service` (DynamicUser, `/var/lib/mj` via
   `XDG_DATA_HOME=%S`, `/etc/mj/env`, already carries MemoryMax=1G and
-  TasksMax=256) and `just install-server` rewritten for it, as root. Needs
-  a release, since `v0.13.0` doesn't have it.
+  TasksMax=256) and `just install-server` rewritten for it, as root
+  (`6351aac`). Sent 2026-10-22
+  (`mail/sent/20261022-145822Z-@cyclops--re-mj-arcana-deploy-*`), with the
+  steps and what to check on the first start. Not yet run as a system unit
+  anywhere.
 - **`@arcana`**: the bus, arcana-core and arcana-ai (now under
   `~/Projects/Arcana/`). Camera concurrency rides on arcana-core 0.17.1
   (`c7181a7`). **Asked 2026-10-17** (Thomas;
