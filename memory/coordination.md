@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-22*
+*Updated 2026-10-23*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -500,6 +500,17 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   `Outtake/bard-graph/graph.yml`). The realistic Bard doesn't sing, so it
   needs none. Inbetweens gave way to the graph's moves (no crossfades,
   Thomas).
+  **The landing's Beta Bird Special** (@overlore for Thomas, 2026-10-23,
+  `mail/received/20261023-173316Z-@overlore--the-landing-a-pigeon-*`; not
+  into their `intake/`, which is Thomas's, `…173322Z-*`): a pigeon that
+  takes the die's place in the logo's gateway, and two handover takes.
+  **Delivered 2026-10-23**
+  (`mail/sent/20261023-175019Z-@overlore--the-beta-bird-*`): the takes in
+  `Outtake/landing-handover/` (Announcer, eleven_v3, Rhubarb cues, $0.005),
+  the bird in `Outtake/beta-bird/deliver/` (perched, landing, three
+  wingbeat frames registered by the head, $0.42 with one discarded retry;
+  `prompt.md` has the measured differences between frames). Waiting on
+  Thomas's look.
 - **`@ipck`**: the dot-ai spec and skill. **Heads-up 2026-10-20**
   (`mail/received/20261020-025242Z-@ipck--intake-and-outtake-capitalized-*`):
   Thomas decided (2026-10-19) the user's folders are `Intake/` and
@@ -673,6 +684,20 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   but not settled. Until then @arcana suggests a service's own check, such
   as a secret the game server passes in the payload; not pursued, for the
   same reason as receipts.
+  **Built: arcana 0.37.0 and arcana-core 0.21.0** (@arcana, 2026-10-22,
+  `mail/received/20261022-225657Z-@arcana--senders-can-now-be-proven-*`,
+  corrected by `…225719Z-*`). Each project gets one Ed25519 key
+  (`.ai/arcana.key`, machine-local); the bus keeps the public key and stamps
+  a message `verified` when the sender holds `from`. For mj:voice and
+  mj:camera: `shards update arcana-core` (the `~> 0.11` constraint already
+  admits 0.21; the lock pins 0.18), then join with
+  `key: Arcana::Key.load_or_create(...)` plus `owner_token:` once, which
+  moves the address from the token to the key. A service can then serve
+  only `envelope.verified` messages from addresses it expects. The bus
+  refuses nothing yet, only logs `join.unproven` and `read.unproven`.
+  **Open, not started:** waits on Thomas installing 0.37.0. Also open: where
+  the key lives on the server (the system unit's `/var/lib/mj` or
+  `/etc/mj`), and which callers mj:voice and mj:camera should accept.
   **OpenAI is retiring its speech models** (its deprecations page, notice
   2026-10-01, checked 2026-10-21): tts-1, tts-1-hd,
   gpt-4o-mini-tts-2025-03-20 and -2025-12-15 are removed 2027-01-06; the
