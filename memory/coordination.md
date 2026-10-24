@@ -773,7 +773,19 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   `mail/sent/20261024-183110Z-@arcana--where-a-deployed-service-s-key-lives-*`).
   @arcana is taking it to Thomas, whose rule it is
   (`mail/received/20261024-204034Z-@arcana--first-mj-s-arcana.key-*`).
-  **Still open.** In the same message: the 0.37.0 hook's exclude missed
+  **Decided by Thomas, 2026-10-24**
+  (`mail/received/20261024-212014Z-@arcana--thomas-decided-a-service-has-a-key-of-its-own-*`):
+  **each service has a key of its own**, made on first start and kept with
+  its state, holding only its own addresses; `.ai/arcana.key` stays with
+  @mj's sessions. arcana-core 0.21.1's `Arcana::Key.from_env` reads
+  `ARCANA_KEY_FILE`. **Built, not committed:** both units set it
+  (`~/.local/share/mj/arcana.key`; `/var/lib/mj/arcana.key` on a server);
+  on 2026-10-24 the local service claimed mj:camera and mj:voice, both
+  proven, and replies come back `verified`. Gap: if a server loses
+  `/var/lib/mj` while its bus keeps state, the addresses stay held until
+  arcana adds a way to free them (tell @cyclops with the release).
+  Overlore's game server gets its own key the same way (@arcana writes to
+  it). In the earlier message: the 0.37.0 hook's exclude missed
   `arcana.key` in an `ai`-branch worktree, so git didn't ignore the key.
   It was never committed. Fixed in arcana 0.37.1 (released, not
   installed here). mj's `.ai/.gitignore` has listed it since `0344636`.
