@@ -8,6 +8,7 @@ require "./tts_rates"
 require "./output_path"
 require "./voice_lanes"
 require "./limits"
+require "./callers"
 
 module MJ
   module Arcana
@@ -64,11 +65,17 @@ module MJ
         limits.each { |lane, n| ts.lane(lane, max_concurrent: n) }
         lane = ->(data : JSON::Any) { VoiceLanes.for(data) }
         ts.tool("voices", "List the speech providers available on this host and their voices.",
-          input_schema: VOICES_SCHEMA) { |_, _ctx| handle_voices }
+          input_schema: VOICES_SCHEMA) { |_, ctx| Callers.check!(ctx.envelope); handle_voices }
         ts.tool("speak", "Synthesize speech from text.",
-          input_schema: SPEAK_SCHEMA, lane: lane) { |data, ctx| handle_speak(data, ctx.envelope.timestamp) }
+          input_schema: SPEAK_SCHEMA, lane: lane) do |data, ctx|
+          Callers.check!(ctx.envelope)
+          handle_speak(data, ctx.envelope.timestamp)
+        end
         ts.tool("music", "A sung song from Eleven Music, from a composition plan or a prompt.",
-          input_schema: MUSIC_SCHEMA, lane: lane) { |data, ctx| handle_music(data, ctx.envelope.timestamp) }
+          input_schema: MUSIC_SCHEMA, lane: lane) do |data, ctx|
+          Callers.check!(ctx.envelope)
+          handle_music(data, ctx.envelope.timestamp)
+        end
       end
 
       # --- the queue ------------------------------------------------------------------------

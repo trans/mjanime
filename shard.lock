@@ -6,7 +6,7 @@ shards:
 
   arcana-core:
     git: https://github.com/trans/arcana-core.git
-    version: 0.18.0
+    version: 0.21.2
 
   backtracer:
     git: https://github.com/sija/backtracer.cr.git

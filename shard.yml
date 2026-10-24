@@ -24,7 +24,7 @@ dependencies:
     github: stumpycr/stumpy_png
   arcana-core:
     github: trans/arcana-core
-    version: ~> 0.11
+    version: ~> 0.21.2
   arcana-ai:
     github: trans/arcana-ai
     version: ~> 0.6.1

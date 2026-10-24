@@ -11,6 +11,7 @@ require "./pool_limit"
 require "./fetch_reference"
 require "./output_path"
 require "./limits"
+require "./callers"
 require "../api/retry"
 
 module MJ
@@ -54,7 +55,7 @@ module MJ
       def self.register(ts : ::Arcana::Toolset, transports : Hash(String, Transport))
         ts.tool("cameras",
           "List the available cameras with measured cost, speed and character.",
-          input_schema: CAMERAS_SCHEMA) { |_, _ctx| handle_cameras }
+          input_schema: CAMERAS_SCHEMA) { |_, ctx| Callers.check!(ctx.envelope); handle_cameras }
         # One lane per provider pool, waited for BEFORE the request takes a toolset slot.
         # That ordering is the whole point and it is why this replaced a token bucket held
         # inside the handler: parking on a pool from inside the handler still occupies a
@@ -69,7 +70,10 @@ module MJ
           lane: ->(data : JSON::Any) {
             id = data["camera"]?.try(&.as_s?) || "klein"
             Cameras.find(id).try(&.provider)
-          }) { |data, ctx| handle_shoot(transports, data, ctx.envelope.timestamp) }
+          }) do |data, ctx|
+          Callers.check!(ctx.envelope)
+          handle_shoot(transports, data, ctx.envelope.timestamp)
+        end
       end
 
       # A provider's content filter refusing is NOT an error: it is unbilled, it is

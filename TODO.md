@@ -155,7 +155,12 @@
 
   **Open:**
   - **Senders aren't authenticated on the bus** (Arcana's server; mail sent to `@arcana`
-    2026-10-22). Until fixed, mj can't tell Overlore from anything else on the bus.
+    2026-10-22). **arcana 0.37 stamps `verified`** (installed 2026-10-24), and mj-arcana
+    serves only `MJ_ARCANA_CALLERS`, verified, when it's set: unset on the workstation,
+    set on a deployment (Thomas, 2026-10-24). mj-arcana joins with **a key of its own**
+    (Thomas, 2026-10-24), from `ARCANA_KEY_FILE`, which both units set.
+    Waits on Overlore's calls signing before its box sets the list. A lost `/var/lib/mj`
+    leaves the addresses held on that bus until arcana has a way to free them.
   - **Paid only: settled, nothing to change** (@overlore, 2026-10-22). Overlore checks a
     player's balance before every paid request and charges twice mj's `usd`; no price limit
     in mj, since one set too low would stop the game (Thomas, 2026-10-22). Lost replies

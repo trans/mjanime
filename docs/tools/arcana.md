@@ -14,6 +14,7 @@ The service keeps running the old one until it's restarted (`systemctl --user re
 Each service registers only if its key is present: `RUNWARE_API_KEY` for `mj:camera`,
 `OPENAI_API_KEY` and/or `ELEVENLABS_API_KEY` for `mj:voice`. Bus URL comes from `ARCANA_WS_URL` /
 `ARCANA_URL`, default `ws://localhost:19118/bus`.
+`MJ_ARCANA_CALLERS` limits who is served (see [Callers](#callers-anyone-here-a-list-on-a-deployment)).
 
 ## Running it as a service
 
@@ -378,6 +379,45 @@ participant can name the URL, so an unchecked fetch reached the droplet's metada
 - **The 32 MB cap applies while reading,** and the whole fetch has 60 s.
 - **A failure says why without echoing what came back,** and shows the URL without its query
   string, which holds a presigned link's signature.
+
+## Callers: anyone here, a list on a deployment
+
+On the workstation both services serve anyone on the bus: keeping a list there would only get in
+the way. A deployment locks them to its own callers, such as Overlore's game server on the
+Overlore box (Thomas, 2026-10-24), with `MJ_ARCANA_CALLERS` in the service's environment:
+
+```
+MJ_ARCANA_CALLERS=overlore            # addresses, split on commas or spaces
+```
+
+With a list, a call is served only when its `from` is on it **and** the bus stamped it
+`verified` (arcana 0.37: the sender proved the address is its own, with its project's key or the
+owner token it joined with). `from` alone is whatever the sender wrote, so a list without the
+stamp would stop no one. So a caller without a key is turned away once a list is set: Overlore's
+REST calls must sign before its box sets one. A refused call is an error, before anything is
+queued or billed, and is logged as `[callers] refused …`. `help` stays open to all. At start the
+log says which policy runs (`src/arcana/callers.cr`).
+
+Checking callers needs no key of mj-arcana's own: the stamp comes from the bus.
+
+## The service's own key
+
+mj-arcana has a bus key of its own (Thomas, 2026-10-24), so nothing else can join as mj:camera
+or mj:voice. It is made on first start in the file `ARCANA_KEY_FILE` names, mode 600, and kept
+with the service's state: `~/.local/share/mj/arcana.key` in the user unit,
+`/var/lib/mj/arcana.key` on a server. It holds only those two addresses. The project's key,
+`.ai/arcana.key`, stays with @mj's sessions: a compromised mj-arcana can sign as its own
+addresses but never as @mj, nothing is bound in from the checkout, and no key is pushed to a
+server. Without `ARCANA_KEY_FILE` the service joins with no key, as before 0.37.
+
+On each bus the first keyed join claims the addresses for that key, and another key is then
+refused them (409 `held`). So start mj-arcana with its key before anything else could take the
+names. The log says which key is in use, and five seconds after joining, whether each address
+was proven with it.
+
+If a server loses `/var/lib/mj` while its bus keeps its saved state, the bus refuses the new
+key, since the old one still holds the addresses. No command releases them yet: until arcana
+has one, the bus has to be stopped and the listings removed from its snapshot.
 
 ## Limits: only the outrageous
 

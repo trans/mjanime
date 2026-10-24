@@ -27,6 +27,11 @@ WorkingDirectory=%S/mj
 # for gimp-console's own config if `format: "xcf"` is used and GIMP is installed.
 Environment=XDG_DATA_HOME=%S
 Environment=HOME=%S/mj
+# The service's own bus key, made on first start and kept with its state; it never leaves
+# the box (Thomas, 2026-10-24). The first keyed join claims mj:camera and mj:voice on this
+# host's bus for it. Lose /var/lib/mj while the bus keeps its state and the bus refuses the
+# new key: the addresses stay held by the old one until @arcana's operator frees them.
+Environment=ARCANA_KEY_FILE=%S/mj/arcana.key
 
 # Pushed by cyclops (`cyclops-env push mj production`), root-owned, mode 600; systemd reads
 # it before dropping to the service's user. Not `-` prefixed: without keys mj registers

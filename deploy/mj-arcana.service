@@ -38,6 +38,11 @@ ExecStart=@MJ_DIR@/bin/mj-arcana
 # can register nothing.
 EnvironmentFile=%h/.config/mj/env
 
+# The service's own bus key, made here on first start, mode 600, holding only mj:camera and
+# mj:voice (Thomas, 2026-10-24). Not the checkout's .ai/arcana.key: that is @mj's, and the
+# sandbox below keeps it out of reach. The directory is already bound in.
+Environment=ARCANA_KEY_FILE=%h/.local/share/mj/arcana.key
+
 Restart=always
 RestartSec=2
 

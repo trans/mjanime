@@ -42,6 +42,8 @@ require "arcana-core"
 #   RUNWARE_API_KEY              required for mj:camera
 #   OPENAI_API_KEY               enables openai speech
 #   ELEVENLABS_API_KEY           enables elevenlabs speech
+#   MJ_ARCANA_CALLERS            the only callers served, verified (unset: anyone)
+#   ARCANA_KEY_FILE              the service's own key, made there on first start (unset: none)
 
 DIM   = "\e[2m"
 BOLD  = "\e[1m"
@@ -64,6 +66,24 @@ toolsets = [] of Arcana::Toolset
 STDERR.puts "#{DIM}┌──────────────────────────────────────────────────#{RESET}"
 STDERR.puts "#{DIM}│#{RESET} mj-arcana  #{DIM}│#{RESET} #{bus_url}"
 STDERR.puts "#{DIM}└──────────────────────────────────────────────────#{RESET}"
+
+if callers = MJ::Arcana::Callers.allowed
+  log "#{GREEN}●#{RESET} callers #{DIM}— only #{callers.join(", ")}, and only verified (#{MJ::Arcana::Callers::ENV_VAR})#{RESET}"
+else
+  log "#{AMBER}○#{RESET} callers #{DIM}— anyone on the bus; set #{MJ::Arcana::Callers::ENV_VAR} to keep a list#{RESET}"
+end
+
+# The service's own key (Thomas, 2026-10-24), not the project's: made on first start where
+# ARCANA_KEY_FILE says, kept with the service's state, holding only mj:camera and mj:voice.
+# The project's .ai/arcana.key stays with @mj's sessions, so a compromised mj-arcana can sign
+# as its own addresses but never as @mj. On each bus the first keyed join claims the
+# addresses for this key, and another key is refused them (409 `held`).
+bus_key = Arcana::Key.from_env
+if bus_key
+  log "#{GREEN}●#{RESET} key #{DIM}— #{ENV[Arcana::Key::FILE_ENV]} (#{Arcana::Key::FILE_ENV})#{RESET}"
+else
+  log "#{AMBER}○#{RESET} key #{DIM}— none; set #{Arcana::Key::FILE_ENV} so the bus holds this service's addresses for it#{RESET}"
+end
 
 # --- mj:camera ------------------------------------------------------------------------
 if key = ENV["RUNWARE_API_KEY"]?
@@ -109,6 +129,7 @@ if key = ENV["RUNWARE_API_KEY"]?
       the reference image.
       GUIDE
     tags: ["image", "generation", "camera", "runware"],
+    key: bus_key,
   )
   # Generous on purpose: this is a backstop against runaway fibers, not the real limit.
   # Per-POOL caps do the actual limiting (see arcana/pool_limit.cr), because one
@@ -199,6 +220,7 @@ else
       suggested rewrite.
       GUIDE
     tags: ["tts", "voice", "speech", "audio", "music"],
+    key: bus_key,
   )
   # A backstop, as for the camera: the per-LANE caps do the limiting (arcana/voice_lanes.cr),
   # one per limit a provider enforces. ElevenLabs caps requests at once per model family
@@ -251,4 +273,18 @@ toolsets[0...-1].each do |ts|
 end
 Fiber.yield
 log "listening"
+# Whether each bus accepted the key's proof. Not proven means a bus that doesn't check
+# keys, or a refusal, which `last_error` names.
+if bus_key
+  spawn do
+    sleep 5.seconds
+    clients.each do |c|
+      if c.verified?
+        log "#{GREEN}●#{RESET} #{c.address} #{DIM}— proven with the key#{RESET}"
+      else
+        log "#{AMBER}○#{RESET} #{c.address} #{DIM}— not proven#{c.last_error.try { |e| ": #{e}" }}#{RESET}"
+      end
+    end
+  end
+end
 toolsets.last.run

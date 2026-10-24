@@ -57,6 +57,10 @@ from a file cyclops pushes.
    ```
 
    If the bus isn't at `ws://localhost:19118/bus`, add `ARCANA_WS_URL` to the scope.
+   Add `MJ_ARCANA_CALLERS` too, naming the box's own callers (`overlore` on the Overlore
+   box): with it, only those addresses are served, and only when the bus verified them, so
+   set it once they sign ([Callers](../docs/tools/arcana.md#callers-anyone-here-a-list-on-a-deployment)).
+   Without it, anything on the box may spend the keys.
 3. **On the server**, as root:
 
    ```sh
@@ -67,6 +71,12 @@ from a file cyclops pushes.
    It refuses to start without the key file, and warns if ffprobe is missing.
 4. **Later:** a new release is `git checkout v<version> && just install-server`; new keys are
    `cyclops-env push mj production`, which restarts the unit.
+
+The service's own bus key is made on first start at `/var/lib/mj/arcana.key` (the unit sets
+`ARCANA_KEY_FILE`) and never leaves the box. Its first join claims mj:camera and mj:voice on
+the box's bus. Back it up with `/var/lib/mj`: if that directory is lost while the bus keeps
+its state, the bus refuses the new key until the old listings are removed by hand
+([The service's own key](../docs/tools/arcana.md#the-services-own-key)).
 
 The system unit keeps the user unit's hardening, less what has no meaning there (the home
 and runtime directories), plus an empty capability set and other processes hidden:
