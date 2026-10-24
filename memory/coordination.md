@@ -545,6 +545,21 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   folder total $0.72. Edit passes can ignore a move: "move the sign
   straight up" moved only the lamps; "until the coin almost touches the top
   of the back" worked.
+  **The Bard in three styles** (@overlore for Thomas, 2026-10-24,
+  `mail/received/20261024-203343Z-@overlore--the-bard-in-three-more-styles-*`,
+  paths corrected in `…-203404Z-…correction-*`): a test so Thomas can pick
+  the look of the landing's third act (the Bard's stand-up set, opening
+  with the bush gag: a stream, "hello", his head pokes out of the bush
+  wide-eyed, a zip, he steps out). The game's Retro (green CRT, not ASCII),
+  3D cartoon and Pixel styles, worded as in its `data/art_styles.yml`; two
+  stills each on the 848x1264 stage: standing in present, and the gag's
+  moment. **Delivered 2026-10-24** in `Outtake/bard-styles/deliver/`
+  ($0.69, ten `mj prop` calls; `prompt.md` has every take). The gag was
+  drawn once in his cartoon style and restyled three times, so the three
+  share one composition. 3D needed an edit (its first take swapped his green
+  tunic for a brown vest). Keying on black also made Retro's own black lines
+  see-through; a corner flood fill keeps the inside solid, and the on-black
+  renders went too. Next, once Thomas picks a style: the act's frames in it.
 - **`@ipck`**: the dot-ai spec and skill. **Heads-up 2026-10-20**
   (`mail/received/20261020-025242Z-@ipck--intake-and-outtake-capitalized-*`):
   Thomas decided (2026-10-19) the user's folders are `Intake/` and
