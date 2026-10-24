@@ -736,10 +736,21 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   `held` (PROTOCOL.md, "Holding addresses"), so a lost key needs @arcana
   to free them. The user unit can't see the checkout's `.ai/`
   (`ProtectHome=tmpfs`), and the server has no `.ai/` at all.
-  **Open, Thomas's to decide:** where mj-arcana's key lives (proposed: its
-  own, at `$XDG_DATA_HOME/mj/arcana.key`, i.e. `~/.local/share/mj` here
-  and `/var/lib/mj` on the server, rather than `.ai/arcana.key`, which
-  also holds @mj); and which callers to accept. Callers on the local bus
+  **Key: one per project** — Thomas already decided it (2026-10-22, in
+  Arcana's `memory/keys.md`, "Decided"): `.ai/arcana.key` holds all of a
+  project's addresses, @mj, mj:voice and mj:camera. My proposal of a key
+  of mj-arcana's own is withdrawn. **Open:** the user unit would need
+  that one file let in; a server has no `.ai/`, so the project key would
+  be copied there (cyclops push, root 600, `LoadCredential=`) or the
+  server makes its own; arcana's notes don't cover servers. Offered to
+  draft the question to @arcana for Thomas to see first.
+  **Callers: settled** (Thomas, 2026-10-24): no list on the workstation;
+  a deployment locks to its own callers (e.g. overlore on the Overlore
+  box). Built as `MJ_ARCANA_CALLERS` (`src/arcana/callers.cr`): set, only
+  those addresses AND `verified`; unset, anyone. **Not committed.** Runs
+  here under "anyone" since 2026-10-24 (rebuilt, restarted, voices and
+  cameras answered). Overlore's calls must sign before its box sets the
+  list. Callers on the local bus
   2026-10-17..24 (audit log, `subject` = recipient, `object` = sender):
   overlore (the game server) 149 camera / 90 voice, @mj 11 / 34,
   @overlore 10 / 12, mj's own test addresses, owl 1; none `verified`, so
