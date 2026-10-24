@@ -522,7 +522,20 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   Nano at its 2K size (2752x1536, $0.103 a call) plus two edit passes that
   moved names in from the edges; $0.72 in all. The sign reaches 19.5% of
   the height, below the 13% asked; `prompt.md` has every take and the
-  measurements. Waiting on Thomas's and Overlore's look.
+  measurements. **Turned down** (Thomas, 2026-10-24): it reads as a brick
+  wall, not the side of a bank, and the bricks are huge. Thomas saw why:
+  the request itself described a wall.
+  **The bank's backdrop, second try** (@overlore for Thomas, 2026-10-24,
+  `mail/received/20261024-150614Z-@overlore--another-backdrop-*`): the
+  Piggy Bank side-on, a pig-shaped building, head and tail in the outer
+  thirds, the coin slot on top, the machine over the middle of the flank.
+  **Delivered 2026-10-24**
+  (`mail/sent/20261024-174817Z-@overlore--the-piggy-bank-side-on-is-ready.md`):
+  `Outtake/piggy-bank-side/deliver/piggy-bank-side.webp`, $0.51. The sign
+  went on the flank over the hind leg, neither of Overlore's two spots,
+  since the machine hides the centre from 10% down; the picture was scaled
+  to 85% and Nano painted the new border, so the snout clears a 4:3 crop
+  (the tail mostly doesn't). Waiting on Thomas's look.
 - **`@ipck`**: the dot-ai spec and skill. **Heads-up 2026-10-20**
   (`mail/received/20261020-025242Z-@ipck--intake-and-outtake-capitalized-*`):
   Thomas decided (2026-10-19) the user's folders are `Intake/` and
