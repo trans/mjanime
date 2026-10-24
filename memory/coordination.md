@@ -535,7 +535,16 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   went on the flank over the hind leg, neither of Overlore's two spots,
   since the machine hides the centre from 10% down; the picture was scaled
   to 85% and Nano painted the new border, so the snout clears a 4:3 crop
-  (the tail mostly doesn't). Waiting on Thomas's look.
+  (the tail mostly doesn't). **Redone the same day** at Thomas's direction:
+  the unscaled first take (out-1) was closer; the coin slot was the
+  trouble, so it's gone, and the sign and lamps moved up to the top of the
+  back, leaving the body open. Thomas will make the ATM smaller, mid-body,
+  and zoom the page in. Delivered beside the first as
+  `deliver/piggy-bank-side-2.webp`
+  (`mail/sent/20261024-180013Z-@overlore--the-piggy-bank-side-on-take-2-*`);
+  folder total $0.72. Edit passes can ignore a move: "move the sign
+  straight up" moved only the lamps; "until the coin almost touches the top
+  of the back" worked.
 - **`@ipck`**: the dot-ai spec and skill. **Heads-up 2026-10-20**
   (`mail/received/20261020-025242Z-@ipck--intake-and-outtake-capitalized-*`):
   Thomas decided (2026-10-19) the user's folders are `Intake/` and
