@@ -559,7 +559,18 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   share one composition. 3D needed an edit (its first take swapped his green
   tunic for a brown vest). Keying on black also made Retro's own black lines
   see-through; a corner flood fill keeps the inside solid, and the on-black
-  renders went too. Next, once Thomas picks a style: the act's frames in it.
+  renders went too. **Thomas picked the 3D cartoon** (2026-10-24, via
+  @overlore, `mail/received/20261024-205415Z-@overlore--one-more-a-new-3d-bard-*`),
+  but each style and each landing act has its own Bard (the game's: fantasy
+  troubadour in red velvet, golden-comic elf in the feathered cap, manga
+  rocker in a kimono), so the third act needs a new man, designed with no
+  reference. **Delivered 2026-10-24** in `Outtake/bard-3d-new/deliver/`
+  ($0.14, two calls). He's a round-bellied showman: curled moustache,
+  ginger curls, mustard beret, ruff, teal doublet, striped breeches. The gag
+  was drawn from his standing render, with the bush about his size. Nano
+  gave a lit purple backdrop with a floor shadow even when asked for flat
+  magenta. The shadow came off by hue (below the knees, magenta-hued
+  pixels). Next: the act's frames in this style, when asked.
 - **`@ipck`**: the dot-ai spec and skill. **Heads-up 2026-10-20**
   (`mail/received/20261020-025242Z-@ipck--intake-and-outtake-capitalized-*`):
   Thomas decided (2026-10-19) the user's folders are `Intake/` and
