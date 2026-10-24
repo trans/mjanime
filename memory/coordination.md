@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-23*
+*Updated 2026-10-24*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -511,6 +511,18 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   wingbeat frames registered by the head, $0.42 with one discarded retry;
   `prompt.md` has the measured differences between frames). Waiting on
   Thomas's look.
+  **The bank's backdrop** (@overlore for Thomas, 2026-10-24,
+  `mail/received/20261024-035821Z-@overlore--a-backdrop-for-overlore-s-bank-*`):
+  the Piggy Bank's pink brick wall behind the HTML teller machine, 16:9,
+  sign and ears in the top ~13%, the middle 30% plain, founders' bricks
+  with 11 given names plus a few from beyond the USA, all inside the
+  central 75%. **Delivered 2026-10-24**
+  (`mail/sent/20261024-041345Z-@overlore--the-piggy-bank-s-wall-is-ready.md`):
+  `Outtake/piggy-bank-wall/deliver/piggy-bank-wall.webp`, 2560x1440, from
+  Nano at its 2K size (2752x1536, $0.103 a call) plus two edit passes that
+  moved names in from the edges; $0.72 in all. The sign reaches 19.5% of
+  the height, below the 13% asked; `prompt.md` has every take and the
+  measurements. Waiting on Thomas's and Overlore's look.
 - **`@ipck`**: the dot-ai spec and skill. **Heads-up 2026-10-20**
   (`mail/received/20261020-025242Z-@ipck--intake-and-outtake-capitalized-*`):
   Thomas decided (2026-10-19) the user's folders are `Intake/` and
@@ -695,9 +707,22 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   moves the address from the token to the key. A service can then serve
   only `envelope.verified` messages from addresses it expects. The bus
   refuses nothing yet, only logs `join.unproven` and `read.unproven`.
-  **Open, not started:** waits on Thomas installing 0.37.0. Also open: where
-  the key lives on the server (the system unit's `/var/lib/mj` or
-  `/etc/mj`), and which callers mj:voice and mj:camera should accept.
+  **Thomas installed 0.37.0** (2026-10-24). arcana-core is updated to
+  0.21.0 in `shard.lock` (not committed); it builds and the specs pass.
+  mj:camera and mj:voice join with no token, so they are free addresses:
+  the first key to claim one holds it, and another key then gets 409
+  `held` (PROTOCOL.md, "Holding addresses"), so a lost key needs @arcana
+  to free them. The user unit can't see the checkout's `.ai/`
+  (`ProtectHome=tmpfs`), and the server has no `.ai/` at all.
+  **Open, Thomas's to decide:** where mj-arcana's key lives (proposed: its
+  own, at `$XDG_DATA_HOME/mj/arcana.key`, i.e. `~/.local/share/mj` here
+  and `/var/lib/mj` on the server, rather than `.ai/arcana.key`, which
+  also holds @mj); and which callers to accept. Callers on the local bus
+  2026-10-17..24 (audit log, `subject` = recipient, `object` = sender):
+  overlore (the game server) 149 camera / 90 voice, @mj 11 / 34,
+  @overlore 10 / 12, mj's own test addresses, owl 1; none `verified`, so
+  refusing the unverified now would cut off the game. A handler sees
+  `ctx.envelope.verified` and `from`.
   **OpenAI is retiring its speech models** (its deprecations page, notice
   2026-10-01, checked 2026-10-21): tts-1, tts-1-hd,
   gpt-4o-mini-tts-2025-03-20 and -2025-12-15 are removed 2027-01-06; the
