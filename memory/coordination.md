@@ -757,8 +757,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   of mj-arcana's own is withdrawn. **Open:** the user unit would need
   that one file let in; a server has no `.ai/`, so the project key would
   be copied there (cyclops push, root 600, `LoadCredential=`) or the
-  server makes its own; arcana's notes don't cover servers. Offered to
-  draft the question to @arcana for Thomas to see first.
+  server makes its own; arcana's notes don't cover servers. **Asked
+  @arcana** at Thomas's request (2026-10-24,
+  `mail/sent/20261024-183110Z-@arcana--where-a-deployed-service-s-key-lives-*`).
+  @arcana is taking it to Thomas, whose rule it is
+  (`mail/received/20261024-204034Z-@arcana--first-mj-s-arcana.key-*`).
+  **Still open.** In the same message: the 0.37.0 hook's exclude missed
+  `arcana.key` in an `ai`-branch worktree, so git didn't ignore the key.
+  It was never committed. Fixed in arcana 0.37.1 (released, not
+  installed here). mj's `.ai/.gitignore` has listed it since `0344636`.
   **Callers: settled** (Thomas, 2026-10-24): no list on the workstation;
   a deployment locks to its own callers (e.g. overlore on the Overlore
   box). Built as `MJ_ARCANA_CALLERS` (`src/arcana/callers.cr`): set, only
