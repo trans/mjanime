@@ -571,6 +571,18 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   gave a lit purple backdrop with a floor shadow even when asked for flat
   magenta. The shadow came off by hue (below the knees, magenta-hued
   pixels). Next: the act's frames in this style, when asked.
+  **His voice** (Trans likes him, "a funny looking fellow"; @overlore,
+  2026-10-24, `mail/received/20261024-233324Z-@overlore--a-voice-for-the-new-3d-bard-*`):
+  a voice of his own, wanted as a jolly, plummy, older British comic.
+  **Sent 2026-10-24** (`mail/sent/20261025-015824Z-*`):
+  - What exists from before: the sung takes in `Outtake/bard-sung/`
+    (George, Callum, Daniel, Barnaby Finch), Kokoro presets, and the OpenAI
+    ballad voice.
+  - Three eleven_v3 auditions of his opening line in
+    `Outtake/bard-3d-voice/`: Tarquin, Gerald and Pip Bumblebottom, from
+    the library, $0.015 for the three.
+  - Lesson: three sync `arcana_deliver` calls sent at once stalled. Two never
+    reached mj:voice and nothing was billed. One at a time, each took ~15 s.
 - **`@ipck`**: the dot-ai spec and skill. **Heads-up 2026-10-20**
   (`mail/received/20261020-025242Z-@ipck--intake-and-outtake-capitalized-*`):
   Thomas decided (2026-10-19) the user's folders are `Intake/` and
