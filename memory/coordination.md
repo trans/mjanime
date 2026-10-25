@@ -605,7 +605,16 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   - Take 4 has `[shouts]` before the first "Overlore". It's sped up 1.1x by
     Rubber Band, pitch kept, and cut into `Outtake/bard-3d-voice/take4/`;
     a 1.15x of the whole act is beside it.
-  - Not yet sent to @overlore; waiting on Thomas's ear.
+  - **Gerald isn't working over a long read** (Thomas, 2026-10-25). The same
+    lilt keeps returning: a word or phrase starts fast and finishes slow.
+    It makes the act feel long. 1.6x was fine to listen to, except the
+    fast starts went too fast and sounded distorted. **No more recordings
+    until the way forward is settled** (Thomas).
+  - **Script cuts** (Thomas): "Tough crowd." is out of u-6, and "Shiver me
+    timbers" out of u-7, which becomes "And fetch me my dog and bone…".
+    The current wording is in `Outtake/bard-3d-voice/script.txt`. Told
+    @overlore, with the direction notes, and asked it to hold the cues
+    (`mail/sent/20261025-035507Z-*`).
   **The act's frames, asked the same message, open:** a new set in the new
   3D Bard on the 848x1264 stage.
   - The bush, settled: a round, wide bush; his head leaning out from behind
