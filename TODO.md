@@ -75,20 +75,20 @@
   Bard cut-outs and their mouth frames, each linked to the picture it was edited from),
   each with its recipe. Moving an asset into another app's store is a transfer between stores, to be
   added: DataDungeon's side carries the bytes, recipe, wordings and links; Curio runs it across the
-  fleet. Until then deliveries stay files plus a manifest (`Outtake/bard-overlore/`).
+  fleet. Until then deliveries stay files plus a manifest (`Outtake/bard-1-2/overlore/`).
 - **0.14.0 is tagged (2026-10-17, `401dd4a`):** a recipe keeps the prompt as sent, with the named
   wordings in it and hashed versions. There are no standard styles, so mj would name, word and tag
   its own. Open: where the
   store lives (Overlore's is `~/.local/share/overlore/assets.db`), and which types to register,
   since DataDungeon's standard types are still drafts.
 - **The Bard's animation graph as an asset** (Thomas, 2026-10-18: "another type of asset we should be
-  able to store in DD"). `Outtake/bard-graph/graph.yml`, compiled to
-  `Outtake/bard-overlore-graph/graph.json`, says which body frames may follow which, and is walked
+  able to store in DD"). `Outtake/bard-1-2/graph/graph.yml`, compiled to
+  `Outtake/bard-1-2/overlore-graph/graph.json`, says which body frames may follow which, and is walked
   fresh on each play (`bard-walker.js`). It isn't a timeline, so none of DataDungeon's draft types
   fit: `sequence` is one fixed timeline, 3D `motion` is skeletal, and a sprite sheet's
   `ImageAnimation` is a fixed loop. Today it could only be `data`. Sketch: the graph is one asset;
   each frame is a prop, linked from it with its node and mouth shape in the link's data, so copying
-  the graph copies its frames (what `bard-overlore-graph/` does by hand now); Thomas's unusable marks
+  the graph copies its frames (what `bard-1-2/overlore-graph/` does by hand now); Thomas's unusable marks
   become `flagged` on the frames; the walker stays app code, named by the graph's format and version.
   **Its own type, `automaton`** (Thomas, with DataDungeon's agreement, 2026-10-19): states and the
   moves allowed between them, walked by input (speech cues, pauses), like a clockwork figure running
@@ -106,7 +106,7 @@
   in three kinds, a moment (`[sighs/]`), a state until the next (a pose), a span with a close
   (`[whisper]…[/whisper]`). A take's word times and mouth cues go with the speech, not the script
   (DataDungeon's call how). For it, mj gave each pose a `means` line and rests and endings a `kind`
-  (`bard-graph/graph.yml`, sent 2026-10-19). **Every link and move goes both ways** (Thomas,
+  (`bard-1-2/graph/graph.yml`, sent 2026-10-19). **Every link and move goes both ways** (Thomas,
   2026-10-19); a way back that breaks physics is flagged `reverse: abnormal`, taken only on purpose.
   **Under discussion (2026-10-19):**
   - *Characters:* a character as an asset holding its sheet (description, reference pictures, voice
@@ -241,14 +241,14 @@
 - **Port the Bard's Python scripts to Crystal** (Thomas, 2026-10-19). They're Python only for
   speed while experimenting (numpy and scipy do whole-image maths in a line), and live in
   `Outtake/`, not mj. Two parts:
-  - *The graph and its package* first, as an mj command: `bard-graph/graph.py` (compile `graph.yml`:
-    neighbour lists, moves, unusable marks) and `bard-overlore-graph/build.py` (cut each frame to
+  - *The graph and its package* first, as an mj command: `bard-1-2/graph/graph.py` (compile `graph.yml`:
+    neighbour lists, moves, unusable marks) and `bard-1-2/overlore-graph/build.py` (cut each frame to
     webp at its stage offset, write `graph.json`). YAML in, JSON out, crops by `magick`: a direct
     port, and the way in for the `automaton` type in mj's DataDungeon store (above). The preview
-    page's builder (`bard-preview/build.py`) can follow. `bard-walker.js` stays JavaScript.
-  - *The compositing:* `bard-pitch/compose.py` (heads onto pose bodies; `EYES`, `HAND`),
-    `bard-poses/mend_neck.py` and `mend_write.py`, `bard-gesture/composite*.py`,
-    `bard-mouths/composite.py`, `align.py`, `measure.py`. Bind ImageMagick's C API (MagickWand) from
+    page's builder (`bard-1-2/preview/build.py`) can follow. `bard-walker.js` stays JavaScript.
+  - *The compositing:* `bard-1/pitch/compose.py` (heads onto pose bodies; `EYES`, `HAND`),
+    `bard-1-2/poses/mend_neck.py` and `mend_write.py`, `bard-1-2/gesture/composite*.py`,
+    `bard-1-2/mouths/composite.py`, `align.py`, `measure.py`. Bind ImageMagick's C API (MagickWand) from
     Crystal, as `just build` already does for the ONNX shim: it has the differences, thresholds,
     morphology (dilate, open), Gaussian blur, connected components (dropping specks) and masked
     blends these use. Filling holes in a mask isn't one call there; a flood from the border, as

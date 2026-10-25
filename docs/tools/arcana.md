@@ -483,7 +483,8 @@ consecutive lines — the thing that stops synthesized narration sounding like a
 `voice_settings.speed` (0.7-1.2; ElevenLabs refuses values outside that). `eleven_v3` ignores it.
 Tried directly on 2026-10-21 (Henry, a 91-character line, speech timed with silence trimmed):
 `eleven_multilingual_v2` went from 4.83 s at 1.0 to 3.82 s at 1.2, and `eleven_v3` didn't change
-(5.47 and 5.74 s at 1.0, 5.49 and 5.72 s at 1.2, 5.00 s at 0.7). For `eleven_v3`, speed up on
+(5.47 and 5.74 s at 1.0, 5.49 and 5.72 s at 1.2, 5.00 s at 0.7). Re-checked 2026-10-25 (Gerald,
+a 108-character line): 7.04 and 6.50 s at 1.0, 6.54 and 6.64 s at 1.2. For `eleven_v3`, speed up on
 playback instead, as the landing plays Henry at 1.1x. A request with `speed` is the only one that
 sends ElevenLabs `voice_settings`, and then only `speed`; before 0.6.1, arcana-ai sent fixed
 `stability` and `similarity_boost` whenever `instructions` were given.

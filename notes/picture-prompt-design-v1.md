@@ -212,7 +212,7 @@ Most of what fields hold is a registered choice anyway: rules (by rating), frami
 own rules (by kind), style, flavor, theme, a stored character's appearance, and light (computed from
 the place's measured direction). What is written per picture (description, staging, an edit's
 change) is small. And a hand-written prompt (the Bard's, 2026-10-15) doesn't split into fields
-cleanly, though a rewrite in field order drew a usable picture (`Outtake/bard-field-order/`).
+cleanly, though a rewrite in field order drew a usable picture (`Outtake/bard-2/field-order/`).
 
 So Thomas's idea: **one prompt field, with Mustache tags for the registered parts** (Mustache because
 DataDungeon already uses it for Overlore's decrees; `$` turns up in prompts). Code writes the bare
