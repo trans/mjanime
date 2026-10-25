@@ -320,7 +320,9 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   the bush slides left and he's caught. Wanted: the bush, the caught frame,
   and three sounds: the whistle (loops while the prompt waits, or cuts
   mid-phrase), the stream (loops, stops dead), the zip (~0.5 s). No sidling
-  frame. **Open.**
+  frame. **Closed 2026-10-25** (@overlore): all three are in the 3D act. The
+  whistle and zip are its stand-ins (Trans: fine); the stream is a CC0
+  freesound recording Trans picked.
   **Moves between poses** (Thomas, 2026-10-18: each pose has its gesture
   group but nothing joins them). Chained Nano edits failed (a second lute,
   doubled quills; the write pose itself had two quills, now mended in every
@@ -683,6 +685,11 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     **Tempo: 1.05x for both voices** (Thomas). Asked @overlore to set the
     page's playback rate; cues and choreography follow `currentTime`.
     Offered sped-up files if it prefers (`mail/sent/20261025-104534Z-*`).
+    **@overlore's side: nothing Trans asked for is missing**
+    (`mail/received/20261025-103635Z-*`). Take 5 plays with its cues,
+    choreography, bleep and robot voice; tempo is one number on its page.
+    The only open item is Trans's optional pick of rimshot, crickets and
+    fanfare.
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
