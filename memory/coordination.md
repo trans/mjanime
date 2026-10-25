@@ -585,7 +585,24 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     reached mj:voice and nothing was billed. One at a time, each took ~15 s.
   **Thomas chose Gerald** (2026-10-24, "Gerald definitely"):
   `fGIZlgPQ75MMlvQ6WxgY`, eleven_v3, is the 3D Bard's voice. Told @overlore.
-  The real takes come once the script is settled.
+  **The act's draft read** (@overlore, 2026-10-25,
+  `mail/received/20261025-021402Z-@overlore--gerald-s-takes-of-the-stand-up-act-*`;
+  u-handover reworded in `…-022208Z-…`): u-1 to u-17 plus u-handover, so
+  Trans can tune the script by ear. **Delivered 2026-10-25** in
+  `Outtake/bard-3d-voice/` as `u-<n>-gerald.mp3` and `u-all-gerald.mp3`
+  (1 s gaps, 3:27), $0.08, no cues
+  (`mail/sent/20261025-022719Z-*`).
+  - Changes to the text: `[sings]` on u-4 and u-16, `[pause]` in u-5,
+    "rope" for RoPE, `[deadpan]` in u-12.
+  - Whisper heard no tag read aloud.
+  **The act's frames, asked the same message, open:** a new set in the new
+  3D Bard on the 848x1264 stage.
+  - The bush, settled: a round, wide bush; his head leaning out from behind
+    it, with neck and shoulder showing; the same head blushing with a toothy
+    grin; him stepping out, tugging his belt.
+  - Poses, each with the six mouths, the list may grow: present, beckon,
+    head shake, hands thrown up, arms wide, wink, whisper, writing, sung,
+    hand out to shake, looking at that hand (blushing), bow.
 - **`@ipck`**: the dot-ai spec and skill. **Heads-up 2026-10-20**
   (`mail/received/20261020-025242Z-@ipck--intake-and-outtake-capitalized-*`):
   Thomas decided (2026-10-19) the user's folders are `Intake/` and
