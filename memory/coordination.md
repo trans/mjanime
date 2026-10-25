@@ -680,6 +680,9 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     Audition 2 gave all four voices the same beats and Thomas picked the
     two Geralds, so the earlier monotone was the missing beats, not the
     voice.
+    **Tempo: 1.05x for both voices** (Thomas). Asked @overlore to set the
+    page's playback rate; cues and choreography follow `currentTime`.
+    Offered sped-up files if it prefers (`mail/sent/20261025-104534Z-*`).
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
