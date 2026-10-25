@@ -688,8 +688,9 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     **@overlore's side: nothing Trans asked for is missing**
     (`mail/received/20261025-103635Z-*`). Take 5 plays with its cues,
     choreography, bleep and robot voice; tempo is one number on its page.
-    The only open item is Trans's optional pick of rimshot, crickets and
-    fanfare.
+    Thomas accepted the first rimshot, crickets and fanfare; remind him to
+    check the others later, not essential (`TODO.md`, "Reminders for
+    Thomas"). Told @overlore (`mail/sent/20261025-104939Z-*`).
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
