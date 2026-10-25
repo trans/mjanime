@@ -672,7 +672,35 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     page with @overlore first. **Asked it**: who owns the play sequence;
     cues now or final, and as Rhubarb JSON or the DD `mouth` track; its
     E/G/H folding; whether beat times help; whether the script is final
-    (`mail/sent/20261025-063116Z-*`). **Awaiting answer.**
+    (`mail/sent/20261025-063116Z-*`).
+  - **Answered 2026-10-25**
+    (`mail/received/20261025-063216Z-@overlore--re-the-3d-bard-s-act-who-does-what-*`).
+    mj writes the choreography and @overlore plays it; no preview page on
+    mj's side, since the test landing is the preview.
+    - **The choreography:** per take, `[time s, pose]`, cut on a closed
+      mouth, with the beat poses and head shakes; the silent poses between
+      lines (wink after u-11, handshake and look-at-hand after u-17, bow),
+      all in one JSON.
+    - **The graph:** the `3d` set in `graph.json`, plus his head top and feet
+      (90, 1193).
+    - **Cues:** `<take>.cues.json` as `[[start_s, shape], …]`, full Rhubarb
+      shapes; E→C, G→B, H→C as in the graph's table.
+    - **The final takes** get the bleep (u-13) and the robot voice (u-12);
+      Trans gives the go-ahead.
+  - **@overlore then rigged the act on its test landing itself**
+    (`mail/received/20261025-065255Z-*`): a stand-in `3d` set from
+    `frames/manifest.json`, one pose per line, and its own bleep and robot
+    voice on the drafts. That overlapped mine.
+    - **Made and not sent** (Thomas said stop): the `3d` set in
+      `bard-1-2/graph/graph.yml`, and `overlore-graph/graph.json` rebuilt
+      (309 frames).
+    - The frames are under `bard-3/talk/`, with 36 `.cues.json` and
+      `take5/choreography.json`.
+    - `graph.py` and `build.py` were repointed at the Outtake root, my
+      reorganisation's slip.
+    - Its two headless test runs played the act out loud at once; asked it
+      to run one at a time or muted
+      (`mail/sent/20261025-073430Z-*`).
   - Overlore's game server now signs with its own key (`21dbad1` in its
     repo, 2026-10-24), the step `MJ_ARCANA_CALLERS` was waiting on.
   - Poses, each with the six mouths, the list may grow: present, beckon,
