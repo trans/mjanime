@@ -1,5 +1,11 @@
 # mj — TODO
 
+## Reminders for Thomas
+
+- **Check the 3D act's rimshot, crickets and fanfare** (Thomas, 2026-10-25: remind me later; not
+  essential). @overlore offered several of each; Thomas accepted the first of each for now, having
+  heard them ("they are fine"). On Overlore's test landing, the stand-up act.
+
 ## arcana bus (`mj:camera`, `mj:voice`)
 - **`shoot_batch`** — one call, a list of shots, each with a caller-supplied `id`; each result carries
   its own `id` and `status` so one refusal doesn't fail the rest. Asked for by `@overlore`
