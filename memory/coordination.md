@@ -200,11 +200,11 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   (`mail/received/*-@overlore--bard-full-figure-*.md`): three candidates
   made with `mj prop` (two fantasy poses, and the golden-style cartoon
   with its forest removed), each a prop dir in the project's
-  `Outtake/bard-full/`. Thomas then asked for more poses: two sets
+  `Outtake/bard-1-2/full/`. Thomas then asked for more poses: two sets
   (fantasy, cartoon) of five, the cartoon bow in two takes picked 50/50.
   **Sent 2026-10-15** (`mail/sent/20261015-031922Z-@overlore--bard-poses.md`):
   the pictures and a `manifest.json` for Overlore's DataDungeon store in
-  `Outtake/bard-overlore/`. **Open:** Overlore's type and tags; whether
+  `Outtake/bard-1-2/overlore/`. **Open:** Overlore's type and tags; whether
   the raw renders are kept, and as what (Thomas raised XCF, 2026-10-15).
   **Mouths and blinks for the Bard**, asked 2026-10-16
   (`mail/received/20261016-221432Z-@overlore--bard-mouths-and-blinks-be6adc02.md`):
@@ -212,12 +212,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   patches X, A-F (G, H optional) for beckon, present, play and write in
   both sets, and closed (and half-closed) eyes for all 11 poses, each a
   cropped patch with alpha that lines up exactly with its cut-out in
-  `Outtake/bard-overlore/`, plus a manifest of pose, shape, size and x, y.
+  `Outtake/bard-1-2/overlore/`, plus a manifest of pose, shape, size and x, y.
   A trial first: present in both sets. **Patches dropped** (Thomas, 2026-10-16:
   a wide mouth moves the jaw, so pasted patches never meet the face's lines);
   head swaps between poses also dropped (placement needs a person every
   time). Each mouth is now a whole-picture edit of the pose's render (trial
-  in `Outtake/bard-mouths/`, 10 edits, $0.692: no shift in 9 of 10, ~3.5/255
+  in `Outtake/bard-1-2/mouths/`, 10 edits, $0.692: no shift in 9 of 10, ~3.5/255
   change outside the face). Asked them 2026-10-17
   (`mail/sent/20261017-020413Z-@overlore--bard-mouths-audio.md`) for a spoken
   and a sung Bard clip with Rhubarb's cues, for a preview page here.
@@ -229,7 +229,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   ElevenLabs (v3 `[sings]` or Eleven Music). Thomas then put a scoped
   ElevenLabs key in cyclops-env for mj (TTS, voices, similar voices, music;
   not `user_read` or `audio_isolation`). Takes in the project's
-  `Outtake/bard-sung/`, with a preview at `Outtake/bard-preview/`
+  `Outtake/bard-1-2/sung/`, with a preview at `Outtake/bard-1-2/preview/`
   (`mail/sent/20261017-023932Z-@overlore--sung-takes.md`). `[sings]` only
   makes v3 lull; Eleven Music sings but takes no voice id.
   **Thomas's voice decisions, 2026-10-17** (sent in
@@ -266,19 +266,19 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   **Talking frames delivered 2026-10-18** (Thomas: deliver what's done, so
   the site can run talks while strums and inbetweens come;
   `mail/sent/20261018-010830Z-@overlore--bard-talking-frames.md`): 40 mouth
-  frames and the 3 bows in `Outtake/bard-overlore-frames/` with
+  frames and the 3 bows in `Outtake/bard-1-2/overlore-frames/` with
   `manifest.json` (made by its `build.py`). Each frame keeps its offset in
   the 848x1264 render; a pose's mouths share one crop; recipes give
   `prompt` as sent. Also told them `credits` became `billed_characters`
   and `usd`. **In their landing page** (`be55b4a` there, not deployed;
   `mail/received/20261018-011555Z-@overlore--re-the-bard-s-talking-frames-in-the-page-70e792e9.md`):
   poses at their offsets on the 848x1264 stage, mouths stacked in place,
-  cues from our `bard-preview/` Rhubarb runs; checked in headless Chromium.
+  cues from our `bard-1-2/preview/` Rhubarb runs; checked in headless Chromium.
   Pose changes are cuts and the song plays in the still play pose until
   strums and inbetweens come. **Voices and song delivered 2026-10-18**
   (Thomas: off the old OpenAI voice; `mail/sent/20261018-021441Z-@overlore--bard-voices-and-song.md`):
   all nine lines in Henry (1.1x) and the Announcer, eleven_v3, and c-1+c-2
-  sung as one song plus c-3 sung, with cues, in `Outtake/bard-overlore-voice/`.
+  sung as one song plus c-3 sung, with cues, in `Outtake/bard-1-2/overlore-voice/`.
   **Thomas's notes, 2026-10-18:** the closed "m" mouth reads as cross at
   rest and at the end (a resting smile X was made for every pose); the
   cartoon's eyes were closed in every play frame (open-eyed play mouths
@@ -297,7 +297,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   proposed, not started. **Cartoon first** (Thomas, 2026-10-18): get the
   cartoon Bard working, then consider the realistic one. Gestures for the
   cartoon's beckon, present and write are made (Nano edits of the arm, the
-  talking heads pasted on, `Outtake/bard-gesture/`), cycled while he talks
+  talking heads pasted on, `Outtake/bard-1-2/gesture/`), cycled while he talks
   (present 1, 3, 2, 3 is Thomas's come-hither). No crossfades (Thomas).
   **Entrance gag asked 2026-10-18** (Thomas's idea, via `@overlore`,
   `mail/received/20261018-032817Z-@overlore--a-gag-entrance-for-the-cartoon-bard-a-bush-a-caugh-cf132693.md`):
@@ -326,35 +326,35 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   doubled quills; the write pose itself had two quills, now mended in every
   write frame). A first-and-last-frame video (LTX-2.5 Pro on Runware,
   present -> write, $0.72) keyed cleanly and, scaled back onto the stage,
-  matches both poses to 1 px (`Outtake/bard-move-video/`). **Rejected** by
+  matches both poses to 1 px (`Outtake/bard-2/move-video/`). **Rejected** by
   Thomas after a second take ("the video is awful, far too many issues"):
   no video moves; poses cut. Lesson: inspect generated frames at full size,
   frame by frame, before showing them; a contact sheet hid the errors.
   **Animation state graph built 2026-10-18** (Thomas's idea: a graph of
-  acceptable paths, walked in a variety of ways): `Outtake/bard-graph/
+  acceptable paths, walked in a variety of ways): `Outtake/bard-1-2/graph/
   graph.yml` (body nodes by frame folder, groups, weighted edges, a walk
   rule per pose: cycle / random / beat / pause / hold, moves between poses)
   and `graph.py` (checks frames exist, compiles neighbour lists, applies the
   flipbook's unusable marks). Mouths are a separate layer chosen by the
-  cues, not graph nodes. mj's preview is now driven by it (`bard-preview/
+  cues, not graph nodes. mj's preview is now driven by it (`bard-1-2/preview/
   build.py`). Next if wanted: the flipbook editing links and groups; then
   Overlore playing the same compiled graph. **Graph and walker delivered**
-  the same day (`Outtake/bard-overlore-graph/`: graph.json with a frame
+  the same day (`Outtake/bard-1-2/overlore-graph/`: graph.json with a frame
   table, frames/, bard-walker.js; `mail/sent/20261018-071956Z-@overlore--bard-animation-graph.md`).
   **The song for talk c** (Thomas approved, 2026-10-18): song #28's verse
-  with c-2 added in its style (`Outtake/bard-sung/take-music-28c2c.mp3`,
+  with c-2 added in its style (`Outtake/bard-1-2/sung/take-music-28c2c.mp3`,
   made by uploading #28 and inpainting with music_v2_5; c-2's words
   changed to Overlore's "Soon, soon! So tell me where to send / a letter to
   an early friend"; he sings "Soon!" once, kept). Sent with the re-recorded
   spoken c-2 (`mail/sent/20261018-074744Z-@overlore--the-song-for-talk-c.md`).
   **Final: `take-music-28c2d`** (Thomas: "perfect"): the second "soon"
-  spliced back in from a copy of the sung word (`Outtake/bard-sung/soonsoon.py`),
+  spliced back in from a copy of the sung word (`Outtake/bard-1-2/sung/soonsoon.py`),
   so c-2's words stand in full; sent as a correction
   (`mail/sent/20261018-081211Z-@overlore--the-song-for-talk-c-final.md`).
   **Which Bard where** (Thomas, 2026-10-18): the realistic Bard does the
   salesman pitch, the cartoon Bard the song (landing page, talk c).
   **Salesman poses, first batch made** (2026-10-18, Thomas: "I trust you";
-  `Outtake/bard-pitch/`, flipbook #324-353, $0.83): a base (`fantasy-base`,
+  `Outtake/bard-1/pitch/`, flipbook #324-353, $0.83): a base (`fantasy-base`,
   from the mended write pose: hands free, looking at the viewer, lute
   behind his hip) with its six mouths ("oo" redone: the first frowned,
   kept as `fantasy-base-F-frown`), and pointing, arms spread and finger up,
@@ -368,16 +368,16 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   lute), the secret hand (laid over the heads), thumbs-up (the wink's
   body under the talking heads) and the wink (its own frame). `compose.py`
   now keeps only the moving face from the heads (a head box left a seam
-  across his throat). All in `bard-graph/graph.yml` (realistic set, a
+  across his throat). All in `bard-1-2/graph/graph.yml` (realistic set, a
   pose each; counting walks one-two-three at pauses: the walker's and the
   preview's "pause" rule now takes an `order`). **Waiting on Thomas** to
   look. Thomas: patting the lute out (#384-390, no neck), robot "fine,
   we'll see how it plays". **Sent** the same day: the rebuilt graph
-  package (`Outtake/bard-overlore-graph/`, 226 frames) with a pose for
+  package (`Outtake/bard-1-2/overlore-graph/`, 226 frames) with a pose for
   each line (`mail/sent/20261018-225627Z-@overlore--salesman-pitch-poses.md`);
   present left out of the map until Thomas clears its marks. **Tin robot
   arms** tried for the robot line (Thomas: "it might be funny"):
-  `bard-pitch/fantasy-tinrobot`, flipbook #413-419, in the graph as pose
+  `bard-1/pitch/fantasy-tinrobot`, flipbook #413-419, in the graph as pose
   `tinrobot`. Thomas: "the robot arms look fine"; a gag, to slip in now and
   then instead of every play-through. **Sent** 2026-10-19
   (`mail/sent/20261019-000725Z-@overlore--the-pitch-tin-robot-arms-a-gag-pose-for-no-more-i.md`).
@@ -430,7 +430,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   made by its agent from an automaton and a take
   (`mail/received/20261019-174852Z-@overlore--re-choreography-*`). Asked of
   mj: each pose's meaning, and rests and endings: added as `means` and
-  `kind` in `bard-graph/graph.yml`; graph.json rebuilt and **sent**
+  `kind` in `bard-1-2/graph/graph.yml`; graph.json rebuilt and **sent**
   (`mail/sent/20261019-190037Z-@overlore--re-choreography-*`). **Every
   link and move goes both ways** (Thomas, 2026-10-19): a way that breaks
   physics (a glass unbreaking) is flagged `reverse: abnormal`, kept for a
@@ -466,7 +466,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   asked** the same day (`mail/received/20261018-173753Z-@overlore--a-robot-voice-for-one-phrase-in-the-bard-s-salesma-4eeff115.md`):
   he imitates the old parser's "I don't know the word!", and v3's [robotic]
   tag did nothing. **Sent** three takes with the same 1.200 s timing
-  (`Outtake/salesman-robot/`, `robot.py`): the Sound Box's Full Robot
+  (`Outtake/bard-1/salesman-robot/`, `robot.py`): the Sound Box's Full Robot
   preset, a phase-vocoder monotone at his 241 Hz, and that at 11 kHz /
   8-bit (8 kHz, or the preset's drive on the monotone, lost the words to
   Whisper); `mail/sent/20261018-200936Z-@overlore--robot-voice-for-i-dont-know-the-word.md`.
@@ -479,12 +479,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   **The realistic present pose is broken** (Thomas, 2026-10-18: the lute's
   neck doesn't line up with its body; #198, and its mouths and three
   gestures made from it, are marked unusable in the flipbook). One mend
-  edit made: `Outtake/bard-poses/fantasy-present-lute` (#321), the lute
+  edit made: `Outtake/bard-1-2/poses/fantasy-present-lute` (#321), the lute
   now across his hips, neck straight out to the right; Thomas: fine, but
   he doesn't look at the camera. **Thomas's fix instead** (2026-10-18):
   just take off the neck above his shoulder, in present and wherever the
   lute is slung behind him (write, bow), since the lute is short when he
-  plays. **Done in place** by `Outtake/bard-poses/mend_neck.py`: one clean
+  plays. **Done in place** by `Outtake/bard-1-2/poses/mend_neck.py`: one clean
   picture per pose (#321 for present; Nano edits `fantasy-write-noneck`
   #323 and `fantasy-bow-noneck` #322), its neck area pasted onto all 38
   frames (present: pose, gaze, 6 mouths, 3 gestures x 7; write: pose,
@@ -497,7 +497,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   (`mail/sent/20261020-161437Z-@overlore--the-realistic-bard-s-present-*`).
   **Strums done** for the cartoon, the one that sings: two middles and two
   lows from Thomas's picks, walked on the song's beat (`play` in
-  `Outtake/bard-graph/graph.yml`). The realistic Bard doesn't sing, so it
+  `Outtake/bard-1-2/graph/graph.yml`). The realistic Bard doesn't sing, so it
   needs none. Inbetweens gave way to the graph's moves (no crossfades,
   Thomas).
   **The landing's Beta Bird Special** (@overlore for Thomas, 2026-10-23,
@@ -506,7 +506,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   takes the die's place in the logo's gateway, and two handover takes.
   **Delivered 2026-10-23**
   (`mail/sent/20261023-175019Z-@overlore--the-beta-bird-*`): the takes in
-  `Outtake/landing-handover/` (Announcer, eleven_v3, Rhubarb cues, $0.005),
+  `Outtake/bard-1-2/landing-handover/` (Announcer, eleven_v3, Rhubarb cues, $0.005),
   the bird in `Outtake/beta-bird/deliver/` (perched, landing, three
   wingbeat frames registered by the head, $0.42 with one discarded retry;
   `prompt.md` has the measured differences between frames). Waiting on
@@ -518,7 +518,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   with 11 given names plus a few from beyond the USA, all inside the
   central 75%. **Delivered 2026-10-24**
   (`mail/sent/20261024-041345Z-@overlore--the-piggy-bank-s-wall-is-ready.md`):
-  `Outtake/piggy-bank-wall/deliver/piggy-bank-wall.webp`, 2560x1440, from
+  `Outtake/piggy-bank/wall/deliver/piggy-bank-wall.webp`, 2560x1440, from
   Nano at its 2K size (2752x1536, $0.103 a call) plus two edit passes that
   moved names in from the edges; $0.72 in all. The sign reaches 19.5% of
   the height, below the 13% asked; `prompt.md` has every take and the
@@ -531,7 +531,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   thirds, the coin slot on top, the machine over the middle of the flank.
   **Delivered 2026-10-24**
   (`mail/sent/20261024-174817Z-@overlore--the-piggy-bank-side-on-is-ready.md`):
-  `Outtake/piggy-bank-side/deliver/piggy-bank-side.webp`, $0.51. The sign
+  `Outtake/piggy-bank/side/deliver/piggy-bank-side.webp`, $0.51. The sign
   went on the flank over the hind leg, neither of Overlore's two spots,
   since the machine hides the centre from 10% down; the picture was scaled
   to 85% and Nano painted the new border, so the snout clears a 4:3 crop
@@ -553,7 +553,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   wide-eyed, a zip, he steps out). The game's Retro (green CRT, not ASCII),
   3D cartoon and Pixel styles, worded as in its `data/art_styles.yml`; two
   stills each on the 848x1264 stage: standing in present, and the gag's
-  moment. **Delivered 2026-10-24** in `Outtake/bard-styles/deliver/`
+  moment. **Delivered 2026-10-24** in `Outtake/bard-3/styles/deliver/`
   ($0.69, ten `mj prop` calls; `prompt.md` has every take). The gag was
   drawn once in his cartoon style and restyled three times, so the three
   share one composition. 3D needed an edit (its first take swapped his green
@@ -564,7 +564,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   but each style and each landing act has its own Bard (the game's: fantasy
   troubadour in red velvet, golden-comic elf in the feathered cap, manga
   rocker in a kimono), so the third act needs a new man, designed with no
-  reference. **Delivered 2026-10-24** in `Outtake/bard-3d-new/deliver/`
+  reference. **Delivered 2026-10-24** in `Outtake/bard-3/new/deliver/`
   ($0.14, two calls). He's a round-bellied showman: curled moustache,
   ginger curls, mustard beret, ruff, teal doublet, striped breeches. The gag
   was drawn from his standing render, with the bush about his size. Nano
@@ -575,11 +575,11 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   2026-10-24, `mail/received/20261024-233324Z-@overlore--a-voice-for-the-new-3d-bard-*`):
   a voice of his own, wanted as a jolly, plummy, older British comic.
   **Sent 2026-10-24** (`mail/sent/20261025-015824Z-*`):
-  - What exists from before: the sung takes in `Outtake/bard-sung/`
+  - What exists from before: the sung takes in `Outtake/bard-1-2/sung/`
     (George, Callum, Daniel, Barnaby Finch), Kokoro presets, and the OpenAI
     ballad voice.
   - Three eleven_v3 auditions of his opening line in
-    `Outtake/bard-3d-voice/`: Tarquin, Gerald and Pip Bumblebottom, from
+    `Outtake/bard-3/voice/`: Tarquin, Gerald and Pip Bumblebottom, from
     the library, $0.015 for the three.
   - Lesson: three sync `arcana_deliver` calls sent at once stalled. Two never
     reached mj:voice and nothing was billed. One at a time, each took ~15 s.
@@ -589,7 +589,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   `mail/received/20261025-021402Z-@overlore--gerald-s-takes-of-the-stand-up-act-*`;
   u-handover reworded in `…-022208Z-…`): u-1 to u-17 plus u-handover, so
   Trans can tune the script by ear. **Delivered 2026-10-25** in
-  `Outtake/bard-3d-voice/` as `u-<n>-gerald.mp3` and `u-all-gerald.mp3`
+  `Outtake/bard-3/voice/` as `u-<n>-gerald.mp3` and `u-all-gerald.mp3`
   (1 s gaps, 3:27), $0.08, no cues
   (`mail/sent/20261025-022719Z-*`).
   - Changes to the text: `[sings]` on u-4 and u-16, `[pause]` in u-5,
@@ -603,7 +603,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     $0.076 each), then cut it into lines at the silences, using Whisper's word
     times.
   - Take 4 has `[shouts]` before the first "Overlore". It's sped up 1.1x by
-    Rubber Band, pitch kept, and cut into `Outtake/bard-3d-voice/take4/`;
+    Rubber Band, pitch kept, and cut into `Outtake/bard-3/voice/take4/`;
     a 1.15x of the whole act is beside it.
   - **Gerald isn't working over a long read** (Thomas, 2026-10-25). The same
     lilt keeps returning: a word or phrase starts fast and finishes slow.
@@ -612,15 +612,29 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     until the way forward is settled** (Thomas).
   - **Script cuts** (Thomas): "Tough crowd." is out of u-6, and "Shiver me
     timbers" out of u-7, which becomes "And fetch me my dog and bone…".
-    The current wording is in `Outtake/bard-3d-voice/script.txt`. Told
+    The current wording is in `Outtake/bard-3/voice/script.txt`. Told
     @overlore, with the direction notes, and asked it to hold the cues
     (`mail/sent/20261025-035507Z-*`).
+  - **Next voice idea** (Thomas, 2026-10-25): more comic emotion, maybe a
+    Scottish accent. Candidates from the library, none recorded: Scotty
+    Marshal (`NfUrCNRReUL9RXS9upG1`, "chipper West Highlander"), Crofty
+    (`keLVje3aBMuRpxuu0bqO`, energetic), Sean (`ztnpYzQJyWffPj1VC5Uw`,
+    older), Pete Gates (`eVKQybPTL0poBPxBa8L6`, Glaswegian). Or a v3
+    `[strong Scottish accent]` tag on a comic voice. Audition over ~45 s of
+    the act, not one line.
+  **Outtake reorganized** (Thomas, 2026-10-25): `bard-1/` the realistic Bard,
+  `bard-2/` the cartoon, `bard-1-2/` work for both (kept whole so its
+  scripts run), `bard-3/` the 3D Bard; `piggy-bank/`, `cow-order/`.
+  - Text files and these notes were repointed, and flipbook numbers kept.
+    `Outtake/README.md` lists old names against new.
+  - Mail sent before then uses the old names.
+  - Told @overlore (`mail/sent/20261025-043907Z-*`).
   **The act's frames, asked the same message, open:** a new set in the new
   3D Bard on the 848x1264 stage.
   - The bush, settled: a round, wide bush; his head leaning out from behind
     it, with neck and shoulder showing; the same head blushing with a toothy
     grin; him stepping out, tugging his belt.
-    **Delivered 2026-10-25** in `Outtake/bard-3d-act/deliver/` ($0.28;
+    **Delivered 2026-10-25** in `Outtake/bard-3/act/deliver/` ($0.28;
     `mail/sent/20261025-023245Z-*`). One bush, the same pixels in the
     bush, peek and blush frames (the canonical bush laid over his cut-out).
     The step-out keeps Nano's bush, since he's in front of it, and he's at
@@ -742,14 +756,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   at start, expiry, and a retry on 429. **Unknown:** Overlore's cache hit
   rate and fresh paragraph length.
   **What a voice costs** (measured 2026-10-22, Bard lines a-1, a-2, b-1,
-  b-3; `Outtake/flash-test/` has Flash and the delivered v3 takes side by
+  b-3; `Outtake/bard-1-2/voice-tests/flash/` has Flash and the delivered v3 takes side by
   side for Thomas): ElevenLabs bills about 39% of the text's characters on
   v3 and 20% on Flash, consistently. Why is unknown, and it could change.
   At arcana-ai's $0.08 / $0.04 per 1,000 billed, an hour of fresh speech
   costs $1.58 on v3 and $0.43 on Flash. Flash made each line in 0.6-1.3 s,
   against v3's 3-4.5 s. Thomas is weighing what to do about voice cost
   (2026-10-22), and wants Flash tried.
-  **Kokoro** (Kokoro-82M ONNX, tried 2026-10-22, `Outtake/kokoro-test/`):
+  **Kokoro** (Kokoro-82M ONNX, tried 2026-10-22, `Outtake/bard-1-2/voice-tests/kokoro/`):
   preset voices only, no cloning. One CPU core makes about 1.7 s of speech
   a second (2.0 int8), four about 5. Thomas: better than expected,
   bm_fable acceptable, Flash only marginally better; they suspect Kokoro
@@ -761,7 +775,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   names its `model`, nothing new in mj. A stored v3 take plays for
   everyone, a Flash take only for Flash players. Overlore strips audio
   tags before Flash; none of its lines has any yet. **Flash reads tags
-  aloud** (tested 2026-10-22, `Outtake/flash-tags-test/`: Whisper heard
+  aloud** (tested 2026-10-22, `Outtake/bard-1-2/voice-tests/flash-tags/`: Whisper heard
   "laughs", "whispers" and "sighs" in every tagged take, none in the
   plain); Overlore told.
   **Paid only** (Thomas, 2026-10-22): nothing should be generated unless
