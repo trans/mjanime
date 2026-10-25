@@ -583,6 +583,9 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     the library, $0.015 for the three.
   - Lesson: three sync `arcana_deliver` calls sent at once stalled. Two never
     reached mj:voice and nothing was billed. One at a time, each took ~15 s.
+  **Thomas chose Gerald** (2026-10-24, "Gerald definitely"):
+  `fGIZlgPQ75MMlvQ6WxgY`, eleven_v3, is the 3D Bard's voice. Told @overlore.
+  The real takes come once the script is settled.
 - **`@ipck`**: the dot-ai spec and skill. **Heads-up 2026-10-20**
   (`mail/received/20261020-025242Z-@ipck--intake-and-outtake-capitalized-*`):
   Thomas decided (2026-10-19) the user's folders are `Intake/` and
