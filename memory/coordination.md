@@ -691,7 +691,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     (`mail/received/20261025-065255Z-*`): a stand-in `3d` set from
     `frames/manifest.json`, one pose per line, and its own bleep and robot
     voice on the drafts. That overlapped mine.
-    - **Made and not sent** (Thomas said stop): the `3d` set in
+    - **Sent 2026-10-25** (`mail/sent/20261025-073749Z-*`, Thomas said send): the `3d` set in
       `bard-1-2/graph/graph.yml`, and `overlore-graph/graph.json` rebuilt
       (309 frames).
     - The frames are under `bard-3/talk/`, with 36 `.cues.json` and
