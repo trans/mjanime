@@ -665,7 +665,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
       outline and skips pixels where the pose differs from the base.
     - Seven silent poses: wink, headshake, look-at-hand, bow, chuckle,
       slumped, waiting.
-    - The bow came out a sideways lean.
+    - The bow came out a sideways lean; Thomas: it's fine (2026-10-25).
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
