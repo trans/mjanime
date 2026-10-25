@@ -666,6 +666,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     - Seven silent poses: wink, headshake, look-at-hand, bow, chuckle,
       slumped, waiting.
     - The bow came out a sideways lean.
+  - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
+    mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
+    tags stripped. A preview page was next; Thomas said to get on the same
+    page with @overlore first. **Asked it**: who owns the play sequence;
+    cues now or final, and as Rhubarb JSON or the DD `mouth` track; its
+    E/G/H folding; whether beat times help; whether the script is final
+    (`mail/sent/20261025-063116Z-*`). **Awaiting answer.**
+  - Overlore's game server now signs with its own key (`21dbad1` in its
+    repo, 2026-10-24), the step `MJ_ARCANA_CALLERS` was waiting on.
   - Poses, each with the six mouths, the list may grow: present, beckon,
     head shake, hands thrown up, arms wide, wink, whisper, writing, sung,
     hand out to shake, looking at that hand (blushing), bow.
