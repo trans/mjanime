@@ -656,6 +656,16 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     bush, peek and blush frames (the canonical bush laid over his cut-out).
     The step-out keeps Nano's bush, since he's in front of it, and he's at
     ~88% of his standing height there.
+  - **Poses and mouths delivered 2026-10-25** in `Outtake/bard-3/frames/`
+    with `manifest.json` ($1.45, 21 calls;
+    `mail/sent/20261025-054924Z-*`). One picture per pose (Thomas).
+    - Nine speaking bodies (present, hands-up, arms-wide, beckon,
+      handshake, shrug, whisper, sung, writing) share one head and one set of
+      six mouths (A B C D F X), pasted by mask. The paste stays inside the
+      outline and skips pixels where the pose differs from the base.
+    - Seven silent poses: wink, headshake, look-at-hand, bow, chuckle,
+      slumped, waiting.
+    - The bow came out a sideways lean.
   - Poses, each with the six mouths, the list may grow: present, beckon,
     head shake, hands thrown up, arms wide, wink, whisper, writing, sung,
     hand out to shake, looking at that hand (blushing), bow.
