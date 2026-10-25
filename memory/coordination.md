@@ -600,6 +600,11 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   - The bush, settled: a round, wide bush; his head leaning out from behind
     it, with neck and shoulder showing; the same head blushing with a toothy
     grin; him stepping out, tugging his belt.
+    **Delivered 2026-10-25** in `Outtake/bard-3d-act/deliver/` ($0.28;
+    `mail/sent/20261025-023245Z-*`). One bush, the same pixels in the
+    bush, peek and blush frames (the canonical bush laid over his cut-out).
+    The step-out keeps Nano's bush, since he's in front of it, and he's at
+    ~88% of his standing height there.
   - Poses, each with the six mouths, the list may grow: present, beckon,
     head shake, hands thrown up, arms wide, wink, whisper, writing, sung,
     hand out to shake, looking at that hand (blushing), bow.
