@@ -622,6 +622,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     older), Pete Gates (`eVKQybPTL0poBPxBa8L6`, Glaswegian). Or a v3
     `[strong Scottish accent]` tag on a comic voice. Audition over ~45 s of
     the act, not one line.
+  - **Audition 2 made** (2026-10-25, Thomas asked): u-1 to u-8 with emotive
+    beats (`[chuckles]`, `[hesitates]` before worm and bone, `[clears
+    throat]`, `[sighs]`, `[excited]`), one request each, in
+    `Outtake/bard-3/voice/audition2/`, $0.08 for the four:
+    - Scotty Marshal
+    - Pete Gates
+    - Gerald with `[strong Scottish accent]`
+    - Gerald with the beats only
+    No tag read aloud. Waiting on Thomas's ear.
   **Outtake reorganized** (Thomas, 2026-10-25): `bard-1/` the realistic Bard,
   `bard-2/` the cartoon, `bard-1-2/` work for both (kept whole so its
   scripts run), `bard-3/` the 3D Bard; `piggy-bank/`, `cow-order/`.
