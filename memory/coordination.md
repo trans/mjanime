@@ -674,6 +674,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     - "Ba-dum" as a mouthed rimshot;
     - the bush gag's whistle, stream and zip, open since 2026-10-18.
     Plus anything on its side.
+    **Thomas, 2026-10-25:** the shout and Ba-dum are fine, and @overlore has
+    the gag sounds. Asked Thomas about tempo. Thomas thought the two voices
+    were different people; both are Gerald (plain, and the accent tag).
+    Audition 2 gave all four voices the same beats and Thomas picked the
+    two Geralds, so the earlier monotone was the missing beats, not the
+    voice.
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
