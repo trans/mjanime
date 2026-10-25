@@ -595,6 +595,17 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   - Changes to the text: `[sings]` on u-4 and u-16, `[pause]` in u-5,
     "rope" for RoPE, `[deadpan]` in u-12.
   - Whisper heard no tag read aloud.
+  **Take 1 turned down by Thomas** (2026-10-25): out of tempo. Line-by-line
+  requests lose the act's context, and `[slowing]` / `[trailing off]`
+  became long pauses. Then: "worm" and "bone" softer, not slower; a shout
+  on the first "Overlore"; he talks too slowly.
+  - **Takes 2–4** read the whole act in one request (2,367 characters, about
+    $0.076 each), then cut it into lines at the silences, using Whisper's word
+    times.
+  - Take 4 has `[shouts]` before the first "Overlore". It's sped up 1.1x by
+    Rubber Band, pitch kept, and cut into `Outtake/bard-3d-voice/take4/`;
+    a 1.15x of the whole act is beside it.
+  - Not yet sent to @overlore; waiting on Thomas's ear.
   **The act's frames, asked the same message, open:** a new set in the new
   3D Bard on the 848x1264 stage.
   - The bush, settled: a round, wide bush; his head leaning out from behind
