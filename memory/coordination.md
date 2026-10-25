@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-24*
+*Updated 2026-10-25*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -690,7 +690,23 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     choreography, bleep and robot voice; tempo is one number on its page.
     Thomas accepted the first rimshot, crickets and fanfare; remind him to
     check the others later, not essential (`TODO.md`, "Reminders for
-    Thomas"). Told @overlore (`mail/sent/20261025-104939Z-*`).
+    Thomas"). Told @overlore (`mail/sent/20261025-104939Z-*`). @overlore
+    plays take 5 at 1.05x by playback rate, pitch kept, cues on the take's
+    clock; no sped-up files (`mail/received/20261025-105425Z-*`).
+  - **"Tough crowd." stays cut** (2026-10-25): @overlore asked for it back,
+    then withdrew; it had misread Thomas
+    (`mail/received/20261025-170848Z-*`, `-171025Z-*`). What Thomas wants
+    back is the song (u-3 to u-5) before the RoPE line on the agent faces.
+    That's @overlore's script; nothing to record.
+  - **Teeth over his closed lips: fixed** (2026-10-25, free; Thomas
+    spotted it, `mail/received/20261025-190802Z-*`). A, X and F showed the
+    base's teeth in patches. The cause was the compose step, not the
+    pictures: interior pixels at alpha 241 between the base's teeth failed
+    the "fully opaque" test. Recomposed all 54 speaking frames with holes
+    inside the silhouette filled, and rebuilt overlore-graph (only those
+    sha256s changed). Write-up in outtake `bard-3/frames/prompt.md`; old
+    frames in `_frames-teeth-prev/`. Told @overlore
+    (`mail/sent/20261025-203142Z-*`).
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
@@ -790,7 +806,23 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     `/var/lib/mj`, since losing it leaves the addresses held.
   - `MJ_ARCANA_CALLERS=overlore`: not until the game server signs.
   - Asked: is v0.13.2 deployed, and which arcana runs the box's bus?
-    **Awaiting answer.**
+  **Deployed 2026-10-25** (`mail/received/20261025-161111Z-@cyclops--*`):
+  v0.13.2 had been running, on arcana 0.35.5, so the first start made
+  `/var/lib/mj/arcana.key` and claimed both addresses unproven. Thomas had
+  the bus upgraded to 0.37.1; now both log "proven with the key". cyclops
+  backed up `/var/lib/mj` and keeps it across deploys.
+  `MJ_ARCANA_CALLERS` is still unset: the game signs and is proven, so it
+  could be `overlore` now. cyclops left it as a deliberate follow-up
+  (Thomas's call). **Open.**
+  - **Type=notify, asked by @overlore for Thomas** (2026-10-25,
+    `mail/received/20261025-165004Z-*`): the game stops if mj:camera doesn't
+    answer within 20 s. Its unit now starts `After=mj-arcana.service`, but
+    `deploy/server/mj-arcana.service` is `Type=simple`, so it counts as up
+    before registering. Wanted: `Type=notify`, with READY=1 sent to
+    `$NOTIFY_SOCKET` once mj:camera and mj:voice are registered and proven.
+    Skip it when the variable is unset; a leading `@` means the abstract
+    namespace; on failure exit as now. **Open: waiting for Thomas to
+    schedule it**; told @overlore so.
 - **`@arcana`**: the bus, arcana-core and arcana-ai (now under
   `~/Projects/Arcana/`). Camera concurrency rides on arcana-core 0.17.1
   (`c7181a7`). **Asked 2026-10-17** (Thomas;
