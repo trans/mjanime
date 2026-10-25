@@ -613,6 +613,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   **Tagged `v0.13.2`** (`877547d`, Thomas asked) and sent to @cyclops to
   deploy (`mail/sent/20261022-154332Z-*`). Its next step is the deploy and
   the first start as a system unit.
+  **`v0.13.3` replaces it** (`e771331`, tagged and pushed 2026-10-24, Thomas
+  asked; `mail/sent/20261025-014450Z-@cyclops--mj-arcana-v0.13.3-*`).
+  - The service's own key: the unit sets `ARCANA_KEY_FILE`, and the first
+    join claims mj:camera and mj:voice on the box's bus. Back up
+    `/var/lib/mj`, since losing it leaves the addresses held.
+  - `MJ_ARCANA_CALLERS=overlore`: not until the game server signs.
+  - Asked: is v0.13.2 deployed, and which arcana runs the box's bus?
+    **Awaiting answer.**
 - **`@arcana`**: the bus, arcana-core and arcana-ai (now under
   `~/Projects/Arcana/`). Camera concurrency rides on arcana-core 0.17.1
   (`c7181a7`). **Asked 2026-10-17** (Thomas;
@@ -778,7 +786,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   **each service has a key of its own**, made on first start and kept with
   its state, holding only its own addresses; `.ai/arcana.key` stays with
   @mj's sessions. arcana-core 0.21.1's `Arcana::Key.from_env` reads
-  `ARCANA_KEY_FILE`. **Built, not committed:** both units set it
+  `ARCANA_KEY_FILE`. **Released in `v0.13.3`:** both units set it
   (`~/.local/share/mj/arcana.key`; `/var/lib/mj/arcana.key` on a server);
   on 2026-10-24 the local service claimed mj:camera and mj:voice, both
   proven, and replies come back `verified`. Gap: if a server loses
@@ -792,7 +800,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   **Callers: settled** (Thomas, 2026-10-24): no list on the workstation;
   a deployment locks to its own callers (e.g. overlore on the Overlore
   box). Built as `MJ_ARCANA_CALLERS` (`src/arcana/callers.cr`): set, only
-  those addresses AND `verified`; unset, anyone. **Not committed.** Runs
+  those addresses AND `verified`; unset, anyone. **Released in `v0.13.3`.** Runs
   here under "anyone" since 2026-10-24 (rebuilt, restarted, voices and
   cameras answered). Overlore's calls must sign before its box sets the
   list. Callers on the local bus
