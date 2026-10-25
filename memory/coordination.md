@@ -701,6 +701,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     - Its two headless test runs played the act out loud at once; asked it
       to run one at a time or muted
       (`mail/sent/20261025-073430Z-*`).
+  - **All in the landing** (2026-10-25,
+    `mail/received/20261025-075355Z-*`), in place of its stand-ins, and it
+    plays end to end. Its own cues matched mine. The audio came from its
+    review runs with sound on; they're muted from now on.
+  - It asked me to restore 27 unusable marks on the realistic present
+    frames. Those are the ones Thomas cleared on 2026-10-20 after the neck
+    mend, and the landing had kept the older copy. Told it to drop them
+    (`mail/sent/` re 70b2f6ff).
   - Overlore's game server now signs with its own key (`21dbad1` in its
     repo, 2026-10-24), the step `MJ_ARCANA_CALLERS` was waiting on.
   - Poses, each with the six mouths, the list may grow: present, beckon,
