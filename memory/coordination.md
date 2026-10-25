@@ -630,7 +630,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     - Pete Gates
     - Gerald with `[strong Scottish accent]`
     - Gerald with the beats only
-    No tag read aloud. Waiting on Thomas's ear.
+    No tag read aloud.
+  - **Thomas chose both c and d** (2026-10-25): "roll the die, folks". Gerald
+    plain and Gerald with `[strong Scottish accent]`, one picked at random
+    per visitor, as with Henry and the Announcer.
+  - **Take 5 made**: the whole act with emotive beats, two requests per
+    version, the accent tag starting each Scottish half. Cut into
+    `Outtake/bard-3/voice/take5/{plain,scottish}/`, 1.0x, $0.17.
+  - Sent to @overlore (`mail/sent/20261025-053616Z-*`); still a draft, cues
+    held.
   **Outtake reorganized** (Thomas, 2026-10-25): `bard-1/` the realistic Bard,
   `bard-2/` the cartoon, `bard-1-2/` work for both (kept whole so its
   scripts run), `bard-3/` the 3D Bard; `piggy-bank/`, `cow-order/`.
