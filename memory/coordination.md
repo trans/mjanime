@@ -666,6 +666,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     - Seven silent poses: wink, headshake, look-at-hand, bow, chuckle,
       slumped, waiting.
     - The bow came out a sideways lean; Thomas: it's fine (2026-10-25).
+  - **Take 5 is final** (Thomas, 2026-10-25): no re-recording, so the cues
+    and choreography stand. Told @overlore, and asked what might have
+    slipped (`mail/sent/20261025-102752Z-*`):
+    - tempo: Thomas said too slow earlier, and take 5 plays at 1.0x;
+    - the first "Overlore" shout isn't louder by level;
+    - "Ba-dum" as a mouthed rimshot;
+    - the bush gag's whistle, stream and zip, open since 2026-10-18.
+    Plus anything on its side.
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
