@@ -739,6 +739,19 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     **Lesson:** don't pass a request's parts straight into a prompt. Check
     each against what the picture already shows; here a second "Azooka Bay"
     under the sign.
+  - **Five coin pouches for the bank's cards** (2026-10-26,
+    `mail/received/20261026-200424Z-*`): a2 is in, at the top of the bank's
+    page. Below it are five cards: $5 to $100, for 125 to 2,500 coins. Thomas
+    noticed "Choose a pouch" has no pouch. @overlore asks for one leather
+    pouch with a gold drawstring, fuller at each step, from a few coins up to
+    a bulging sack spilling them. Painted like a2, with coins like its
+    24x18 coin icon, lit from the upper left. 512x512, transparent, the
+    pouch about 80% of the frame, readable at 56 px. WebP and PNG to
+    outtake `bank-pouches/` as pouch-1 to pouch-5, plus a strip. No
+    deadline. **Open: asked Thomas first** (relayed request).
+    Checked against the spec: 80% of each card leaves only fullness to show
+    the growth. A soft shadow won't survive keying off a solid background.
+    Five separate calls won't be one family, so paint them on one sheet.
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
