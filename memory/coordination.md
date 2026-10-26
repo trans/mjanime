@@ -707,6 +707,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     sha256s changed). Write-up in outtake `bard-3/frames/prompt.md`; old
     frames in `_frames-teeth-prev/`. Told @overlore
     (`mail/sent/20261025-203142Z-*`).
+  - **The nudge lines** (2026-10-25; Thomas confirmed directly before
+    recording, since @overlore had misread him an hour before): one line per
+    act, said when the Bard is clicked at the email prompt. Request:
+    `mail/received/20261025-202637Z-*`. Recorded in outtake `landing-nudge/`
+    (README.md): the Announcer for the pitch (with the car-salesman tag) and
+    for the song, and Gerald plain and Scottish for the stand-up. Each has
+    Rhubarb cues: `.json` raw, `.cues.json` as pairs. $0.0084 in all.
+    Suggested whisper, then beckon on "friend" (`choreography.json`). Sent
+    (`mail/sent/20261026-002302Z-*`). For landing-v0.5.2, when Thomas says.
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
@@ -821,8 +830,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     before registering. Wanted: `Type=notify`, with READY=1 sent to
     `$NOTIFY_SOCKET` once mj:camera and mj:voice are registered and proven.
     Skip it when the variable is unset; a leading `@` means the abstract
-    namespace; on failure exit as now. **Open: waiting for Thomas to
-    schedule it**; told @overlore so.
+    namespace; on failure exit as now. **Thomas said build it**
+    (2026-10-25). **Built and tested, not yet committed**:
+    `src/arcana/systemd.cr` plus its spec, the readiness fiber in
+    `src/mj-arcana.cr`, the server unit as `Type=notify`, and
+    docs/tools/arcana.md "Ready". Tested against a private bus on :19199
+    with transient `systemd-run --user -p Type=notify` units: proven (ready
+    in 0.14 s), held (timed out), and no key (ready in 1 s). The abstract
+    `@` socket form was tested with a Python listener. Commit, release
+    (v0.13.4?) and the notice to @cyclops wait for Thomas.
 - **`@arcana`**: the bus, arcana-core and arcana-ai (now under
   `~/Projects/Arcana/`). Camera concurrency rides on arcana-core 0.17.1
   (`c7181a7`). **Asked 2026-10-17** (Thomas;
