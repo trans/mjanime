@@ -50,7 +50,7 @@ require "./flipbook"
 require "./bus_service"
 
 module MJ
-  VERSION = "0.13.3"
+  VERSION = "0.13.4"
 
   module App
     @@renderer : Renderer? = nil
