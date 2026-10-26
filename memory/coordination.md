@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-25*
+*Updated 2026-10-26*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -837,8 +837,11 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     docs/tools/arcana.md "Ready". Tested against a private bus on :19199
     with transient `systemd-run --user -p Type=notify` units: proven (ready
     in 0.14 s), held (timed out), and no key (ready in 1 s). The abstract
-    `@` socket form was tested with a Python listener. Commit, release
-    (v0.13.4?) and the notice to @cyclops wait for Thomas.
+    `@` socket form was tested with a Python listener. **Released in
+    `v0.13.4`** (`d8365ef`, bump `a8457e0`, tagged and pushed 2026-10-26,
+    Thomas asked). Sent to @cyclops to deploy
+    (`mail/sent/20261026-112418Z-*`) and @overlore told
+    (`-112422Z-*`). **Awaiting the deploy.**
 - **`@arcana`**: the bus, arcana-core and arcana-ai (now under
   `~/Projects/Arcana/`). Camera concurrency rides on arcana-core 0.17.1
   (`c7181a7`). **Asked 2026-10-17** (Thomas;
