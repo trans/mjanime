@@ -748,10 +748,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     24x18 coin icon, lit from the upper left. 512x512, transparent, the
     pouch about 80% of the frame, readable at 56 px. WebP and PNG to
     outtake `bank-pouches/` as pouch-1 to pouch-5, plus a strip. No
-    deadline. **Open: asked Thomas first** (relayed request).
-    Checked against the spec: 80% of each card leaves only fullness to show
-    the growth. A soft shadow won't survive keying off a solid background.
-    Five separate calls won't be one family, so paint them on one sheet.
+    deadline. Checked against the spec: 80% of each card leaves only fullness
+    to show the growth. A soft shadow won't survive keying off a solid
+    background. Five separate calls won't be one family, so paint them on
+    one sheet. **Thomas, 2026-10-26:** two sheets, each framed both ways:
+    fill (each 80%) and grow (one scale). Made in outtake `piggy-bank/pouches/`
+    (prompt.md), not `bank-pouches/`, to sit with the rest of the bank's
+    art. Sheets a and b, $0.21, keyed at 12 to 36 (4 to 28 left a haze). Every
+    coin came out stamped "$", although the icon is plain. **Open: Thomas
+    picks**, and decides on the "$". @overlore not told yet.
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
