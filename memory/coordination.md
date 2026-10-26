@@ -728,7 +728,16 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     @overlore's current teller as a second reference. Delivered as
     2560x1440 PNG and WebP, with `screens.json`. a's screen is 0.113 of the
     width, under the 1/8 asked for; b's is 0.150. $0.21. Sent
-    (`mail/sent/20261026-150209Z-*`); **Thomas picks.**
+    (`mail/sent/20261026-150209Z-*`). **Thomas, 2026-10-26:** a is better
+    overall. The brass "Azooka Bay" plate (in @overlore's list) repeats the
+    sign above it, so it's out. b is too wide, tucking into the thigh, and
+    its keys float. Made **a2**: a without the plate, plus a's card tile
+    pasted back where the edit garbled "card". $0.10, folder total $0.31.
+    Its screen is 0.111 of the width, still under 1/8. Sent
+    (`mail/sent/20261026-154431Z-*`).
+    **Lesson:** don't pass a request's parts straight into a prompt. Check
+    each against what the picture already shows; here a second "Azooka Bay"
+    under the sign.
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
