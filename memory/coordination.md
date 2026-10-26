@@ -734,7 +734,8 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     its keys float. Made **a2**: a without the plate, plus a's card tile
     pasted back where the edit garbled "card". $0.10, folder total $0.31.
     Its screen is 0.111 of the width, still under 1/8. Sent
-    (`mail/sent/20261026-154431Z-*`).
+    (`mail/sent/20261026-154431Z-*`). **Thomas picked a2** (2026-10-26);
+    @overlore told (`mail/sent/20261026-155617Z-*`).
     **Lesson:** don't pass a request's parts straight into a prompt. Check
     each against what the picture already shows; here a second "Azooka Bay"
     under the sign.
