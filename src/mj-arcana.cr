@@ -19,6 +19,7 @@ require "./arcana/transports/openai_direct"
 require "./arcana/transports/google_direct"
 require "./arcana/camera_service"
 require "./arcana/voice_service"
+require "./arcana/systemd"
 require "arcana-core"
 
 # mj-arcana — mj's services on the Arcana bus.
@@ -44,6 +45,7 @@ require "arcana-core"
 #   ELEVENLABS_API_KEY           enables elevenlabs speech
 #   MJ_ARCANA_CALLERS            the only callers served, verified (unset: anyone)
 #   ARCANA_KEY_FILE              the service's own key, made there on first start (unset: none)
+#   NOTIFY_SOCKET                set by systemd for Type=notify: told READY=1 once on the bus
 
 DIM   = "\e[2m"
 BOLD  = "\e[1m"
@@ -273,11 +275,18 @@ toolsets[0...-1].each do |ts|
 end
 Fiber.yield
 log "listening"
-# Whether each bus accepted the key's proof. Not proven means a bus that doesn't check
-# keys, or a refusal, which `last_error` names.
-if bus_key
-  spawn do
-    sleep 5.seconds
+# Ready once every service has joined, and then systemd is told (Type=notify; the server unit
+# is one, so the game's After=mj-arcana.service waits for mj to answer). With a key, joined
+# means proven: a bus that checks keys answers the proof at once, so wait up to 5 s for it.
+# A bus that doesn't check keys answers nothing, nor does any bus answer a join without a
+# key, so then a join the bus sent no error about counts. Not ready, systemd isn't told,
+# and under it TimeoutStartSec restarts the service.
+spawn do
+  if bus_key
+    50.times do
+      break if clients.all?(&.verified?)
+      sleep 100.milliseconds
+    end
     clients.each do |c|
       if c.verified?
         log "#{GREEN}●#{RESET} #{c.address} #{DIM}— proven with the key#{RESET}"
@@ -285,6 +294,20 @@ if bus_key
         log "#{AMBER}○#{RESET} #{c.address} #{DIM}— not proven#{c.last_error.try { |e| ": #{e}" }}#{RESET}"
       end
     end
+  else
+    sleep 1.second
+  end
+  failed = clients.reject { |c| c.connected? && c.last_error.nil? }
+  if failed.empty?
+    told = begin
+      MJ::Arcana::Systemd.notify("READY=1\nSTATUS=#{clients.map(&.address).join(" and ")} on the bus")
+    rescue ex
+      log "#{AMBER}○#{RESET} couldn't tell systemd #{DIM}— #{ex.message}#{RESET}"
+      false
+    end
+    log "#{GREEN}●#{RESET} ready#{told ? " #{DIM}— told systemd#{RESET}" : ""}"
+  else
+    log "#{AMBER}○#{RESET} not ready #{DIM}— #{failed.map(&.address).join(" and ")} not on the bus#{RESET}"
   end
 end
 toolsets.last.run

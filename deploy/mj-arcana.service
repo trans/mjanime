@@ -9,6 +9,8 @@ After=network.target
 # plus RestartSec=2 is the whole retry policy.
 
 [Service]
+# Not Type=notify, as the server unit is: InaccessiblePaths=%t below hides the user
+# manager's notify socket ($XDG_RUNTIME_DIR/systemd/notify), and nothing here waits on it.
 Type=simple
 WorkingDirectory=%h/.local/share/mj
 ExecStart=@MJ_DIR@/bin/mj-arcana

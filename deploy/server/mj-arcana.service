@@ -12,7 +12,11 @@ StartLimitIntervalSec=0
 # unit, ../mj-arcana.service, whose comments explain the hardening shared here.
 
 [Service]
-Type=simple
+# Up only once mj:camera and mj:voice have joined the bus (proven, with the key below):
+# mj-arcana sends READY=1 then. So a unit with After=mj-arcana.service, such as the game,
+# starts when mj can answer (@overlore for Thomas, 2026-10-25). Not ready within
+# TimeoutStartSec (90 s by default), systemd stops it and Restart= starts it again.
+Type=notify
 ExecStart=/usr/local/bin/mj-arcana
 Restart=always
 RestartSec=2

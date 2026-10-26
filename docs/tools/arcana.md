@@ -412,8 +412,25 @@ server. Without `ARCANA_KEY_FILE` the service joins with no key, as before 0.37.
 
 On each bus the first keyed join claims the addresses for that key, and another key is then
 refused them (409 `held`). So start mj-arcana with its key before anything else could take the
-names. The log says which key is in use, and five seconds after joining, whether each address
-was proven with it.
+names. The log says which key is in use, and once the bus answers (five seconds at most), whether
+each address was proven with it.
+
+### Ready: systemd's Type=notify
+
+The server unit is `Type=notify` (@overlore for Thomas, 2026-10-25): the game asks mj:camera
+for its cameras at start and stops if nothing answers in 20 s, and its unit starts
+`After=mj-arcana.service`, which only means "mj can answer" if systemd waits for mj-arcana to
+say so. It says `READY=1` (with a `STATUS=` line for `systemctl status`) on `$NOTIFY_SOCKET`
+once every service has joined: with a key, once each address is proven, which a 0.37 bus
+answers at once. A bus that doesn't check keys answers nothing, nor does any bus answer a join
+without a key, so then it waits up to 5 s (1 s without a key) and counts a join the bus sent no
+error about. A refused join (`held`) is never ready: systemd stops the service after
+`TimeoutStartSec` (90 s) and `Restart=always` tries again. Outside systemd it only logs "ready".
+`src/arcana/systemd.cr` builds the socket address itself, since `Socket::UNIXAddress` can't
+name an abstract socket (a leading `@`). Tested 2026-10-25 under transient `systemd-run --user
+-p Type=notify` units against a private bus: proven (ready in 0.14 s), held (timed out), no key
+(ready in 1 s). The user unit stays `Type=simple`: its `InaccessiblePaths=%t` hides the user
+manager's notify socket, and nothing on the workstation waits for it.
 
 If a server loses `/var/lib/mj` while its bus keeps its saved state, the bus refuses the new
 key, since the old one still holds the addresses. No command releases them yet: until arcana
