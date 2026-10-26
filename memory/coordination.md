@@ -716,6 +716,19 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     Rhubarb cues: `.json` raw, `.cues.json` as pairs. $0.0084 in all.
     Suggested whisper, then beckon on "friend" (`choreography.json`). Sent
     (`mail/sent/20261026-002302Z-*`). For landing-v0.5.2, when Thomas says.
+    **"Psst." question** (2026-10-26, `mail/received/20261026-011101Z-*`):
+    @overlore said Thomas dropped "Psst." from the stand-up nudge, since it
+    follows u-14's. Thomas: keep it as is for now; he'll listen and decide.
+    Told @overlore (`mail/sent/20261026-150211Z-*`). **Open, Thomas's call.**
+    That message also confirms the 54 teeth frames are in, checked by sha256.
+  - **The Piggy Bank with an ATM in its side** (2026-10-26,
+    `mail/received/20261026-104313Z-*`): for the bank's new pouch-card page.
+    Thomas asked for two. Both are edits of `piggy-bank/side/out-1d.png`
+    (sign on top) in outtake `piggy-bank/atm/` (prompt.md); b used
+    @overlore's current teller as a second reference. Delivered as
+    2560x1440 PNG and WebP, with `screens.json`. a's screen is 0.113 of the
+    width, under the 1/8 asked for; b's is 0.150. $0.21. Sent
+    (`mail/sent/20261026-150209Z-*`); **Thomas picks.**
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
