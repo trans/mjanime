@@ -559,7 +559,11 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   castle, the man on the road), "and other assets like that". **Take 2** in
   `og-cards/take2/` puts the castle behind the pitch, the cavern behind the
   song and the road behind the stand-up. The castle's 1024 px are scaled up
-  1.17x. Sent (`mail/sent/20261027-221423Z-*`). **Open: Thomas to pick.**
+  1.17x. Sent (`mail/sent/20261027-221423Z-*`). **Thomas picked
+  (2026-10-27):** the gate for the pitch (take 1), the cavern for the
+  stand-up and the castle for the song (take 3). They are in outtake
+  `og-cards/final/` under the asked names. **Delivered**
+  (`mail/sent/20261027-223611Z-*`).
   **The bank's backdrop** (@overlore for Thomas, 2026-10-24,
   `mail/received/20261024-035821Z-@overlore--a-backdrop-for-overlore-s-bank-*`):
   the Piggy Bank's pink brick wall behind the HTML teller machine, 16:9,
