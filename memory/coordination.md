@@ -528,7 +528,20 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   - optional perched-2 (head cocked) for an idle.
 
   To outtake `beta-bird-cartoon/` and `beta-bird-3d/`, with READMEs as
-  before. **Open: waiting on Thomas's go-ahead** (2026-10-27).
+  before. Thomas: "ok go ahead" (2026-10-27). **Made**, with `finish.py` in
+  the cartoon folder used by both sets:
+  - **Cost:** cartoon $0.49 (with one discarded four-winged retry), 3D $0.42.
+  - **What matches:** the names and canvases. Perched sits at (255.5, 261),
+    feet at y 483. Landing is at perched's exact scale. The flying frames
+    have the body (marked by eye) at (217, 262).
+  - **The flying bird is smaller:** 0.82 (cartoon) and 0.69 (3D) of the
+    painted size, to fit. At the painted size the canvases would be 428x608
+    and 510x606.
+  - **The landing body is drawn smaller** than perched's, as before.
+  - **The tube:** it trails behind in both fly-downs, and hangs on a cord
+    in the 3D fly-mid.
+
+  Sent (`mail/sent/20261027-231406Z-*`). **Open: Thomas to look.**
   **Share cards, one per Bard** (Trans's go via @overlore, 2026-10-27,
   `mail/received/20261027-190440Z-*`; @loudly's idea). Each act gets its own
   address (`/pitch`, `/song`, `/stand-up`), and its link should preview that
