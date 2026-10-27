@@ -820,6 +820,23 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     timeline, levelled to the old -30.1 LUFS, with an events file of onsets. Each
     falls quiet earlier than the old one (2.11 to 2.73 s against 2.78). $0.0175.
     **Open: Thomas to listen and pick**, then tell @overlore (not told yet).
+    **@overlore's needs** (`mail/received/20261027-103952Z-*`):
+    - Any timings work if each take comes with its times (shakes, throw,
+      first knock, clatter, settle), as JSON; several can play at random.
+    - The game's Fate room rolls six dice and plays only the landing, so it
+      wants a separate take, about 2 to 3 s.
+    - The source and licence, for the credits page.
+    - Each take faded at its end.
+
+    **Done** in the same folder:
+    - The events files carry those fields; the first knock is placed by its
+      peak.
+    - fate-1..4, cut from six-dice takes. They are 0.9 to 1.4 s, short of the
+      2 to 3 s asked for: every six-dice take spent its start on a shake or a
+      burst.
+    - The README has the source, licence and a credit line.
+
+    $0.0295 in all.
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
@@ -886,6 +903,16 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   - Paid: pictures, voice lines and music, at measured rates. No generated
     video: Thomas rejected the Bards' AI video moves.
   - mj will work out the brief with @loudly once it settles. **Open: the brief.**
+  
+  **Thomas's direction, relayed** (via @loudly and @my, 2026-10-27,
+  `mail/received/20261027-101528Z-@my--*`):
+  - The Overlord is saved for opening day. Before then he appears only in
+    the background, if at all, with no early reveal and never at the centre
+    of a marketing proposal.
+  - Thomas chose stills first.
+  - Reusing the existing voices outside the site needs his approval.
+  
+  @loudly will define a bounded brief. Nothing is authorised yet.
 - **`@ipck`**: the dot-ai spec and skill. **Heads-up 2026-10-20**
   (`mail/received/20261020-025242Z-@ipck--intake-and-outtake-capitalized-*`):
   Thomas decided (2026-10-19) the user's folders are `Intake/` and
