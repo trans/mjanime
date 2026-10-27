@@ -860,8 +860,10 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     **Made** (Thomas: "make it and I will listen"): three presses (0.17 to
     0.20 s) and three releases (0.74 to 0.80 s) in outtake `dice-roll/` (README,
     `cut_dome.py`), peaked at -11.7 dBFS. $0.0036. If they don't work, the old
-    sounds stay (Thomas). **Open: Thomas to listen**, then send the rolls, the
-    Fate takes and the dome to @overlore with their times and the licence.
+    sounds stay (Thomas). **Thomas listened (2026-10-27): none would work**,
+    though press and release played together might do better ("I have my
+    doubts"). The old sounds stay, and Thomas keeps trying. @overlore told not
+    to use them (`mail/sent/*-@overlore--the-dice-dome-keep-the-current-sounds-*`).
   - **ElevenLabs licensing, checked 2026-10-27** (Thomas asked; the account
     is Starter, a paid plan):
     - **Speech and sound effects:** commercial use is fine on any paid plan,
