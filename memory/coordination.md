@@ -776,8 +776,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     head set would look much better. About 3,000 characters, roughly $0.25.
     Checked against the screenshots: the gate's lions are there (s-5), but
     u-8's "No bards" clashes with the narrator screen, which offers a Tavern
-    Bard. **Open: asked Thomas** (recordings need his approval; lines not yet
-    reviewed).
+    Bard. Thomas fixed it himself. More from @overlore, 2026-10-27, from
+    Thomas (`mail/received/20261027-0506…` to `…0526…`): line 9 drops
+    "abilities", since what the dice mean is open. Line 8 no longer names
+    the narrators; Gerald's now says one of them's a bard, "Not me". Audio tags
+    added: the voice tags as before, [playful, sing-song] on each song line,
+    and four optional beats for Gerald (keep what helps). Then: "Trans has
+    approved the script, please record all 40" (05:26Z). Thomas had just told
+    mj directly to wait for his review, so **confirming with him first**.
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
