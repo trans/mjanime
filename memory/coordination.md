@@ -552,7 +552,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   darkened so the tagline reads over the play stills' text panel, tagline in
   Libertinus Serif. The stand-up card hides the egg: it sits behind Gerald,
   and no crop shows both. The play stills' player portrait shows in their top
-  right corner. Sent (`mail/sent/20261027-214116Z-*`). **Open: Thomas to look.**
+  right corner. Sent (`mail/sent/20261027-214116Z-*`). Thomas: "very good
+  but for those minor issues like the portrait clipped in the corner". He
+  suggested the Zork paintings instead, Overlore's quest-card art in its
+  `assets/props/backdrops/common/intro-zork{1,2,3}.webp` (the cavern, the
+  castle, the man on the road), "and other assets like that". **Take 2** in
+  `og-cards/take2/` puts the castle behind the pitch, the cavern behind the
+  song and the road behind the stand-up. The castle's 1024 px are scaled up
+  1.17x. Sent (`mail/sent/20261027-221423Z-*`). **Open: Thomas to pick.**
   **The bank's backdrop** (@overlore for Thomas, 2026-10-24,
   `mail/received/20261024-035821Z-@overlore--a-backdrop-for-overlore-s-bank-*`):
   the Piggy Bank's pink brick wall behind the HTML teller machine, 16:9,
