@@ -819,7 +819,8 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     paid plan. Three rolls, each a generated shake and throw placed on the old
     timeline, levelled to the old -30.1 LUFS, with an events file of onsets. Each
     falls quiet earlier than the old one (2.11 to 2.73 s against 2.78). $0.0175.
-    **Open: Thomas to listen and pick**, then tell @overlore (not told yet).
+    **Open: Thomas to listen and pick**, then tell @overlore (not told yet;
+    Thomas listens first, 2026-10-27).
     **@overlore's needs** (`mail/received/20261027-103952Z-*`):
     - Any timings work if each take comes with its times (shakes, throw,
       first knock, clatter, settle), as JSON; several can play at random.
@@ -847,7 +848,11 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
 
     Never use the board game's name in file names or notes. The credits
     need the source and licence, and the volume should match the rattle.
-    **Open: confirm with Thomas before making it.**
+    **Made** (Thomas: "make it and I will listen"): three presses (0.17 to
+    0.20 s) and three releases (0.74 to 0.80 s) in outtake `dice-roll/` (README,
+    `cut_dome.py`), peaked at -11.7 dBFS. $0.0036. If they don't work, the old
+    sounds stay (Thomas). **Open: Thomas to listen**, then send the rolls, the
+    Fate takes and the dome to @overlore with their times and the licence.
   - **ElevenLabs licensing, checked 2026-10-27** (Thomas asked; the account
     is Starter, a paid plan):
     - **Speech and sound effects:** commercial use is fine on any paid plan,
