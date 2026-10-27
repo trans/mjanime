@@ -529,6 +529,26 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
 
   To outtake `beta-bird-cartoon/` and `beta-bird-3d/`, with READMEs as
   before. **Open: waiting on Thomas's go-ahead** (2026-10-27).
+  **Share cards, one per Bard** (Trans's go via @overlore, 2026-10-27,
+  `mail/received/20261027-190440Z-*`; @loudly's idea). Each act gets its own
+  address (`/pitch`, `/song`, `/stand-up`), and its link should preview that
+  Bard. `og-logo.jpg` stays for the bare address. Wanted: `og-pitch.jpg`,
+  `og-song.jpg` and `og-stand-up.jpg`.
+  - **Format:** 1200x630 JPG, 150 to 300 KB, everything that matters inside
+    the middle 1000x560.
+  - **Background:** a First Look still from the landing's `look/` (1600),
+    darkened behind the logo: `hall` for the pitch, `play` for the song,
+    `play-tree` for the stand-up.
+  - **The Bard:** on the right, large, from the knees or waist up, from his
+    landing frames, in a pose that's him: the salesman presenting, the
+    cartoon Bard with his lute, Gerald with his arms wide.
+  - **The logo:** on the left, `logo-portal.webp`, with the tagline "A whole
+    new beginning for interactive fiction." legible when the card is small.
+  - **Nothing else:** no other words, no Overlord, no Zork headline.
+
+  To outtake `og-cards/`, with a README and a one-line alt text for each.
+  This is compositing existing art, with no generation. **Open: confirming
+  with Thomas** (2026-10-27).
   **The bank's backdrop** (@overlore for Thomas, 2026-10-24,
   `mail/received/20261024-035821Z-@overlore--a-backdrop-for-overlore-s-bank-*`):
   the Piggy Bank's pink brick wall behind the HTML teller machine, 16:9,
