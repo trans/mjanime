@@ -755,8 +755,13 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     fill (each 80%) and grow (one scale). Made in outtake `piggy-bank/pouches/`
     (prompt.md), not `bank-pouches/`, to sit with the rest of the bank's
     art. Sheets a and b, $0.21, keyed at 12 to 36 (4 to 28 left a haze). Every
-    coin came out stamped "$", although the icon is plain. **Open: Thomas
-    picks**, and decides on the "$". @overlore not told yet.
+    coin came out stamped "$", although the icon is plain. **Thomas,
+    2026-10-26:** b; coins plain; a touch more detail in the leather; all five
+    the same size, with pouch 5 matched, leaving relative sizes to the page.
+    Made b2: one edit of b ($0.10). Its painted contact shadows were taken out
+    by `unshadow.py`, which guards b's own outlines. Each pouch is 410 px tall,
+    pouch 5 484x410. Folder $0.31. **Delivered** to `deliver/pouch-1..5`
+    (prompt.md). Sent (`mail/sent/20261027-001023Z-*`).
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
