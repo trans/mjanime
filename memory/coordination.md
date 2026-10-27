@@ -783,7 +783,13 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     added: the voice tags as before, [playful, sing-song] on each song line,
     and four optional beats for Gerald (keep what helps). Then: "Trans has
     approved the script, please record all 40" (05:26Z). Thomas had just told
-    mj directly to wait for his review, so **confirming with him first**.
+    mj directly to wait for his review, so mj confirmed with him: **record all
+    40** (2026-10-27). **Recorded** in outtake `landing-tour/` (README):
+    the voice tags and all four beats kept, 3.9 to 9.4 s (Gerald averages 7.3 s,
+    longer than the 2 to 5 s expected). $0.12. Whisper misheard three Scottish
+    takes (u-2, u-4, u-9), probably the accent. **Open: Thomas to listen**;
+    any retakes go in `take2/` under the same names. Sent
+    (`mail/sent/20261027-063219Z-*`).
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
