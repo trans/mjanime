@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-26*
+*Updated 2026-10-27*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -790,6 +790,18 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     takes (u-2, u-4, u-9), probably the accent. **Open: Thomas to listen**;
     any retakes go in `take2/` under the same names. Sent
     (`mail/sent/20261027-063219Z-*`).
+    **The song Bard's couplets, sung** (`mail/received/20261027-071203Z-*`,
+    and `…075147Z-*`: a landing release waits on them). Thomas wanted the
+    cartoon Bard's lines sung like his act's song (28c2d), words unchanged,
+    as `tour-s-<n>-sung`; mj confirmed with him directly: **one call**.
+    **Made** in outtake `landing-tour/sung/` (README; `sing.py`, `cut.py`).
+    It is one Eleven Music song: #28's verse 1 kept, then ten new verses
+    conditioned on it at low strength, cut at the voice. 7.8 to 8.5 s
+    (spoken ones 5.5). Whisper hears every word. Loudness -13.7 to -15.4
+    LUFS. 1,290 characters on the account counter (Eleven Music gives no
+    price), about $0.10, entered in the spend ledger. Sent
+    (`mail/sent/20261027-082255Z-*`). **Open: Thomas to listen**; any redone
+    take goes in `sung/take2/`.
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
