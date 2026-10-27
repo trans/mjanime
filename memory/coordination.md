@@ -848,6 +848,22 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     Never use the board game's name in file names or notes. The credits
     need the source and licence, and the volume should match the rattle.
     **Open: confirm with Thomas before making it.**
+  - **ElevenLabs licensing, checked 2026-10-27** (Thomas asked; the account
+    is Starter, a paid plan):
+    - **Speech and sound effects:** commercial use is fine on any paid plan,
+      except Beta Services; attribution is required only on the free plan.
+      Sound effects can go in games but can't be resold on their own (Sound
+      Effects Terms, updated 2026-10-09).
+    - **Eleven Music** (the act's song, the sung couplets):
+      - Starter allows commercial use except film, TV, radio and "Studio
+        Games" (monetized public games), and except streaming services
+        (Music model terms, updated 2026-10-09).
+      - An "Indie Game" is exempt: under $500k lifetime revenue, from a
+        developer under $1M a year from games. Overlore should qualify while
+        it stays under both.
+      - "Film" is undefined, so a marketing video carrying the songs is
+        uncertain on Starter.
+      - Starter is for individual use only.
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
