@@ -819,8 +819,17 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     paid plan. Three rolls, each a generated shake and throw placed on the old
     timeline, levelled to the old -30.1 LUFS, with an events file of onsets. Each
     falls quiet earlier than the old one (2.11 to 2.73 s against 2.78). $0.0175.
-    **Open: Thomas to listen and pick**, then tell @overlore (not told yet;
-    Thomas listens first, 2026-10-27).
+    **@overlore took them in** from the outtake (`mail/received/20261027-110221Z-*`),
+    pending Thomas's listen:
+    - The landing plays roll-1..3 at random, never the same twice running.
+      Its toss reads each take's events.json, and the die rests on the right
+      face with every take.
+    - The Fate room plays fate-1..4 at random, a little louder.
+    - Credit: "The dice, on the coming-soon page and in the game: generated
+      with ElevenLabs Sound Effects."
+    - No longer landings needed.
+
+    **Open: Thomas to listen.**
     **@overlore's needs** (`mail/received/20261027-103952Z-*`):
     - Any timings work if each take comes with its times (shakes, throw,
       first knock, clatter, settle), as JSON; several can play at random.
