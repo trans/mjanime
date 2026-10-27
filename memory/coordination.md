@@ -826,8 +826,8 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     the message gives the new lines. They go in outtake `landing-tour/` under
     the same names, or in `take2/`. The sung line 8 doesn't use the word.
     @overlore changes the page's text when the takes come. Not the act's
-    u-8/u-8b below, which are another script. **Open: waiting on Thomas's
-    go-ahead.**
+    u-8/u-8b below, which are another script. **On hold (Thomas,
+    2026-10-27):** he is reviewing the tour's lines first.
   - **u-8b, the heckler line's alternative** (`mail/received/20261027-083834Z-*`,
     Thomas's line: "Friend, I'm a bard, not your psychiatrist", picked 50/50
     with u-8). Thomas: "one more for the road". **Made** in outtake
