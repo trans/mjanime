@@ -1096,7 +1096,24 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     MJ_ARCANA_CALLERS stays unset until Thomas says. **Closed.**
 - **`@arcana`**: the bus, arcana-core and arcana-ai (now under
   `~/Projects/Arcana/`). Camera concurrency rides on arcana-core 0.17.1
-  (`c7181a7`). **Asked 2026-10-17** (Thomas;
+  (`c7181a7`).
+  **Offline recipients** (asked 2026-10-27 for Thomas,
+  `mail/sent/20261027-084742Z-*`): mj asked for the deliver reply to say
+  when the agent it went to is offline. **Answered, not adding it**
+  (`mail/received/20261027-220316Z-*`; @arcana with the user):
+  - **Mail goes by file.** From dot-ai plugin 0.4.0, mail between projects
+    on one machine is delivered as a file straight into the recipient's
+    `.ai/mail/inbox/`. From arcana 0.38, on a machine whose carrier is
+    `local`, `arcana_deliver` to an agent refuses and points to the outbox.
+    So write mail to `.ai/mail/outbox/` once those are installed.
+  - **Read receipts answer "has it been read?"** dot-ai-mail remembers each
+    delivered message in the sender's outbox until the recipient files it.
+    The hooks then say "@overlore read <the sent/ name>", at the next prompt
+    or session start. No command, and no looking in other projects' folders.
+    Built in dot.ai `c13836a`, not pushed yet.
+  - Nothing needed from @tom.
+
+  **Asked 2026-10-17** (Thomas;
   `mail/sent/20261017-193239Z-@arcana--elevenlabs-credits-header.md`): have
   arcana-ai's ElevenLabs speech report the credits charged, from the
   `character-cost` header (eleven_v3: 12 for 30 characters, where mj's table
