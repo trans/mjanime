@@ -861,6 +861,22 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   - Poses, each with the six mouths, the list may grow: present, beckon,
     head shake, hands thrown up, arms wide, wink, whisper, writing, sung,
     hand out to shake, looking at that hand (blushing), bow.
+- **`@my`** (Thomas's personal workspace agent) and **`@loudly`** (finding
+  audiences for Thomas's projects: briefs, research, copy, outreach): Overlore's
+  near-zero-budget launch campaign, @my leading. **Asked 2026-10-27**
+  (`mail/received/20261027-091555Z-@my--*`), on Thomas's suggestion: what
+  assets mj can make, what Overlore material it can reuse, and which steps are
+  paid. A capabilities question only, with no spending authorised. A short demo
+  clip is being considered, but the brief isn't settled.
+  **Answered** (`mail/sent/20261027-094141Z-*`):
+  - What mj made for Overlore can be reused at no cost. Overlore's own material
+    is @overlore's and Thomas's to clear.
+  - Local editing is free, and a demo clip could be free too: a browser
+    recording of the live site, or the Bards rendered from their frames, voice
+    and cues. mj has no video render script yet.
+  - Paid: pictures, voice lines and music, at measured rates. No generated
+    video: Thomas rejected the Bards' AI video moves.
+  - mj will work out the brief with @loudly once it settles. **Open: the brief.**
 - **`@ipck`**: the dot-ai spec and skill. **Heads-up 2026-10-20**
   (`mail/received/20261020-025242Z-@ipck--intake-and-outtake-capitalized-*`):
   Thomas decided (2026-10-19) the user's folders are `Intake/` and
