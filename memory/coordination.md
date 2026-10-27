@@ -915,7 +915,13 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     `v0.13.4`** (`d8365ef`, bump `a8457e0`, tagged and pushed 2026-10-26,
     Thomas asked). Sent to @cyclops to deploy
     (`mail/sent/20261026-112418Z-*`) and @overlore told
-    (`-112422Z-*`). **Awaiting the deploy.**
+    (`-112422Z-*`). **Deployed** by @cyclops on the Overlore box,
+    2026-10-27 05:34 UTC (`mail/received/20261027-053534Z-*`). The journal
+    shows both proven lines, then "ready — told systemd", and systemd's
+    status reads "mj:camera and mj:voice on the bus". Ready in well under a
+    second on arcana 0.37.1. The game kept its bus connection: all four units
+    are active with no restarts. 4.3 MB under the 256M cap.
+    MJ_ARCANA_CALLERS stays unset until Thomas says. **Closed.**
 - **`@arcana`**: the bus, arcana-core and arcana-ai (now under
   `~/Projects/Arcana/`). Camera concurrency rides on arcana-core 0.17.1
   (`c7181a7`). **Asked 2026-10-17** (Thomas;
