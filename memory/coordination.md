@@ -811,6 +811,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     u-8 was recorded among its neighbours, then cut with u-8's lead-in and
     tail. 5.38 s plain, 5.31 s Scottish. Shrug at 2.09 and 2.05 s. $0.011.
     Sent (`mail/sent/20261027-084245Z-*`). **Open: Thomas to listen.**
+  - **A new dice roll** (Thomas, 2026-10-27): the landing die's rattle is
+    licensed for non-commercial use only. The replacement keeps the old timeline,
+    which @overlore choreographed the roll to (its `outtake/die-roll/README.md`):
+    the first click at 0.10 s, the first knock at 1.76 s. **Made** in outtake
+    `dice-roll/` (README, `sfx.py`, `assemble.py`). ElevenLabs sound effects on the
+    paid plan. Three rolls, each a generated shake and throw placed on the old
+    timeline, levelled to the old -30.1 LUFS, with an events file of onsets. Each
+    falls quiet earlier than the old one (2.11 to 2.73 s against 2.78). $0.0175.
+    **Open: Thomas to listen and pick**, then tell @overlore (not told yet).
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
