@@ -800,8 +800,17 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     (spoken ones 5.5). Whisper hears every word. Loudness -13.7 to -15.4
     LUFS. 1,290 characters on the account counter (Eleven Music gives no
     price), about $0.10, entered in the spend ledger. Sent
-    (`mail/sent/20261027-082255Z-*`). **Open: Thomas to listen**; any redone
-    take goes in `sung/take2/`.
+    (`mail/sent/20261027-082255Z-*`). @overlore installed them, levelled to
+    -18 LUFS like the act's song, in landing 0.6.0. **Open: Thomas to
+    listen**; any redone take goes in `sung/take2/`.
+  - **u-8b, the heckler line's alternative** (`mail/received/20261027-083834Z-*`,
+    Thomas's line: "Friend, I'm a bard, not your psychiatrist", picked 50/50
+    with u-8). Thomas: "one more for the road". **Made** in outtake
+    `bard-3/voice/take5/u-8b/` (README, `cut.py`, `choreography.json`):
+    recorded with u-7's line before it and u-9's first words after it, since
+    u-8 was recorded among its neighbours, then cut with u-8's lead-in and
+    tail. 5.38 s plain, 5.31 s Scottish. Shrug at 2.09 and 2.05 s. $0.011.
+    Sent (`mail/sent/20261027-084245Z-*`). **Open: Thomas to listen.**
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
