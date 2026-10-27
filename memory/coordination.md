@@ -837,6 +837,17 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     - The README has the source, licence and a credit line.
 
     $0.0295 in all.
+    **One more to replace** (`mail/received/20261027-104216Z-*`, from Trans
+    via @overlore): the dice dome in the game's Overlord intro, behind the
+    closed gates. It is a clear plastic bubble with dice inside, and its
+    current sounds have no known source. Two takes are wanted:
+    - `dome-press`: a hard plastic flex and click, about 0.2 s.
+    - `dome-release`: the dome springs back, a pop, then the dice rattle
+      against the plastic, 0.4 to 0.8 s.
+
+    Never use the board game's name in file names or notes. The credits
+    need the source and licence, and the volume should match the rattle.
+    **Open: confirm with Thomas before making it.**
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
