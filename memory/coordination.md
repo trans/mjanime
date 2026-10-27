@@ -761,7 +761,23 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     Made b2: one edit of b ($0.10). Its painted contact shadows were taken out
     by `unshadow.py`, which guards b's own outlines. Each pouch is 410 px tall,
     pouch 5 484x410. Folder $0.31. **Delivered** to `deliver/pouch-1..5`
-    (prompt.md). Sent (`mail/sent/20261027-001023Z-*`).
+    (prompt.md). Sent (`mail/sent/20261027-001023Z-*`). @overlore: they're on
+    the cards, and Thomas likes them (`mail/received/20261027-024841Z-*`).
+  - **The narrated first look** (2026-10-27,
+    `mail/received/20261027-024841Z-*`, change in `…045000Z-*`): the die can
+    land on ten screenshots of the game. The Bard who was on stage narrates,
+    his head in a circle, one line per picture. 40 takes: `tour-p-<n>-announcer`
+    (salesman), `tour-s-<n>-announcer` (spoken rhyme), and `tour-u-<n>-gerald`
+    plain and `-scottish`, n = 1 to 10. Each needs an mp3, Rhubarb `.json` and
+    `.cues.json`, and a `.txt`. To outtake `landing-tour/`, with a README of
+    lengths. Lines in @overlore's `outtake/landing-tour/lines.md`, its drafts;
+    Thomas changed line 3 for each Bard (more classic titles coming). Head
+    crops come from the existing frames. @overlore asks whether a dedicated
+    head set would look much better. About 3,000 characters, roughly $0.25.
+    Checked against the screenshots: the gate's lions are there (s-5), but
+    u-8's "No bards" clashes with the narrator screen, which offers a Tavern
+    Bard. **Open: asked Thomas** (recordings need his approval; lines not yet
+    reviewed).
   - **Rhubarb cues for take 5** (2026-10-25, Thomas asked): beside each line
     mp3 as `u-<n>-gerald[-scottish].json`. Drafts, `-d` with the line text,
     tags stripped. A preview page was next; Thomas said to get on the same
