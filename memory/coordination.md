@@ -547,8 +547,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   - **Nothing else:** no other words, no Overlord, no Zork headline.
 
   To outtake `og-cards/`, with a README and a one-line alt text for each.
-  This is compositing existing art, with no generation. **Open: confirming
-  with Thomas** (2026-10-27).
+  Thomas put these ahead of the tour's re-takes (2026-10-27). **Made**
+  (`make.py`, free): the Bards cut at mid-thigh, the left side blurred and
+  darkened so the tagline reads over the play stills' text panel, tagline in
+  Libertinus Serif. The stand-up card hides the egg: it sits behind Gerald,
+  and no crop shows both. The play stills' player portrait shows in their top
+  right corner. Sent (`mail/sent/20261027-214116Z-*`). **Open: Thomas to look.**
   **The bank's backdrop** (@overlore for Thomas, 2026-10-24,
   `mail/received/20261024-035821Z-@overlore--a-backdrop-for-overlore-s-bank-*`):
   the Piggy Bank's pink brick wall behind the HTML teller machine, 16:9,
