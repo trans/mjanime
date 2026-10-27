@@ -513,6 +513,22 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   wingbeat frames registered by the head, $0.42 with one discarded retry;
   `prompt.md` has the measured differences between frames). Waiting on
   Thomas's look.
+  **The Beta Bird in the other Bards' styles** (Trans via @overlore,
+  2026-10-27, `mail/received/20261027-175315Z-*`): at each act's end the
+  bird flies in, lands at the Bard's feet and waits; clicking it opens the
+  Special. The same pigeon, β tube and all, drawn in the cartoon Bard's
+  old-school cartoon style (wanted first) and in the 3D Bard's 3D-cartoon
+  style (second). The realistic Bard keeps the current bird. The frames,
+  sizes and registration must match `deliver/` so the page only swaps
+  files:
+  - perched: body middle at (255, 262), feet at about y 483;
+  - landing: at perched's scale (the first set's came out a quarter smaller);
+  - three wingbeats, distinct this time: body middle at (217, 262), tube
+    held the same way;
+  - optional perched-2 (head cocked) for an idle.
+
+  To outtake `beta-bird-cartoon/` and `beta-bird-3d/`, with READMEs as
+  before. **Open: waiting on Thomas's go-ahead** (2026-10-27).
   **The bank's backdrop** (@overlore for Thomas, 2026-10-24,
   `mail/received/20261024-035821Z-@overlore--a-backdrop-for-overlore-s-bank-*`):
   the Piggy Bank's pink brick wall behind the HTML teller machine, 16:9,
@@ -803,6 +819,15 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     (`mail/sent/20261027-082255Z-*`). @overlore installed them, levelled to
     -18 LUFS like the act's song, in landing 0.6.0. **Open: Thomas to
     listen**; any redone take goes in `sung/take2/`.
+  - **"Narrator" becomes "dungeon master"** (Thomas's change to the copy, via
+    @overlore, 2026-10-27, `mail/received/20261027-183459Z-*`). Line 8 uses
+    the word, so three takes are wanted again: `tour-p-8-announcer` and
+    `tour-u-8-gerald`, plain and Scottish. Same voices, tags and settings, and
+    the message gives the new lines. They go in outtake `landing-tour/` under
+    the same names, or in `take2/`. The sung line 8 doesn't use the word.
+    @overlore changes the page's text when the takes come. Not the act's
+    u-8/u-8b below, which are another script. **Open: waiting on Thomas's
+    go-ahead.**
   - **u-8b, the heckler line's alternative** (`mail/received/20261027-083834Z-*`,
     Thomas's line: "Friend, I'm a bard, not your psychiatrist", picked 50/50
     with u-8). Thomas: "one more for the road". **Made** in outtake
