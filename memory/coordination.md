@@ -547,7 +547,10 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   painted size: cartoon 428x608, body at (254, 320); 3D 510x606, body at
   (311, 324); all three wingbeats on one canvas per set, same names, in
   `deliver/` or a `deliver-2/` (say which). The landing's smaller body is
-  fine. **Open: the re-export** (free, `finish.py`).
+  fine. Thomas: the size mustn't jump within a style (2026-10-28).
+  **Delivered** in each set's `deliver-2/` (`finish.py --painted`, free;
+  `mail/sent/20261028-041332Z-*`): at page scale the flying head now matches
+  the standing head (`beta-bird-cartoon/stitch-heads.png`).
   **Share cards, one per Bard** (Trans's go via @overlore, 2026-10-27,
   `mail/received/20261027-190440Z-*`; @loudly's idea). Each act gets its own
   address (`/pitch`, `/song`, `/stand-up`), and its link should preview that
