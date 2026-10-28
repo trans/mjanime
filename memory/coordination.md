@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-27*
+*Updated 2026-10-28*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -542,6 +542,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     in the 3D fly-mid.
 
   Sent (`mail/sent/20261027-231406Z-*`). **Open: Thomas to look.**
+  @overlore: "They look right" (`mail/received/20261028-001423Z-*`), and it
+  is wiring both sets in. It asked for the flying frames again at the
+  painted size: cartoon 428x608, body at (254, 320); 3D 510x606, body at
+  (311, 324); all three wingbeats on one canvas per set, same names, in
+  `deliver/` or a `deliver-2/` (say which). The landing's smaller body is
+  fine. **Open: the re-export** (free, `finish.py`).
   **Share cards, one per Bard** (Trans's go via @overlore, 2026-10-27,
   `mail/received/20261027-190440Z-*`; @loudly's idea). Each act gets its own
   address (`/pitch`, `/song`, `/stand-up`), and its link should preview that
@@ -576,7 +582,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   (2026-10-27):** the gate for the pitch (take 1), the cavern for the
   stand-up and the castle for the song (take 3). They are in outtake
   `og-cards/final/` under the asked names. **Delivered**
-  (`mail/sent/20261027-223611Z-*`).
+  (`mail/sent/20261027-223611Z-*`). In landing 0.6.6.
   **The bank's backdrop** (@overlore for Thomas, 2026-10-24,
   `mail/received/20261024-035821Z-@overlore--a-backdrop-for-overlore-s-bank-*`):
   the Piggy Bank's pink brick wall behind the HTML teller machine, 16:9,
@@ -876,6 +882,23 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     @overlore changes the page's text when the takes come. Not the act's
     u-8/u-8b below, which are another script. **On hold (Thomas,
     2026-10-27):** he is reviewing the tour's lines first.
+    Also held: Gerald's line 3 gains "New new ones." at its end
+    (`mail/received/20261027-234500Z-*`), so `tour-u-3-gerald` plain and
+    Scottish are wanted again, same tags and settings. Its
+    `outtake/landing-tour/lines.md` has the line. Record from whatever
+    that file says after Thomas's review.
+  - **Bugs on the live landing** (Thomas and a visitor, 2026-10-28). Worked
+    out in headless Chromium and sent to @overlore to fix
+    (`mail/sent/20261028-025117Z-*`):
+    - After "Roll again.", the new Bard hops and runs off left, walks back
+      in, then snaps to `translate(-1280px, -60.48px)` at about 13 s and
+      stays off screen.
+    - With `play()` refused outside a click (as strict autoplay rules do),
+      the act runs silent and types at about 33 characters a second. The
+      audio files themselves serve and play fine.
+    - At an act's end, each wheel notch scrolls 120 px past the page's
+      limit and the page scrolls it back, so the Bard jumps per notch.
+    **Open:** which browser and device Thomas saw no sound on.
   - **u-8b, the heckler line's alternative** (`mail/received/20261027-083834Z-*`,
     Thomas's line: "Friend, I'm a bard, not your psychiatrist", picked 50/50
     with u-8). Thomas: "one more for the road". **Made** in outtake
