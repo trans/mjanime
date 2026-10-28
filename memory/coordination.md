@@ -898,7 +898,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
       audio files themselves serve and play fine.
     - At an act's end, each wheel notch scrolls 120 px past the page's
       limit and the page scrolls it back, so the Bard jumps per notch.
-    **Open:** which browser and device Thomas saw no sound on.
+    **Fixed on @overlore's test server** for the next landing release
+    (`mail/received/20261028-031151Z-*`): the Bard's moves no longer leave a
+    filling animation behind; a refused line now types at its take's pace,
+    and the sound button shows "Tap for sound" until a sound plays; wheel,
+    touch and keys stop at the limit. **Open:** which browser and device
+    Thomas saw no sound on (@overlore still wants it).
   - **u-8b, the heckler line's alternative** (`mail/received/20261027-083834Z-*`,
     Thomas's line: "Friend, I'm a bard, not your psychiatrist", picked 50/50
     with u-8). Thomas: "one more for the road". **Made** in outtake
