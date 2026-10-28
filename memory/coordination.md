@@ -550,7 +550,9 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   fine. Thomas: the size mustn't jump within a style (2026-10-28).
   **Delivered** in each set's `deliver-2/` (`finish.py --painted`, free;
   `mail/sent/20261028-041332Z-*`): at page scale the flying head now matches
-  the standing head (`beta-bird-cartoon/stitch-heads.png`).
+  the standing head (`beta-bird-cartoon/stitch-heads.png`). The landing
+  frames' smaller body (feet kept full size) stays as it is: Thomas, "a
+  third of a second is fine" (2026-10-28).
   **Share cards, one per Bard** (Trans's go via @overlore, 2026-10-27,
   `mail/received/20261027-190440Z-*`; @loudly's idea). Each act gets its own
   address (`/pitch`, `/song`, `/stand-up`), and its link should preview that
