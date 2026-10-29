@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-28*
+*Updated 2026-10-29*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -1062,6 +1062,12 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   - Reusing the existing voices outside the site needs his approval.
   
   @loudly will define a bounded brief. Nothing is authorised yet.
+  **Browser tests on hold** (@my for Thomas, 2026-10-29,
+  `mail/received/20261029-033245Z-*`): a runaway WebKit/WPE job ate the
+  machine's CPU and memory. It wasn't mj's: mj only ran headless Chromium on
+  2026-10-28, 02:38–02:51Z, closed since, and nothing of mj's was running.
+  Answered (`mail/sent/20261029-035610Z-*`). **No browser tests until Thomas
+  says go.** Even then, one browser at a time (Thomas, 2026-10-28).
 - **`@ipck`**: the dot-ai spec and skill. **Heads-up 2026-10-20**
   (`mail/received/20261020-025242Z-@ipck--intake-and-outtake-capitalized-*`):
   Thomas decided (2026-10-19) the user's folders are `Intake/` and
