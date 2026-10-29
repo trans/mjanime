@@ -498,7 +498,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   frames (present: pose, gaze, 6 mouths, 3 gestures x 7; write: pose,
   gaze, 6 mouths; bow); originals kept as `prop-neck.png`. The frames line
   up with their poses (1-3 levels of 255 around the patch). **Cleared
-  2026-10-20:** Thomas took his unusable marks off the mended present
+  2026-10-20:** Thomas took their unusable marks off the mended present
   frames (54 marks down to 26). `graph.json` and the preview rebuilt (only
   the `unusable` list changed; the frames already had the mended neck) and
   sent, so the pitch can use `present` again
@@ -769,7 +769,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     **@overlore's side: nothing Trans asked for is missing**
     (`mail/received/20261025-103635Z-*`). Take 5 plays with its cues,
     choreography, bleep and robot voice; tempo is one number on its page.
-    Thomas accepted the first rimshot, crickets and fanfare; remind him to
+    Thomas accepted the first rimshot, crickets and fanfare; remind them to
     check the others later, not essential (`TODO.md`, "Reminders for
     Thomas"). Told @overlore (`mail/sent/20261025-104939Z-*`). @overlore
     plays take 5 at 1.05x by playback rate, pitch kept, cues on the take's
@@ -799,7 +799,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     (`mail/sent/20261026-002302Z-*`). For landing-v0.5.2, when Thomas says.
     **"Psst." question** (2026-10-26, `mail/received/20261026-011101Z-*`):
     @overlore said Thomas dropped "Psst." from the stand-up nudge, since it
-    follows u-14's. Thomas: keep it as is for now; he'll listen and decide.
+    follows u-14's. Thomas: keep it as is for now; they'll listen and decide.
     Told @overlore (`mail/sent/20261026-150211Z-*`). **Open, Thomas's call.**
     That message also confirms the 54 teeth frames are in, checked by sha256.
   - **The Piggy Bank with an ATM in its side** (2026-10-26,
@@ -892,7 +892,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     the same names, or in `take2/`. The sung line 8 doesn't use the word.
     @overlore changes the page's text when the takes come. Not the act's
     u-8/u-8b below, which are another script. **On hold (Thomas,
-    2026-10-27):** he is reviewing the tour's lines first.
+    2026-10-27):** they are reviewing the tour's lines first.
     Also held: Gerald's line 3 gains "New new ones." at its end
     (`mail/received/20261027-234500Z-*`), so `tour-u-3-gerald` plain and
     Scottish are wanted again, same tags and settings. Its
@@ -922,7 +922,17 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     recorded with u-7's line before it and u-9's first words after it, since
     u-8 was recorded among its neighbours, then cut with u-8's lead-in and
     tail. 5.38 s plain, 5.31 s Scottish. Shrug at 2.09 and 2.05 s. $0.011.
-    Sent (`mail/sent/20261027-084245Z-*`). **Open: Thomas to listen.**
+    Sent (`mail/sent/20261027-084245Z-*`). Thomas, in mj's store
+    (2026-10-29): yes to both, and they like the plain one better (they heard
+    them as a duplicate; Gemini calls both Scottish too). **Open:** whether
+    that changes anything.
+  - **u-8c, a third heckler answer** (via @overlore, 2026-10-29): "Ooh, a
+    heckler! Friend, I'm a bard, not a straw." (the crazy straw), the three
+    answers picked at random. Plain and Scottish, done as u-8b, named
+    `u-8c-gerald[-scottish]` with the same files and `choreography.json`
+    (`mail/received/20261029-195859Z-*`). It replaces "not an eight ball",
+    asked and withdrawn minutes before (`…195202Z-*`, `…195622Z-*`).
+    **Open: Thomas to confirm directly before recording.**
   - **A new dice roll** (Thomas, 2026-10-27): the landing die's rattle is
     licensed for non-commercial use only. The replacement keeps the old timeline,
     which @overlore choreographed the roll to (its `outtake/die-roll/README.md`):
