@@ -200,6 +200,42 @@
 - The repo `.env` is mode 644. Everything else in the chain is 600. Worth tightening, but it is
   Thomas's file.
 
+## hearing, recording, music cost (mj's suggestions, 2026-10-27; Thomas: add them, 2026-10-28)
+- **A `listen` tool (the one that would help most).** mj can't hear: every report on a take is
+  indirect (Whisper for the words, spectrograms for the cuts, loudness meters, a beat tracker), so
+  every take waits on Thomas's ears, even the plainly broken ones. The audio counterpart of Nano
+  Banana for pictures: send a take, and a reference when it helps, to a model that can hear (Gemini)
+  with narrow questions: the same voice as this one? the same tempo? a click, or a cut mid-word? still
+  a Scottish accent? It reports; Thomas still judges. **Test it first on cases with known answers:**
+  the "elf" pitch-shift Thomas rejected, and the three Scottish takes Whisper misheard. If it can't
+  hear those, it isn't worth having.
+  **Tested 2026-10-29** (outtake `listen-test/README.md`, $0.28): Gemini 3.1 Pro and 3.8 Flash, 28
+  clips with planted faults and Thomas's past calls.
+  - **Glitches: no.** Planted clicks, cuts, dropouts and distortion were found 2 of 8 at best,
+    different ones at different thinking levels. No model reported a glitch in a clean take.
+  - **Speakers: no.** Both models called the Announcer and Gerald the same speaker.
+  - **Pitch shift heard alone: no.** Neither model heard any pitch-shifted take as processed.
+  - **Pitch shift against a reference: yes, with 3.1 Pro.** Given the original, it called all five
+    shifted Henrys, "elf" included, higher and processed (11 of 12). It mixes up pitch and pace.
+  - **Words in an accent: yes.** Both models heard the Scottish u-2 and u-9 as written, where Whisper
+    failed. On u-4, Flash and Whisper both heard "what's a hotel" for "like a hotel".
+  - **Accent:** 3.8 Flash was right 10 of 11.
+  So no general `listen`. **Built instead (Thomas: "get what you can that is useful out of it",
+  2026-10-29): `mj listen`** (`docs/tools/listen.md`, `src/engine/listen.cr`). It has:
+  - measured glitch checks: 7 of 8 planted faults found, nothing in mj's 339 real takes;
+  - Whisper and Gemini 3.8 Flash on the words, marking where both differ from the script;
+  - Gemini's guess at the accent;
+  - Gemini 3.1 Pro's "processed" answer against a reference.
+  **Still to do:** a `listen` tool on the bus, if another agent wants one.
+- **The recording pipeline as an `mj` command.** The recording runner, the Whisper word check,
+  Rhubarb-to-cues, the cutters and the choreography script live in a session's scratchpad and are
+  rebuilt every session. As tested code in the repo, with a page in `docs/tools/`, anyone can run
+  them; a skill for it would then be a few lines (where the voice key comes from, the command, the
+  page).
+- **Price Eleven Music.** `music` is logged with `cost: null`, since Eleven Music returns no price
+  (`docs/tools/spend.md`). Read the plan's character counter before and after a song and price the
+  difference.
+
 ## sfx (audio) refinements
 - **Composite sounds need layers.** The recipe is single-source (one noise OR one osc), so it can't
   represent a sound that is several things at once. The bowling "bloop" is attack-transient + tonal bloop

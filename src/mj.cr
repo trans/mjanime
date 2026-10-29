@@ -272,6 +272,53 @@ when "sfx"
   out_path = ARGV[2]? || input.sub(/\.[^.]+$/, "") + ".sfx.json"
   File.write(out_path, recipe.to_pretty_json)
   STDERR.puts "[sfx] #{input} -> #{out_path}#{preview ? " (+ #{preview})" : ""}"
+when "listen"
+  # mj listen <take>... [--script TEXT] [--ref REF] [--free|--glitches] [--json] — check voice takes: glitches (measured, free),
+  # the words against the script (Whisper and Gemini; the script defaults to the .txt beside each take), the accent,
+  # and processing against a reference take. See docs/tools/listen.md.
+  usage = "Usage: mj listen <take>... [--script TEXT] [--ref REF] [--free|--glitches] [--json]"
+  takes = [] of String
+  script = nil
+  ref = nil
+  free = false
+  glitches_only = false
+  as_json = false
+  i = 1
+  while i < ARGV.size
+    case arg = ARGV[i]
+    when "--script"
+      i += 1
+      script = ARGV[i]?
+    when "--ref"
+      i += 1
+      ref = ARGV[i]?
+    when "--free"     then free = true
+    when "--glitches" then glitches_only = true
+    when "--json" then as_json = true
+    else
+      if arg.starts_with?("--")
+        STDERR.puts usage
+        exit 1
+      end
+      takes << arg
+    end
+    i += 1
+  end
+  if takes.empty?
+    STDERR.puts usage
+    exit 1
+  end
+  missing = (takes + [ref].compact).reject { |f| File.file?(f) }
+  unless missing.empty?
+    STDERR.puts "mj listen: no such file: #{missing.join(", ")}"
+    exit 1
+  end
+  results = MJ::Listen.check(takes, script, ref, free, glitches_only)
+  if as_json
+    puts results.to_pretty_json
+  else
+    MJ::Listen.print(results)
+  end
 when "bus"
   # mj bus — join the Arcana bus and serve the tools (pixelize/prop/base/decorate/sfx).
   MJ::BusService.run
@@ -447,6 +494,6 @@ when "spend"
 when "version", "--version", "-v"
   puts "mj #{MJ::VERSION}"
 else
-  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|cyclorama|sfx|matte|webp|backdrop|spend|bus|version]"
+  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|cyclorama|sfx|listen|matte|webp|backdrop|spend|bus|version]"
   exit 1
 end

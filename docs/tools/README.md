@@ -16,6 +16,7 @@ Most image commands need `RUNWARE_API_KEY` (read from the environment — source
 | `mj decorate <dir>` | Redraw a master decorated in a style/theme (Stage 2) | yes | [base & decorate](base-and-decorate.md) |
 | `/cyclochroma` (web) | Key a colour out, light the transparency with music-reactive colour | no | [cyclochroma](cyclochroma.md) |
 | `mj sfx <in.wav\|mp3> […]` | Reference sound → procedural Web Audio recipe (JSON) | no | [sfx](sfx.md) |
+| `mj listen <take>… [--ref REF]` | Check voice takes: glitches, words against the script, accent, processing | Gemini (not `--free`) | [listen](listen.md) |
 | `mj backdrop <image> [name]` | Import a full-frame image into the backdrop library | no | [diorama](diorama.md#backdrop-library) |
 | `mj webp [<prop>] [--quality N]` | Transcode library deliverables to `.webp` | no | [diorama](diorama.md#webp) |
 | `mj spend [--today\|--days N\|--all]` | Report the API cost ledger (per day / model / command) | no | [spend](spend.md) |
