@@ -21,7 +21,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   `#datadungeon` (Thomas, 2026-10-19,
   `mail/received/20261019-215533Z-@datadungeon--*`); requests to one app
   still come as mail. Not subscribed (Thomas: later), so read it on "check
-  mail": **read through post 8** (2026-10-21). Post 1, v0.15.2: the standard asset types,
+  mail": **read through post 13** (2026-10-29). Post 1, v0.15.2: the standard asset types,
   `subtype`, and `automaton` (the Bard graph); stores move onto the types
   one at a time, Overlore last. Post 2, v0.15.3: a take's tracks,
   `words` and `mouth` (`{start_ms, end_ms, value}` cues, naming the tool),
@@ -30,8 +30,14 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   Post 6, v0.15.7: search by meaning (a type names what's embedded).
   Post 7, v0.16.0: only standard type names. Post 8, v0.16.1: prop and
   figure reworded (a building's front is a prop), and characters as assets
-  are on DataDungeon's to-do list (Thomas), how still open. mj has no DataDungeon
-  dependency, so none of these needs anything here.
+  are on DataDungeon's to-do list (Thomas), how still open. Posts 9-13,
+  v0.16.2-6: review fixes, Memo pins; an app without Memo (mj) still
+  builds on crystal-db 0.14 and sqlite3 0.23.
+  **mj's own store** (Thomas, 2026-10-29: "your own data dungeon"; "just
+  what you need me to see", and removing is fine): DataDungeon `~> 0.16.6`,
+  `mj dungeon` and `/dungeon` in `mj serve` (`docs/tools/dungeon.md`).
+  Before this mj had no DataDungeon dependency, so the earlier releases
+  needed nothing here.
   Picture prompts. mj sent the design (order, groups,
   `framing`, `light`, `changes`) to them, `@overlore` and `@owl` on
   2026-10-14 (`mail/sent/*-picture-prompt-design.md`; the note is
@@ -54,7 +60,7 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   directives. `style` is now DataDungeon's own words for the art style;
   `flavor` (Thomas) is the app's wording refining it. A picture whose
   style isn't DataDungeon's isn't stored. mj's view words are in it as
-  `ViewWords`. mj has no DataDungeon dependency, so nothing to bump here.
+  `ViewWords`. (mj had no DataDungeon dependency then, so nothing to bump.)
   **Proposal sent 2026-10-16** (`mail/sent/20261016-171751Z-@datadungeon--prompt-as-template.md`,
   worked out with Thomas, not copied to `@overlore` or `@owl`): one
   prompt with Mustache tags for the registered parts (rules, framing,
