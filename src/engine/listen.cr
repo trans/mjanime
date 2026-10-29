@@ -1,4 +1,5 @@
 require "json"
+require "digest/sha256"
 require "base64"
 require "http/client"
 
@@ -245,10 +246,17 @@ module MJ
       end
     end
 
-    # Equal, or one letter apart in a word of five or more: "jewelled" and "jeweled" are the same word heard; "roll"
-    # and "roar" aren't.
+    # Number words a listener may write in digits: "forty" heard as "40" is the word as written.
+    NUMBERS = {"0" => "zero", "1" => "one", "2" => "two", "3" => "three", "4" => "four", "5" => "five", "6" => "six",
+               "7" => "seven", "8" => "eight", "9" => "nine", "10" => "ten", "11" => "eleven", "12" => "twelve",
+               "13" => "thirteen", "14" => "fourteen", "15" => "fifteen", "16" => "sixteen", "17" => "seventeen",
+               "18" => "eighteen", "19" => "nineteen", "20" => "twenty", "30" => "thirty", "40" => "forty",
+               "50" => "fifty", "60" => "sixty", "70" => "seventy", "80" => "eighty", "90" => "ninety"}
+
+    # Equal (a number in words or digits), or one letter apart in a word of five or more: "jewelled" and "jeweled"
+    # are the same word heard; "roll" and "roar" aren't.
     def self.same_word?(a : String, b : String) : Bool
-      return true if a == b
+      return true if a == b || NUMBERS[a]? == b || NUMBERS[b]? == a
       a.size >= 5 && b.size >= 5 && (a.size - b.size).abs <= 1 && levenshtein(a, b) <= 1
     end
 
@@ -294,7 +302,34 @@ module MJ
         end
       end
       flush.call(m, n)
-      diffs
+      diffs.reject { |d| spelling?(d, script, heard) }
+    end
+
+    # A difference in spelling, not hearing: the same letters split or joined ("em bark" for "Embark"), or a word
+    # split off its neighbour ("a while" for "awhile", where "while" matched "awhile").
+    def self.spelling?(d : Diff, script : Array(Token), heard : Array(Token)) : Bool
+      s = d.script.join(&.text)
+      h = d.heard.join(&.text)
+      return true if !s.empty? && s == h
+      before = ->(list : Array(Token), i : Int32) { i > 0 ? list[i - 1]?.try(&.text) : nil }
+      if d.script.empty?
+        after_s, after_h = script[d.at]?.try(&.text), heard[d.from + d.heard.size]?.try(&.text)
+        return true if after_s && after_h && h + after_h == after_s
+        before_s, before_h = before.call(script, d.at), before.call(heard, d.from)
+        return true if before_s && before_h && before_h + h == before_s
+      elsif d.heard.empty?
+        after_s, after_h = script[d.at + d.script.size]?.try(&.text), heard[d.from]?.try(&.text)
+        return true if after_s && after_h && s + after_s == after_h
+        before_s, before_h = before.call(script, d.at), before.call(heard, d.from)
+        return true if before_s && before_h && before_s + s == before_h
+      end
+      false
+    end
+
+    # Where in Whisper's words a place in the script falls, given where Whisper left the script: that word's time.
+    private def self.aligned_time(at : Int32, dw : Array(Diff), whisper : Array(Token)) : Float64?
+      i = at + dw.select { |d| d.at + d.script.size <= at }.sum { |d| d.heard.size - d.script.size }
+      i >= 0 ? whisper[i]?.try(&.time) : nil
     end
 
     # Whisper on every file at once (one model load), through uv so faster-whisper needn't be installed. Returns each
@@ -385,25 +420,48 @@ module MJ
         contents:         [{role: "user", parts: parts}],
         generationConfig: {responseMimeType: "application/json", thinkingConfig: {thinkingLevel: "low"}},
       }.to_json
+      cached = cache_path(model, body)
+      return JSON.parse(File.read(cached)) if cached && File.file?(cached)
       headers = HTTP::Headers{"Content-Type" => "application/json", "x-goog-api-key" => key}
-      response = nil
+      problem = ""
+      # An overloaded service, or an answer that isn't JSON (now and then an empty one), is asked again.
       3.times do |attempt|
-        response = HTTP::Client.post("https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent",
+        sleep (2 ** attempt).seconds if attempt > 0
+        r = HTTP::Client.post("https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent",
           headers: headers, body: body)
-        break unless MJ::Retry.retryable?(response.status_code, response.body) && attempt < 2
-        sleep (2 ** attempt).seconds
+        unless r.status_code == 200
+          problem = "Gemini error (#{r.status_code}): #{r.body[0, 300]}"
+          next if MJ::Retry.retryable?(r.status_code, r.body)
+          raise problem
+        end
+        parsed = JSON.parse(r.body)
+        MJ::Spend.record("listen", model, cost(model, parsed["usageMetadata"]?), provider: "google")
+        candidate = parsed["candidates"]?.try(&.[0]?)
+        text = candidate.try(&.["content"]?).try(&.["parts"]?).try(&.as_a?).try do |ps|
+          ps.reject { |p| p["thought"]?.try(&.as_bool?) }.join { |p| p["text"]?.try(&.as_s?) || "" }
+        end || ""
+        text = text.strip.lchop("```json").lchop("```").rchop("```").strip
+        begin
+          answer = JSON.parse(text)
+          if cached
+            Dir.mkdir_p(File.dirname(cached))
+            File.write(cached, answer.to_json)
+          end
+          return answer
+        rescue ex : JSON::ParseException
+          why = candidate.try(&.["finishReason"]?).try(&.as_s?)
+          problem = "Gemini answered something that isn't JSON#{" (#{why})" if why}: #{text.empty? ? "nothing" : text[0, 120].inspect}"
+        end
       end
-      r = response.not_nil!
-      raise "Gemini error (#{r.status_code}): #{r.body[0, 300]}" unless r.status_code == 200
-      parsed = JSON.parse(r.body)
-      MJ::Spend.record("listen", model, cost(model, parsed["usageMetadata"]?), provider: "google")
-      text = parsed["candidates"]?.try(&.[0]?).try(&.["content"]?).try(&.["parts"]?).try(&.as_a?).try do |ps|
-        ps.reject { |p| p["thought"]?.try(&.as_bool?) }.join { |p| p["text"]?.try(&.as_s?) || "" }
-      end || ""
-      text = text.strip.lchop("```json").lchop("```").rchop("```").strip
-      JSON.parse(text)
-    rescue ex : JSON::ParseException
-      raise "Gemini answered something that isn't JSON: #{ex.message}"
+      raise problem
+    end
+
+    # Each answer is kept by the request's SHA-256 (the model, the audio and the question), so asking the same
+    # again (filing a manifest again) costs nothing. `MJ_LISTEN_CACHE=0` turns it off.
+    private def self.cache_path(model : String, body : String) : String?
+      return nil if ENV["MJ_LISTEN_CACHE"]? == "0"
+      base = ENV["XDG_CACHE_HOME"]?.presence || File.join(Path.home.to_s, ".cache")
+      File.join(base, "mj", "listen", Digest::SHA256.hexdigest("#{model}\n#{body}") + ".json")
     end
 
     private def self.cost(model : String, usage : JSON::Any?) : Float64?
@@ -439,6 +497,22 @@ module MJ
 
       def both? : Bool
         !@whisper.nil? && !@gemini.nil?
+      end
+
+      # `"Like" at 3.3 s: Whisper heard "What's", Gemini heard "what's" (both: worth a listen)`, given the
+      # listeners that ran.
+      def line(listeners : Array(String), at : Bool = true) : String
+        where = @script.empty? ? "nothing written" : "\"#{@script}\""
+        where += " at #{@time.not_nil!.round(2)} s" if at && @time
+        heard = [@whisper.try { |s| "Whisper heard \"#{s}\"" }, @gemini.try { |s| "Gemini heard \"#{s}\"" }].compact.join(", ")
+        verdict = if both?
+                    "both: worth a listen"
+                  elsif listeners.size > 1
+                    "only #{@whisper ? "Whisper" : "Gemini"}"
+                  else
+                    "one listener"
+                  end
+        "#{where}: #{heard} (#{verdict})"
       end
     end
 
@@ -491,9 +565,18 @@ module MJ
       end
       dg.each_with_index do |b, k|
         next if taken.includes?(k)
-        got << {b.at, WordNote.new(b.script.map(&.shown).join(" "), nil, said.call(b), nil)}
+        got << {b.at, WordNote.new(b.script.map(&.shown).join(" "), nil, said.call(b), whisper.try { |w| aligned_time(b.at, dw, w) })}
       end
       got.sort_by(&.[0]).map(&.[1])
+    end
+
+    # One take's Gemini answer, or nil (said on stderr) when it didn't come, so the other takes and the free
+    # checks still report.
+    private def self.gemini_or_nil(take : String, & : -> JSON::Any) : JSON::Any?
+      yield
+    rescue ex
+      STDERR.puts "[listen] #{File.basename(take)}: no Gemini answer, so Whisper alone: #{ex.message}"
+      nil
     end
 
     # `free`: no Gemini (glitches and Whisper only). `glitches_only`: the measurements alone, no listener.
@@ -506,13 +589,13 @@ module MJ
       takes.map do |t|
         x = decode(t)
         sc = scripts[t]
-        g = key ? gemini_words(t, key) : nil
+        g = key ? gemini_or_nil(t) { gemini_words(t, key.not_nil!) } : nil
         gemini_tokens = g.try(&.["transcript"]?).try(&.as_s?).try { |s| tokens(s) }
         listeners = [] of String
         listeners << "Whisper" if heard.has_key?(t)
         listeners << "Gemini" if gemini_tokens
         words = sc ? notes(tokens(sc[0]), heard[t]?, gemini_tokens) : [] of WordNote
-        cmp = key && ref && ref != t ? gemini_compare(t, ref.not_nil!, key) : nil
+        cmp = key && ref && ref != t ? gemini_or_nil(t) { gemini_compare(t, ref.not_nil!, key.not_nil!) } : nil
         Result.new(t, (x.size / SR.to_f).round(2), Glitch.find(x), sc.try(&.[0]), sc.try(&.[1]), listeners, words,
           heard[t]?.try(&.map(&.shown).join(" ")), g.try(&.["transcript"]?).try(&.as_s?),
           g.try(&.["accent"]?).try(&.as_s?), g.try(&.["scottish"]?).try(&.as_s?),
@@ -538,19 +621,7 @@ module MJ
             io.puts "  words: as written in #{r.script_from} (#{who})"
           else
             io.puts "  words, against #{r.script_from} (#{who}):"
-            r.words.each do |w|
-              at = w.time ? " at #{w.time.not_nil!.round(2)} s" : ""
-              heard = [w.whisper.try { |s| "Whisper heard \"#{s}\"" }, w.gemini.try { |s| "Gemini heard \"#{s}\"" }].compact.join(", ")
-              verdict = if w.both?
-                          "both: worth a listen"
-                        elsif r.listeners.size > 1
-                          "only #{w.whisper ? "Whisper" : "Gemini"}"
-                        else
-                          "one listener"
-                        end
-              where = w.script.empty? ? "nothing written" : "\"#{w.script}\""
-              io.puts "    #{where}#{at}: #{heard} (#{verdict})"
-            end
+            r.words.each { |w| io.puts "    #{w.line(r.listeners)}" }
           end
         elsif (g = r.gemini_heard)
           io.puts "  words (no script): Gemini heard \"#{g}\""

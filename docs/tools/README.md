@@ -17,6 +17,7 @@ Most image commands need `RUNWARE_API_KEY` (read from the environment — source
 | `/cyclochroma` (web) | Key a colour out, light the transparency with music-reactive colour | no | [cyclochroma](cyclochroma.md) |
 | `mj sfx <in.wav\|mp3> […]` | Reference sound → procedural Web Audio recipe (JSON) | no | [sfx](sfx.md) |
 | `mj listen <take>… [--ref REF]` | Check voice takes: glitches, words against the script, accent, processing | Gemini (not `--free`) | [listen](listen.md) |
+| `mj dungeon add\|list\|heard\|remove` | mj's own DataDungeon store: what waits for Thomas to hear, with mj's checks; `/dungeon` in `mj serve` | Gemini on `add` (not `--free`) | [dungeon](dungeon.md) |
 | `mj backdrop <image> [name]` | Import a full-frame image into the backdrop library | no | [diorama](diorama.md#backdrop-library) |
 | `mj webp [<prop>] [--quality N]` | Transcode library deliverables to `.webp` | no | [diorama](diorama.md#webp) |
 | `mj spend [--today\|--days N\|--all]` | Report the API cost ledger (per day / model / command) | no | [spend](spend.md) |

@@ -76,6 +76,15 @@
   misses; $0.32 to test).
 
 ## mj's own DataDungeon store
+- **Built 2026-10-29** (Thomas: "go for it"): `mj dungeon` and `/dungeon` in `mj serve`
+  (`docs/tools/dungeon.md`), on DataDungeon `~> 0.16.6`, at `~/.local/share/mj/dungeon/`. Thomas:
+  "you don't need to store everything, just what you need me to see", and things can be removed, so
+  it can hold things for a while. First filed: what waited for Thomas's ear (outtake `dungeon/`).
+  Thomas answers on the page, or in chat and mj records it (`mj dungeon heard`).
+  **Next, in order:**
+  - delivered art (for @overlore, the Beta Birds, the venues) as TIFF masters with their recipes;
+  - only the kept props, the curated ones.
+  **Open:** a store-to-store transfer for deliveries (below).
 - **Decided (Thomas, 2026-10-16): each app has its own store, mj included.** mj requires DataDungeon
   as a library and stores with `DB#store`, as Overlore does. It holds what mj makes for others (the
   Bard cut-outs and their mouth frames, each linked to the picture it was edited from),
@@ -84,9 +93,8 @@
   fleet. Until then deliveries stay files plus a manifest (`Outtake/bard-1-2/overlore/`).
 - **0.14.0 is tagged (2026-10-17, `401dd4a`):** a recipe keeps the prompt as sent, with the named
   wordings in it and hashed versions. There are no standard styles, so mj would name, word and tag
-  its own. Open: where the
-  store lives (Overlore's is `~/.local/share/overlore/assets.db`), and which types to register,
-  since DataDungeon's standard types are still drafts.
+  its own. The store lives in `~/.local/share/mj/dungeon/` (Overlore's is
+  `~/.local/share/overlore/assets.db`), and registers `speech` and `effect` so far (2026-10-29).
 - **The Bard's animation graph as an asset** (Thomas, 2026-10-18: "another type of asset we should be
   able to store in DD"). `Outtake/bard-1-2/graph/graph.yml`, compiled to
   `Outtake/bard-1-2/overlore-graph/graph.json`, says which body frames may follow which, and is walked

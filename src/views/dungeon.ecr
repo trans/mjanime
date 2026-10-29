@@ -1,0 +1,99 @@
+<%
+  # A listen finding worth Thomas's ear: a glitch, or a word both listeners heard differently.
+  concern = ->(line : String) { line.includes?("worth a listen") || line.matches?(/ s, (click|cut|dropout|clipping): /) }
+%>
+<section class="dungeon">
+  <h1>Waiting for you</h1>
+  <p class="muted">What mj needs you to hear, from its store (<code>mj dungeon</code>). Play one, then answer:
+  <b>yes</b> keeps it, <b>no</b> takes it out of play. A note goes with either. Under each take are mj's own checks
+  (<code>mj listen</code>); a highlighted one is worth your ear.</p>
+
+  <% if waiting.empty? %><p class="muted">Nothing waits for you.</p><% end %>
+  <% waiting.group_by(&.piece).each do |piece, items| %>
+    <h2><%= HTML.escape(piece || "other") %> <span class="count"><%= items.size %></span></h2>
+    <% items.each do |it| %>
+      <article class="item" id="item-<%= it.id %>">
+        <div class="head"><b><%= HTML.escape(it.take || it.key.to_s) %></b>
+          <% if (s = it.seconds) %><span class="muted"><%= s %> s</span><% end %></div>
+        <% if (w = it.words) %><p class="words">“<%= HTML.escape(w) %>”</p><% end %>
+        <p class="why"><%= HTML.escape(it.why.to_s) %></p>
+        <% if (lines = it.listen) %>
+          <% if lines.empty? %>
+            <p class="listen ok">mj listen: nothing found</p>
+          <% else %>
+            <ul class="listen">
+              <% lines.each do |line| %><li class="<%= concern.call(line) ? "flag" : "" %>"><%= HTML.escape(line) %></li><% end %>
+            </ul>
+          <% end %>
+        <% end %>
+        <audio controls preload="none" src="/dungeon/<%= it.id %>/file"></audio>
+        <form class="answer" data-id="<%= it.id %>">
+          <input name="note" placeholder="note (optional)" autocomplete="off">
+          <button name="answer" value="yes">Yes</button>
+          <button name="answer" value="no" class="no">No</button>
+        </form>
+      </article>
+    <% end %>
+  <% end %>
+
+  <h2>Answered</h2>
+  <ul id="answered" class="answered">
+    <% answered.each do |it| %>
+      <li><span class="<%= it.answer == "yes" ? "yes" : "no" %>"><%= HTML.escape(it.answer.to_s) %></span>
+        <b><%= HTML.escape(it.take || it.key.to_s) %></b>
+        <span class="muted"><%= HTML.escape(it.answered.to_s) %></span>
+        <% if (n = it.note) %>“<%= HTML.escape(n) %>”<% end %></li>
+    <% end %>
+  </ul>
+</section>
+
+<style>
+  .dungeon .muted { color: #7b8494; }
+  .dungeon h2 { font-size: 1rem; color: #9aa3b2; margin-top: 1.6rem; }
+  .dungeon .count { font-weight: normal; color: #7b8494; }
+  .dungeon .item { background: #161922; border: 1px solid #2a2e38; border-radius: 8px;
+                   padding: .75rem 1rem; margin: .5rem 0; max-width: 46rem; }
+  .dungeon .item.done { opacity: .45; }
+  .dungeon .head { display: flex; gap: .6rem; align-items: baseline; }
+  .dungeon .words { margin: .3rem 0; color: #e6e9ef; }
+  .dungeon .why { margin: .2rem 0; color: #9aa3b2; font-size: .9rem; }
+  .dungeon .listen { margin: .3rem 0; padding-left: 1.1rem; font-size: .85rem; color: #7b8494; }
+  .dungeon .listen.ok { padding-left: 0; }
+  .dungeon .listen li.flag { color: #f0b35a; }
+  .dungeon audio { width: 100%; margin: .4rem 0; }
+  .dungeon .answer { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .dungeon .answer input { flex: 1; min-width: 10rem; font: inherit; padding: .4rem .6rem; background: #0e1015;
+                           color: #cdd3df; border: 1px solid #2a2e38; border-radius: 6px; }
+  .dungeon .answer button { font: inherit; padding: .4rem 1rem; border: 0; border-radius: 6px;
+                            background: #2f8f5b; color: #fff; cursor: pointer; }
+  .dungeon .answer button.no { background: #a8434f; }
+  .dungeon .answered { list-style: none; padding: 0; }
+  .dungeon .answered li { margin: .25rem 0; }
+  .dungeon .answered .yes, .dungeon .answered .no { display: inline-block; min-width: 2.2rem; font-weight: bold; }
+  .dungeon .answered .yes { color: #4cc38a; }
+  .dungeon .answered .no { color: #e5677a; }
+</style>
+
+<script>
+  document.querySelectorAll(".dungeon form.answer").forEach((form) => {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const answer = e.submitter && e.submitter.value;
+      if (!answer) return;
+      const body = new URLSearchParams({ answer, note: form.note.value });
+      const res = await fetch(`/dungeon/${form.dataset.id}/heard`, { method: "POST", body });
+      const got = await res.json().catch(() => ({}));
+      if (!res.ok) { alert(got.error || `failed (${res.status})`); return; }
+      const card = document.getElementById(`item-${form.dataset.id}`);
+      card.classList.add("done");
+      form.replaceWith(Object.assign(document.createElement("p"), {
+        className: "muted", textContent: `Answered ${got.answer}${got.note ? `: “${got.note}”` : ""}`,
+      }));
+      const li = document.createElement("li");
+      const tag = Object.assign(document.createElement("span"), { className: got.answer, textContent: got.answer });
+      li.append(tag, " ", Object.assign(document.createElement("b"), { textContent: got.take || got.key }),
+        got.note ? ` “${got.note}”` : "");
+      document.getElementById("answered").prepend(li);
+    });
+  });
+</script>

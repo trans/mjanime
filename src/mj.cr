@@ -319,6 +319,76 @@ when "listen"
   else
     MJ::Listen.print(results)
   end
+when "dungeon"
+  # mj dungeon add <manifest.json>... [--free|--no-listen] | list [--answered|--all] [--json] | heard <id> yes|no [note...] |
+  # remove <id>... — mj's own DataDungeon store: what waits for Thomas to see or hear, with what mj measured of
+  # each, and their answers. `mj serve` shows it at /dungeon. See docs/tools/dungeon.md.
+  usage = "Usage: mj dungeon add <manifest.json>... [--free|--no-listen] | list [--answered|--all] [--json] | " \
+          "heard <id> yes|no [note...] | remove <id>..."
+  args = ARGV[2..]? || [] of String
+  ids = ->(list : Array(String)) do
+    list.map { |s| s.to_i64? || (STDERR.puts "mj dungeon: #{s.inspect} isn't an asset id"; exit 1) }
+  end
+  begin
+    case ARGV[1]?
+    when "add"
+      free = !args.delete("--free").nil?
+      listen = args.delete("--no-listen").nil?
+      if args.empty? || args.any?(&.starts_with?("--"))
+        STDERR.puts usage
+        exit 1
+      end
+      entries = args.flat_map { |m| Array(MJ::Dungeon::Entry).from_json(File.read(m)) }
+      MJ::Dungeon.open do |db|
+        got = MJ::Dungeon.add(db, entries, free, listen)
+        MJ::Dungeon.print(got.compact_map { |id| MJ::Dungeon.get(db, id) })
+        puts "#{got.size} filed in #{MJ::Dungeon.dir}"
+      end
+    when "list", nil
+      as_json = !args.delete("--json").nil?
+      which = args.delete("--all") ? :all : args.delete("--answered") ? :answered : :waiting
+      unless args.empty?
+        STDERR.puts usage
+        exit 1
+      end
+      MJ::Dungeon.open do |db|
+        items = case which
+                when :all      then MJ::Dungeon.everything(db)
+                when :answered then MJ::Dungeon.answered(db)
+                else                MJ::Dungeon.waiting(db)
+                end
+        if as_json
+          puts items.to_pretty_json
+        elsif items.empty?
+          puts which == :waiting ? "Nothing waits for Thomas." : "Nothing here."
+        else
+          MJ::Dungeon.print(items)
+        end
+      end
+    when "heard"
+      id = ids.call(args[0, 1]).first?
+      answer = args[1]?
+      unless id && (answer == "yes" || answer == "no")
+        STDERR.puts usage
+        exit 1
+      end
+      MJ::Dungeon.open { |db| MJ::Dungeon.heard(db, id, answer == "yes", args[2..].join(" ").presence) }
+    when "remove"
+      if args.empty?
+        STDERR.puts usage
+        exit 1
+      end
+      list = ids.call(args)
+      MJ::Dungeon.open { |db| list.each { |id| MJ::Dungeon.remove(db, id) } }
+      puts "removed #{list.size}"
+    else
+      STDERR.puts usage
+      exit 1
+    end
+  rescue ex : ArgumentError | JSON::ParseException | File::NotFoundError
+    STDERR.puts "mj dungeon: #{ex.message}"
+    exit 1
+  end
 when "bus"
   # mj bus — join the Arcana bus and serve the tools (pixelize/prop/base/decorate/sfx).
   MJ::BusService.run
@@ -494,6 +564,6 @@ when "spend"
 when "version", "--version", "-v"
   puts "mj #{MJ::VERSION}"
 else
-  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|cyclorama|sfx|listen|matte|webp|backdrop|spend|bus|version]"
+  STDERR.puts "Usage: mj [init|serve|strip|base|prop|pixelize|decorate|cyclorama|sfx|listen|dungeon|matte|webp|backdrop|spend|bus|version]"
   exit 1
 end

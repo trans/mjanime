@@ -19,7 +19,8 @@ mj listen <take>... [--script TEXT] [--ref REF] [--free | --glitches] [--json]
 - **Needs:** `ffmpeg`. Whisper runs through `uv` (`uv run --with faster-whisper`, model `small.en`
   from the Hugging Face cache). Gemini needs `GEMINI_API_KEY`
   (`eval "$(cyclops-env export mj local --format bash)"`). If one is missing, that check is skipped
-  with a note.
+  with a note. Gemini is asked up to three times. It now and then answers with nothing, and a take
+  that never gets an answer is checked by Whisper alone, with a note, so the other takes still report.
 - **Cost:** a take's words and accent are one Gemini 3.8 Flash call, about $0.0007. A comparison with
   a reference is one Gemini 3.1 Pro call, about $0.004. Both go into the spend log as `cmd: listen`.
   The glitch checks and Whisper are free.

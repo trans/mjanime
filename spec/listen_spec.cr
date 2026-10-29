@@ -87,6 +87,19 @@ describe MJ::Listen do
     ])
   end
 
+  it "counts a number in digits, and a word split or joined, as the word written" do
+    script = MJ::Listen.tokens("Forty-odd years, to linger awhile. Embark!")
+    heard = MJ::Listen.tokens("40-odd years, to linger a while. Em bark!")
+    MJ::Listen.diff(script, heard).should be_empty
+  end
+
+  it "places a word only Gemini heard at the time Whisper says it" do
+    script = MJ::Listen.tokens("The Hall. Lots of doors.")
+    whisper = %w(The Hall. Lots of doors.).map_with_index { |w, i| MJ::Listen::Token.new(w.downcase.delete('.'), w, i * 0.5) }
+    gemini = MJ::Listen.tokens("the hole, lots of doors")
+    MJ::Listen.notes(script, whisper, gemini).map { |n| {n.script, n.gemini, n.time} }.should eq([{"Hall", "hole", 0.5}])
+  end
+
   it "reads the script from the .txt beside a take" do
     dir = File.tempname("mj_listen")
     Dir.mkdir(dir)

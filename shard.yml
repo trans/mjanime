@@ -28,3 +28,6 @@ dependencies:
   arcana-ai:
     github: trans/arcana-ai
     version: ~> 0.6.1
+  data_dungeon:
+    github: trans/datadungeon
+    version: ~> 0.16.6

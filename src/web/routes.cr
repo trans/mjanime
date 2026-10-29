@@ -70,6 +70,39 @@ module MJ
         end
       end
 
+      # -- Dungeon: what waits for Thomas to hear, from mj's DataDungeon store (docs/tools/dungeon.md) --
+      get "/dungeon" do |env|
+        db = Dungeon.shared
+        waiting = Dungeon.waiting(db)
+        answered = Dungeon.answered(db)
+        render "src/views/dungeon.ecr", "src/views/layout.ecr"
+      end
+
+      get "/dungeon/:id/file" do |env|
+        rec = env.params.url["id"].to_i64?.try { |id| Dungeon.shared.get_by_id(id, touch: false) }
+        halt env, status_code: 404, response: "no such asset" unless rec
+        send_file env, Dungeon.shared.path_for(rec), rec.content_type
+      end
+
+      # answer=yes|no, note: Thomas's answer on one asset.
+      post "/dungeon/:id/heard" do |env|
+        env.response.content_type = "application/json"
+        id = env.params.url["id"].to_i64?
+        answer = env.params.body["answer"]?
+        unless id && (answer == "yes" || answer == "no")
+          env.response.status_code = 400
+          next({error: "answer is yes or no"}.to_json)
+        end
+        db = Dungeon.shared
+        begin
+          Dungeon.heard(db, id, answer == "yes", env.params.body["note"]?.try(&.strip))
+          Dungeon.get(db, id).to_json
+        rescue ex : ArgumentError
+          env.response.status_code = 404
+          {error: ex.message}.to_json
+        end
+      end
+
       # -- New cut form --
       get "/cuts/new" do |env|
         render "src/views/cuts/new.ecr", "src/views/layout.ecr"
