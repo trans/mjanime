@@ -892,7 +892,10 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     the same names, or in `take2/`. The sung line 8 doesn't use the word.
     @overlore changes the page's text when the takes come. Not the act's
     u-8/u-8b below, which are another script. **On hold (Thomas,
-    2026-10-27):** they are reviewing the tour's lines first.
+    2026-10-27):** they are reviewing the tour's lines first. Thirteen more
+    end mid-sound, ElevenLabs' files as they came (Thomas heard it,
+    2026-10-29), and wait on the same review (Thomas, 2026-10-30): the list
+    is in mj's `TODO.md`. The landing has them as they are.
     Also held: Gerald's line 3 gains "New new ones." at its end
     (`mail/received/20261027-234500Z-*`), so `tour-u-3-gerald` plain and
     Scottish are wanted again, same tags and settings. Its
