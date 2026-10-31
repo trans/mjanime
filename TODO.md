@@ -5,6 +5,18 @@
 - **Check the 3D act's rimshot, crickets and fanfare** (Thomas, 2026-10-25: remind me later; not
   essential). @overlore offered several of each; Thomas accepted the first of each for now, having
   heard them ("they are fine"). On Overlore's test landing, the stand-up act.
+- **The landing tour's lines, then retakes** (Thomas, 2026-10-30: "some of the line could stand
+  improving yet"). Thomas reviews the lines first; then mj records again, the way u-8b was made (with
+  a line after it, then cut with a pause after the voice):
+  - **The 13 that end mid-sound.** These are ElevenLabs' files as they came, measured 2026-10-29, and
+    Thomas heard the clipped ends in mj's store. They are the nine car-salesman takes
+    (`tour-p-1` to `p-10`, apart from p-8) and Gerald's plain u-2, u-6 and u-10 and u-7 Scottish.
+    About $0.07.
+  - **Those already held for new lines:** `tour-p-8-announcer`, and `tour-u-3-gerald` and
+    `tour-u-8-gerald`, plain and Scottish.
+  - **Not the spoken rhymes** (`tour-s-N-announcer`): the Bard sings those lines (`tour-s-N-sung`),
+    so Thomas said no to s-1's (2026-10-29).
+  - Then send them to @overlore, whose landing has the takes as they are now.
 
 ## arcana bus (`mj:camera`, `mj:voice`)
 - **`shoot_batch`** — one call, a list of shots, each with a caller-supplied `id`; each result carries
@@ -234,7 +246,10 @@
   - Whisper and Gemini 3.8 Flash on the words, marking where both differ from the script;
   - Gemini's guess at the accent;
   - Gemini 3.1 Pro's "processed" answer against a reference.
-  **Still to do:** a `listen` tool on the bus, if another agent wants one.
+  **Still to do:**
+  - a check for a take that ends while the voice still sounds: 19 of the tour takes do (2026-10-29),
+    and Thomas heard it on the car-salesman ones. Set it on the ones Thomas names;
+  - a `listen` tool on the bus, if another agent wants one.
 - **The recording pipeline as an `mj` command.** The recording runner, the Whisper word check,
   Rhubarb-to-cues, the cutters and the choreography script live in a session's scratchpad and are
   rebuilt every session. As tested code in the repo, with a page in `docs/tools/`, anyone can run
