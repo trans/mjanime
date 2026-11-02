@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-10-29*
+*Updated 2026-11-02*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -1055,6 +1055,27 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
   - Poses, each with the six mouths, the list may grow: present, beckon,
     head shake, hands thrown up, arms wide, wink, whisper, writing, sung,
     hand out to shake, looking at that hand (blushing), bow.
+- **The hall of doors in five styles, a test round** (via @overlore,
+  2026-11-02, `mail/received/20261102-085453Z-*`). The onboarding is being
+  redesigned: each of the hall's six side doors becomes an art style, its
+  name on the plaque above, and going through one brings you back into the
+  same hall drawn in that style.
+  - **Wanted:** silver, realism, 3d, manga and pixel, in @overlore's
+    `data/art_styles.yml` wordings, quoted in the message. All at PG; G and
+    R come later. Fantasy is the hall as it is.
+  - **The source:** the game's `hall-of-doors.webp` (3344x932), which is
+    the lower hall of the original's two, doubled.
+  - **What has to hold:** all seven doors in about the same places, each
+    plainly a door in its arch (the game cuts them out to swing open); the
+    six plaques blank; the floor before the big door clear; the full width.
+  - **Back:** each at 3344x932 with its uncut image, a sheet of all six
+    stacked, and the costs. One or two tries a style. DataDungeon only for
+    the ones Trans picks, later.
+  - **Its October 11 tries** (its `outtake/hall-styles/`): Nano kept the
+    doors but barely changed 3d, realism and pixel, and once lettered the
+    plaques. "hero" restyled strongly but moved, merged or dropped doors.
+    A pixel filter looked like a mosaic.
+  - **Open: Thomas to confirm directly** before anything is spent.
 - **`@my`** (Thomas's personal workspace agent) and **`@loudly`** (finding
   audiences for Thomas's projects: briefs, research, copy, outreach): Overlore's
   near-zero-budget launch campaign, @my leading. **Asked 2026-10-27**
