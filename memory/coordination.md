@@ -1,6 +1,6 @@
 # Coordination
 
-*Updated 2026-11-02*
+*Updated 2026-11-05*
 
 Who mj corresponds with, and what is open with each. The work itself is
 tracked in the code repo's `TODO.md`; this note is only the who and the
@@ -1075,7 +1075,57 @@ writes to `@mj`. The bus services are separate addresses: `mj`,
     doors but barely changed 3d, realism and pixel, and once lettered the
     plaques. "hero" restyled strongly but moved, merged or dropped doors.
     A pixel filter looked like a mosaic.
-  - **Open: Thomas to confirm directly** before anything is spent.
+  - **Delivered 2026-11-03** (`sent/20261103-082628Z-*`, id `5a29721b`): all
+    five at PG plus golden, in `Outtake/hall-styles/deliver/`, with Thomas's
+    picks. Nano at 4:1 broke the hall in 7 of 12 runs; GPT-Image kept every door.
+  - **SAM in Calibrate** (@overlore, 2026-11-04,
+    `received/20261104-044132Z-*`, id `c4367894`): the game now takes each
+    door's exact outline and each plaque's four corners, with Thomas marking
+    them. Thomas chose Python for the helper "for now" (2026-11-04). **Built,
+    not yet committed**: docs/tools/calibrate.md. Not seen in a real browser
+    yet (browser tests on hold). **Open:** Thomas's marking; telling @overlore
+    the `quad` shape's format. @overlore's `doors.json` has more bad doors than
+    the five it listed: golden's red and sun, silver's red.
+  - **SAM, second round** (@overlore, 2026-11-05,
+    `received/20261105-093755Z-*`, id `e491f45a`): Thomas tried it: close, but
+    edges need chiselling, and they fall back on GIMP's magic wand. @overlore
+    asks, in this order: (1) SAM crops to the zoomed view; (2) one working
+    shape per door, with add and remove; (3) a small add/erase brush; plus a
+    black-and-white PNG mask per hall, outlines kept. Its test ran its own
+    220 px tiles and changed nothing in mj: 3d sun improved, realism trident
+    barely moved, golden tree mixed. It is putting today's outlines into the
+    hall first, and may find few doors need this. Thomas said go on 1 and 2
+    together (2026-11-05): **built, not yet committed** (docs/tools/calibrate.md,
+    "Fixing an edge"). On the 3d sun, six fixes took the worst miss against
+    Thomas's 36 hand points from 9.1 px to 2.5 px. **Open:** the brush, the mask
+    PNG, telling @overlore. *(2026-11-06: masks made, and the hand-over sent on
+    Thomas's word, `sent/20261107-041546Z-*`, id `0118e600`; the brush is left
+    until @overlore's hall test. **Open:** the six plaques per hall.)* Thomas's image-model idea was tested 2026-11-05
+    (`Outtake/door-key/README.md`): paint the door magenta, one door per crop,
+    take the shape from the colour. 4 of 12 calls ran. **No call did what was
+    asked:** every door stayed a door, tinted, not flat magenta space (0% to 4.3%
+    of door pixels near #FF00FF), and Thomas said so on seeing them. The shapes
+    come from a colour test run afterwards. Those came close to the six SAM
+    fixes, and Kontext's held the golden tree's edge against black shadow, by
+    eye. Thomas judged the silhouettes good enough (2026-11-06), with tiny
+    jagged edges to smooth: done in `Outtake/door-key/smooth.py`. Klein's picture
+    is drawn 2 px low; corrected for that, its one call on the sun door scores
+    0.85 mean, 2.55 worst against the hand points, level with six SAM fixes, at
+    $0.0075. Thomas topped Runware up to $20 and asked to spend lightly
+    (2026-11-06). **All 49 doors done with Klein**, one door per call
+    (`Outtake/door-key/all/README.md`): `doors-hall-<style>.json` load into
+    Calibrate. 3d and fantasy are the same room, so fantasy reuses 3d's outlines
+    (42 different doors). On Thomas's suggestion the 11 rough doors also went to
+    Nano, which paints flat and leaves the picture still but draws its own door
+    (11.45 px on the sun), so Klein, Nano and SAM vote, 2 of 3: 0.77 mean on the
+    sun, the only door measured, against 0.84 for six SAM fixes. The rest are by
+    eye. 17 doors take SAM's bottom edge, because Klein leaves the band at a door's
+    foot unpainted. Half a hall in one call was tried and dropped: Klein redrew
+    the room. **Open:** Thomas's check of the
+    outlines, telling @overlore. "Remove" wording, Nano and Flare untested, and
+    no longer needed unless Thomas wants them. Before the top-up, Runware's
+    balance was $0.38 with $0.48 reserved, which refuses most calls until
+    Thomas tops it up.
 - **`@my`** (Thomas's personal workspace agent) and **`@loudly`** (finding
   audiences for Thomas's projects: briefs, research, copy, outreach): Overlore's
   near-zero-budget launch campaign, @my leading. **Asked 2026-10-27**
