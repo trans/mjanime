@@ -55,6 +55,8 @@
   #hint{position:fixed;left:0;right:0;top:46px;bottom:0;z-index:4;display:flex;align-items:center;justify-content:center;
     text-align:center;color:var(--dim);font-size:14px;pointer-events:none}
   #hint b{color:var(--text)}
+  #panel .dim{color:var(--dim)}
+  #panel button.go{border-color:var(--accent2)}
   input[type=file]{display:none}
 </style>
 </head>
@@ -68,6 +70,8 @@
       <button class="tool" data-tool="line">Line</button>
       <button class="tool" data-tool="rect">Rect</button>
       <button class="tool" data-tool="ellipse">Ellipse</button>
+      <button class="tool" data-tool="quad" title="Four corners: drag a box, then drag each corner">Corners</button>
+      <button class="tool" data-tool="sam" title="Segment Anything: click a shape or drag a box round it, and get its outline. Needs mj serve.">SAM</button>
       <button class="tool" data-tool="pan">Pan</button>
     </div>
     <span class="sep"></span>
@@ -101,7 +105,8 @@
 <script>
 "use strict";
 // mj calibration / markup tool. Load any image, zoom & pan, draw points, lines,
-// rectangles and ellipses, label & colour them, save/load the markup as JSON.
+// rectangles, ellipses and four-cornered shapes, or have Segment Anything outline a
+// shape (docs/tools/calibrate.md), label & colour them, save/load the markup as JSON.
 // Coordinates are stored in IMAGE pixel space (independent of zoom/pan/dpr).
 // Salvaged and generalised from the wcfranks skee-ball calibration editor.
 
@@ -117,7 +122,7 @@ const img=new Image();
 let imgReady=false, imgName="", ART_W=1000, ART_H=1000;
 function setImage(dataURL,name,cb){
   img.onload=()=>{ imgReady=true; ART_W=img.naturalWidth; ART_H=img.naturalHeight;
-    imgName=name||"image"; hintEl.style.display="none"; fit(); draw(); cb&&cb(); };
+    imgName=name||"image"; samImage=null; sam=null; hintEl.style.display="none"; fit(); draw(); cb&&cb(); };
   img.onerror=()=>{ flash("Failed to load image"); };
   img.src=dataURL;
 }
@@ -142,6 +147,8 @@ const sX=ix=>view.ox+ix*view.scale, sY=iy=>view.oy+iy*view.scale;
 // line    {type,x1,y1,x2,y2,label,color}
 // rect    {type,cx,cy,rx,ry,label,color}         (center + half-extents, axis-aligned)
 // ellipse {type,cx,cy,rx,ry,rotation,label,color}
+// outline {type,points:[[x,y],...],label,color}  (closed: the last point joins the first)
+// quad    {type,points:[[x,y]×4],label,color}    (top left, top right, bottom right, bottom left)
 let shapes=[];
 let tool="point", sel=-1, action=null, grab=null, pan=null;
 let cursorImg={x:0,y:0}, flashMsg="", flashT=0, spaceDown=false;
@@ -158,6 +165,19 @@ function distSeg(px,py,x1,y1,x2,y2){
   let t=((px-x1)*dx+(py-y1)*dy)/L2; t=Math.max(0,Math.min(1,t));
   return Math.hypot(px-(x1+t*dx),py-(y1+t*dy));
 }
+const isPoly=s=>s.type==="outline"||s.type==="quad";
+function insidePoly(pts,x,y){ let on=false;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++){ const [xi,yi]=pts[i],[xj,yj]=pts[j];
+    if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi) on=!on; }
+  return on; }
+function polyEdge(pts,x,y){ let d=Infinity;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++) d=Math.min(d,distSeg(x,y,pts[j][0],pts[j][1],pts[i][0],pts[i][1]));
+  return d; }
+function polyArea(pts){ let a=0;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++) a+=pts[j][0]*pts[i][1]-pts[i][0]*pts[j][1];
+  return Math.abs(a)/2; }
+function polyBounds(pts){ const xs=pts.map(p=>p[0]), ys=pts.map(p=>p[1]);
+  return [Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)]; }
 // corner handles (image space) for the selected rect/ellipse
 function corners(s){ return [[s.cx-s.rx,s.cy-s.ry],[s.cx+s.rx,s.cy-s.ry],[s.cx+s.rx,s.cy+s.ry],[s.cx-s.rx,s.cy+s.ry]]; }
 function hitHandle(ix,iy){
@@ -168,6 +188,9 @@ function hitHandle(ix,iy){
   }else if(s.type==="rect"||s.type==="ellipse"){
     const cs=corners(s);
     for(let i=0;i<4;i++) if(Math.hypot(ix-cs[i][0],iy-cs[i][1])<=tol) return {corner:i};
+  }else if(isPoly(s)){ let best=-1, near=tol;
+    s.points.forEach(([x,y],i)=>{ const d=Math.hypot(ix-x,iy-y); if(d<=near){near=d;best=i;} });
+    if(best>=0) return {v:best};
   }
   return null;
 }
@@ -181,6 +204,9 @@ function hitShape(ix,iy){
     else if(s.type==="rect"){ const qx=Math.abs(ix-s.cx)-s.rx, qy=Math.abs(iy-s.cy)-s.ry; const inside=qx<=0&&qy<=0;
       const edge=inside?Math.min(-qx,-qy):Math.hypot(Math.max(qx,0),Math.max(qy,0));
       if(edge<=tol&&edge<bestED){bestED=edge;bestEdge=i;} if(inside){const a=s.rx*s.ry; if(a<bestArea){bestArea=a;bestIn=i;}} }
+    else if(isPoly(s)){ const edge=polyEdge(s.points,ix,iy);
+      if(edge<=tol&&edge<bestED){bestED=edge;bestEdge=i;}
+      if(insidePoly(s.points,ix,iy)){const a=polyArea(s.points); if(a<bestArea){bestArea=a;bestIn=i;}} }
     else{ const d=distSeg(ix,iy,s.x1,s.y1,s.x2,s.y2); if(d<=tol&&d<bestED){bestED=d;bestEdge=i;} }
   }
   return bestEdge>=0?bestEdge:bestIn;
@@ -202,9 +228,12 @@ cv.addEventListener("pointerdown",e=>{
   const cxy=canvasXY(e);
   if(e.button===1 || tool==="pan" || spaceDown){ e.preventDefault(); pan={x:cxy.x,y:cxy.y}; return; }
   const p=toImg(cxy.x,cxy.y);
-  // handle drag on the selected shape first (resize / endpoint)
+  // SAM takes the canvas, but for a selected shape's handles. Not an outline's: they'd take every click near its edge,
+  // and that's where SAM is wanted most
+  if(tool==="sam"&&(sam||sel<0||shapes[sel].type==="outline"||!hitHandle(p.x,p.y))){ samDrag={start:p,now:p,no:e.altKey||e.shiftKey||e.button===2}; return; }
+  // handle drag on the selected shape first (resize / endpoint / vertex)
   const h=e.shiftKey?null:hitHandle(p.x,p.y);
-  if(h){ pushUndo(); grab=h; action={kind:h.corner!=null?"resize":"movePoint"}; return; }
+  if(h){ pushUndo(); grab=h; action={kind:h.corner!=null?"resize":h.v!=null?"moveVertex":"movePoint"}; return; }
   const hit=e.shiftKey?-1:hitShape(p.x,p.y);
   pushUndo();
   if(hit>=0){ sel=hit; grab=null; const s=shapes[hit];
@@ -214,6 +243,8 @@ cv.addEventListener("pointerdown",e=>{
     sel=shapes.length-1; action={kind:"place"}; }
   else if(tool==="ellipse"||tool==="rect"){ shapes.push({type:tool,cx:p.x,cy:p.y,rx:0,ry:0,label:"",color:currentColor});
     sel=shapes.length-1; action={kind:"draw", start:p}; }
+  else if(tool==="quad"){ shapes.push({type:"quad",points:[0,1,2,3].map(()=>[p.x,p.y]),label:nextLabel("quad"),color:currentColor});
+    sel=shapes.length-1; action={kind:"draw", start:p}; }
   else{ shapes.push({type:"line",x1:p.x,y1:p.y,x2:p.x,y2:p.y,label:"",color:currentColor});
     sel=shapes.length-1; action={kind:"draw", start:p}; }
   draw();
@@ -222,29 +253,39 @@ cv.addEventListener("pointermove",e=>{
   const cxy=canvasXY(e);
   if(pan){ view.ox+=cxy.x-pan.x; view.oy+=cxy.y-pan.y; pan={x:cxy.x,y:cxy.y}; draw(); return; }
   const p=toImg(cxy.x,cxy.y); cursorImg=p;
+  if(samDrag){ samDrag.now=p; draw(); return; }
   if(action){ const s=shapes[sel];
-    if(action.kind==="draw"){ if(s.type==="line"){s.x2=p.x;s.y2=p.y;} else {s.rx=Math.max(1,Math.abs(p.x-s.cx));s.ry=Math.max(1,Math.abs(p.y-s.cy));} }
+    if(action.kind==="draw"){ if(s.type==="line"){s.x2=p.x;s.y2=p.y;}
+      else if(s.type==="quad"){ const a=action.start, x0=Math.min(a.x,p.x), x1=Math.max(a.x,p.x), y0=Math.min(a.y,p.y), y1=Math.max(a.y,p.y);
+        s.points=[[x0,y0],[x1,y0],[x1,y1],[x0,y1]]; }
+      else {s.rx=Math.max(1,Math.abs(p.x-s.cx));s.ry=Math.max(1,Math.abs(p.y-s.cy));} }
     else if(action.kind==="place"){ s.x=p.x; s.y=p.y; }
     else if(action.kind==="movePoint"){ if(grab.pt===1){s.x1=p.x;s.y1=p.y;} else {s.x2=p.x;s.y2=p.y;} }
+    else if(action.kind==="moveVertex"){ s.points[grab.v]=[p.x,p.y]; }
     else if(action.kind==="resize"){ s.rx=Math.max(1,Math.abs(p.x-s.cx)); s.ry=Math.max(1,Math.abs(p.y-s.cy)); }
     else{ const dx=p.x-action.start.x, dy=p.y-action.start.y, o=action.orig;
       if(s.type==="point"){s.x=o.x+dx;s.y=o.y+dy;}
       else if(s.type==="line"){s.x1=o.x1+dx;s.y1=o.y1+dy;s.x2=o.x2+dx;s.y2=o.y2+dy;}
+      else if(isPoly(s)){s.points=o.points.map(([x,y])=>[x+dx,y+dy]);}
       else{s.cx=o.cx+dx;s.cy=o.cy+dy;} }
   }
   draw();
 });
 cv.addEventListener("pointerup",()=>{
   if(pan){ pan=null; return; }
+  if(samDrag){ samRelease(); return; }
   if(action&&action.kind==="draw"){ const s=shapes[sel];
-    const tiny=s.type==="line"?Math.hypot(s.x2-s.x1,s.y2-s.y1)<2:(s.rx<2&&s.ry<2);
+    const tiny=s.type==="line"?Math.hypot(s.x2-s.x1,s.y2-s.y1)<2
+      :s.type==="quad"?polyEdge([s.points[0]],s.points[2][0],s.points[2][1])<2:(s.rx<2&&s.ry<2);
     if(tiny){ shapes.pop(); sel=-1; } }
   action=null; grab=null; endOp(); draw();
 });
 cv.addEventListener("wheel",e=>{ e.preventDefault();
   zoomAt(e.deltaY<0?1.12:1/1.12, ...Object.values(canvasXY(e))); draw();
 },{passive:false});
-cv.addEventListener("dblclick",e=>{ const p=toImg(...Object.values(canvasXY(e)));
+cv.addEventListener("contextmenu",e=>{ if(tool==="sam") e.preventDefault(); });
+cv.addEventListener("dblclick",e=>{ if(tool==="sam") return;
+  const p=toImg(...Object.values(canvasXY(e)));
   const hit=hitShape(p.x,p.y); if(hit<0) return;
   const v=prompt("Label:", shapes[hit].label||"");
   if(v!==null){ if(v.trim()!==shapes[hit].label) pushUndo(); shapes[hit].label=v.trim(); sel=hit; draw(); }
@@ -252,12 +293,15 @@ cv.addEventListener("dblclick",e=>{ const p=toImg(...Object.values(canvasXY(e)))
 
 // ---- keyboard ----
 addEventListener("keydown",e=>{
-  if(e.target.tagName==="INPUT") { if(e.key==="Escape") e.target.blur(); return; }
+  if(e.target.tagName==="INPUT") { if(e.key==="Escape"||e.key==="Enter") e.target.blur(); return; }
   if(e.code==="Space"){ spaceDown=true; cv.style.cursor="grab"; }
+  if(sam&&samKey(e)) return;
   if((e.ctrlKey||e.metaKey)&&(e.key==="z"||e.key==="Z")){ e.preventDefault(); undo(); return; }
+  if(e.ctrlKey||e.metaKey) return;
   const k=e.key.toLowerCase();
   if(k==="p"){ setTool("point"); } else if(k==="l"){ setTool("line"); }
   else if(k==="r"){ setTool("rect"); } else if(k==="e"){ setTool("ellipse"); }
+  else if(k==="c"){ setTool("quad"); } else if(k==="s"){ setTool("sam"); }
   else if(k==="h"){ setTool("pan"); } else if(k==="f"){ fit(); draw(); }
   else if((e.key==="Delete"||e.key==="Backspace")&&sel>=0){ pushUndo(); shapes.splice(sel,1); sel=-1; e.preventDefault(); draw(); }
   else if(sel>=0 && e.key.indexOf("Arrow")===0){
@@ -266,6 +310,7 @@ addEventListener("keydown",e=>{
     pushCoalesced("arrow"+sel); const s=shapes[sel];
     if(s.type==="point"){s.x+=dx;s.y+=dy;}
     else if(s.type==="line"){ if(grab&&grab.pt===1){s.x1+=dx;s.y1+=dy;} else if(grab&&grab.pt===2){s.x2+=dx;s.y2+=dy;} else {s.x1+=dx;s.y1+=dy;s.x2+=dx;s.y2+=dy;} }
+    else if(isPoly(s)){ s.points=s.points.map(([x,y])=>[x+dx,y+dy]); }
     else {s.cx+=dx;s.cy+=dy;}
     e.preventDefault(); draw();
   }
@@ -305,6 +350,9 @@ function draw(){
     }else if(s.type==="rect"){
       ctx.strokeRect(sX(s.cx-s.rx),sY(s.cy-s.ry),2*s.rx*view.scale,2*s.ry*view.scale);
       ctx.beginPath();ctx.arc(sX(s.cx),sY(s.cy),2.2,0,Math.PI*2);ctx.fill();
+    }else if(isPoly(s)){
+      polyPath(s.points); ctx.stroke();
+      if(s.type==="quad") s.points.forEach(p=>{ ctx.beginPath();ctx.arc(sX(p[0]),sY(p[1]),on?3.5:2.6,0,Math.PI*2);ctx.fill(); });
     }else{
       ctx.beginPath();ctx.moveTo(sX(s.x1),sY(s.y1));ctx.lineTo(sX(s.x2),sY(s.y2));ctx.stroke();
       const r=on?4.5:2.6;
@@ -319,19 +367,25 @@ function draw(){
   // selection handles
   if(sel>=0){ const s=shapes[sel];
     ctx.fillStyle="#fff"; ctx.strokeStyle="#000"; ctx.lineWidth=1;
-    const hd=(x,y)=>{ctx.fillRect(x-3.5,y-3.5,7,7);ctx.strokeRect(x-3.5,y-3.5,7,7);};
+    const hd=(x,y,r=3.5)=>{ctx.fillRect(x-r,y-r,2*r,2*r);ctx.strokeRect(x-r,y-r,2*r,2*r);};
     if(s.type==="rect"||s.type==="ellipse") corners(s).forEach(c=>hd(sX(c[0]),sY(c[1])));
     else if(s.type==="line"){ hd(sX(s.x1),sY(s.y1)); hd(sX(s.x2),sY(s.y2)); }
+    else if(isPoly(s)) s.points.forEach(p=>hd(sX(p[0]),sY(p[1]),s.type==="quad"?3.5:2));
   }
+  drawSam();
   overlays();
 }
-const labelX=s=>s.type==="point"?sX(s.x):s.type==="line"?sX((s.x1+s.x2)/2):sX(s.cx);
-const labelY=s=>s.type==="point"?sY(s.y):s.type==="line"?sY((s.y1+s.y2)/2):sY(s.cy-(s.ry||0));
+function polyPath(pts){ ctx.beginPath(); pts.forEach((p,i)=>i?ctx.lineTo(sX(p[0]),sY(p[1])):ctx.moveTo(sX(p[0]),sY(p[1]))); ctx.closePath(); }
+const labelX=s=>s.type==="point"?sX(s.x):s.type==="line"?sX((s.x1+s.x2)/2):isPoly(s)?sX(polyBounds(s.points)[0]):sX(s.cx);
+const labelY=s=>s.type==="point"?sY(s.y):s.type==="line"?sY((s.y1+s.y2)/2):isPoly(s)?sY(polyBounds(s.points)[1]):sY(s.cy-(s.ry||0));
 function overlays(){
   helpEl.textContent =
-    "[P]oint [L]ine [R]ect [E]llipse  [H]/space/mid-drag = pan   wheel = zoom  [F] = fit\n"+
+    "[P]oint [L]ine [R]ect [E]llipse [C]orners [S]AM  [H]/space/mid-drag = pan   wheel = zoom  [F] = fit\n"+
     "drag = draw   click shape = select   drag handles = resize/move end   arrows = nudge (shift ×10)\n"+
     ", . = size ellipse/rect   shift+,. = rotate ellipse   dbl-click = label   Del = delete   Ctrl+Z = undo\n"+
+    (tool==="sam"?"SAM: click = this, shift/alt/right-click = not this, drag = box   Tab = next answer, 1 2 3 = pick one\n"+
+      "     A = add it to the outline here, X = cut it from that outline, zoom in first for finer edges\n"+
+      "     Enter = keep as its own outline, C = keep four corners, Backspace = take back a click, Esc = cancel\n":"")+
     (imgReady?imgName+"  "+ART_W+"×"+ART_H+"   cursor "+cursorImg.x.toFixed(0)+", "+cursorImg.y.toFixed(0):"no image")+
     (Date.now()<flashT?"\n\n▶ "+flashMsg:"");
   renderPanel();
@@ -340,7 +394,7 @@ function flash(m){ flashMsg=m; flashT=Date.now()+2400; draw(); setTimeout(draw,2
 
 // ---- toolbar wiring ----
 function setTool(t){ tool=t; document.querySelectorAll("#tools .tool").forEach(b=>b.classList.toggle("on",b.dataset.tool===t));
-  cv.style.cursor=t==="pan"?"grab":"crosshair"; }
+  cv.style.cursor=t==="pan"?"grab":"crosshair"; if(t!=="sam") sam=null; draw(); }
 document.querySelectorAll("#tools .tool").forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
 const colorsEl=document.getElementById("colors");
 PALETTE.forEach(col=>{ const sw=document.createElement("div"); sw.className="swatch"; sw.style.background=col; sw.dataset.col=col;
@@ -353,10 +407,13 @@ customColor.value="#ff00ff"; customColor.oninput=()=>pickColor(customColor.value
 function pickColor(col){ currentColor=col;
   document.querySelectorAll(".swatch").forEach(s=>s.classList.toggle("on",s.dataset.col===col)); }
 function renderPanel(){
+  if(sam){ renderSamPanel(); return; }
+  if(document.activeElement&&document.activeElement.id==="labIn") return; // a redraw would take the field from under the typing
   if(sel<0){ panelEl.innerHTML='<div>'+shapes.length+' shape'+(shapes.length===1?'':'s')+'</div>'; return; }
   const s=shapes[sel];
   const geo=s.type==="point"?`${s.x.toFixed(1)}, ${s.y.toFixed(1)}`
     :s.type==="line"?`${s.x1.toFixed(1)},${s.y1.toFixed(1)} → ${s.x2.toFixed(1)},${s.y2.toFixed(1)}`
+    :isPoly(s)?`${s.points.length} points  x ${polyBounds(s.points)[0].toFixed(0)}–${polyBounds(s.points)[2].toFixed(0)}  y ${polyBounds(s.points)[1].toFixed(0)}–${polyBounds(s.points)[3].toFixed(0)}`
     :`c ${s.cx.toFixed(1)},${s.cy.toFixed(1)}  r ${s.rx.toFixed(1)}×${s.ry.toFixed(1)}`+(s.type==="ellipse"?`  ${rot(s).toFixed(0)}°`:"");
   panelEl.innerHTML =
     `<div>${s.type.toUpperCase()} #${sel}</div>`+
@@ -372,6 +429,257 @@ function renderPanel(){
   sc.oninput=()=>{ shapes[sel].color=sc.value; draw(); };
   sc.onchange=()=>{ pushUndo(); };
   document.getElementById("delBtn").onclick=()=>{ pushUndo(); shapes.splice(sel,1); sel=-1; draw(); };
+}
+
+// ---- Segment Anything ----
+// A click or a dragged box asks mj serve (POST /calibrate/sam) for SAM's three answers; more clicks refine them. SAM looks
+// no wider than the screen, so zooming in gives finer edges. The answer then goes on the outline under it, added or cut
+// (reshape, below), or is kept on its own, as an outline or four corners. A shape kept over one of its own type replaces
+// it, and keeps its label, so a bad outline can be redone by clicking the door again. The picture goes to the server
+// once, on the first ask.
+let sam=null;       // {points:[{x,y,on}],box,answers,k,seq,busy,note}
+let samDrag=null;   // the press being made: {start,now,no}
+let samImage=null;  // the picture's id on the server
+// What a hall's shapes are called, left to right: @overlore's game reads these (docs/tools/calibrate.md).
+const HALL_LABELS={outline:["red","sun","tree","big","moon","trident","brown"], quad:["red","sun","tree","moon","trident","brown"]};
+const NEAR=24;      // how close to an outline, in picture pixels, a piece counts as being meant for it
+function nextLabel(type){
+  if(!imgName.startsWith("hall-")) return "";
+  const used=shapes.filter(s=>s.type===type).map(s=>s.label);
+  return HALL_LABELS[type].find(l=>!used.includes(l))||"";
+}
+function samRelease(){
+  const d=samDrag; samDrag=null;
+  if(!imgReady) return;
+  const inPicture=q=>q.x>=0&&q.y>=0&&q.x<ART_W&&q.y<ART_H;
+  const dragged=(Math.abs(d.now.x-d.start.x)+Math.abs(d.now.y-d.start.y))*view.scale>6;
+  if(!sam) sam={points:[],box:null,answers:[],k:0,seq:0,busy:false,note:""};
+  if(dragged&&!d.no){
+    const edge=(v,top)=>Math.max(0,Math.min(top,v));
+    sam.box=[edge(Math.min(d.start.x,d.now.x),ART_W),edge(Math.min(d.start.y,d.now.y),ART_H),
+             edge(Math.max(d.start.x,d.now.x),ART_W),edge(Math.max(d.start.y,d.now.y),ART_H)];
+  }else if(inPicture(d.start)) sam.points.push({x:d.start.x,y:d.start.y,on:!d.no});
+  samAsk();
+}
+async function samSendPicture(){
+  const picture=await (await fetch(img.src)).blob();
+  const r=await fetch("/calibrate/sam/image",{method:"POST",body:picture});
+  if(r.status===404) throw new Error("This mj serve is older than the SAM tool: restart it (just serve).");
+  const d=await r.json();
+  if(!r.ok) throw new Error(d.error||"the picture wasn't taken");
+  samImage=d.image;
+}
+function samView(){
+  const a=toImg(0,0), b=toImg(cv.clientWidth,cv.clientHeight);
+  return [Math.max(0,a.x),Math.max(0,a.y),Math.min(ART_W,b.x),Math.min(ART_H,b.y)];
+}
+async function samPost(s){
+  const r=await fetch("/calibrate/sam",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({image:samImage,points:s.points.map(p=>[p.x,p.y]),labels:s.points.map(p=>p.on?1:0),box:s.box,view:samView()})});
+  return {missing:r.status===410, ...(await r.json())};
+}
+async function samAsk(){
+  const s=sam; if(!s) return;
+  if(!s.box&&!s.points.some(p=>p.on)){ s.answers=[]; s.note=s.points.length?"That's only \"not this\": click what you want too.":""; draw(); return; }
+  const seq=++s.seq, current=()=>sam===s&&seq===s.seq;
+  s.busy=true; s.note=""; draw();
+  try{
+    if(!samImage) await samSendPicture();
+    let d=await samPost(s);
+    if(d.missing){ await samSendPicture(); d=await samPost(s); }
+    if(!current()) return; // a newer click is already asking
+    if(d.error) s.note=d.error;
+    else{ s.answers=d.answers; s.k=d.start; }
+  }catch(err){
+    if(current()) s.note=err.name==="TypeError"?"SAM needs mj serve (just serve).":err.message; // fetch's TypeError: nothing answered
+  }
+  if(current()){ s.busy=false; draw(); }
+}
+function samStep(n){ const c=sam.answers.length; if(c){ sam.k=(sam.k+n+c)%c; draw(); } }
+function samBack(){
+  if(sam.points.length) sam.points.pop(); else sam.box=null;
+  if(!sam.points.length&&!sam.box){ sam=null; draw(); } else samAsk();
+}
+function samKeep(type){
+  const a=sam&&sam.answers[sam.k]; if(!a) return;
+  const points=(type==="quad"?a.corners:a.outline).map(p=>p.slice());
+  const b=polyBounds(points), mid=[(b[0]+b[2])/2,(b[1]+b[3])/2];
+  const old=shapes.findIndex(s=>{ if(s.type!==type) return false;
+    const o=polyBounds(s.points); return insidePoly(s.points,...mid)&&insidePoly(points,(o[0]+o[2])/2,(o[1]+o[3])/2); });
+  pushUndo();
+  if(old>=0){ shapes[old]={...shapes[old],points}; sel=old; }
+  else{ shapes.push({type,points,label:nextLabel(type),color:currentColor}); sel=shapes.length-1; }
+  sam=null; draw();
+  if(!shapes[sel].label){ const li=document.getElementById("labIn"); if(li) li.focus(); }
+}
+// The outline an answer would go on: the one it shares the most with, or else the nearest
+function samTarget(a){
+  if(a.target!==undefined) return a.target;
+  let best=-1, most=0, nearest=NEAR;
+  shapes.forEach((s,i)=>{ if(s.type!=="outline") return;
+    const shared=a.outline.filter(p=>insidePoly(s.points,p[0],p[1])).length+s.points.filter(p=>insidePoly(a.outline,p[0],p[1])).length;
+    if(shared>most){ most=shared; best=i; }
+    else if(!most){ const d=Math.min(...a.outline.map(p=>polyEdge(s.points,p[0],p[1]))); if(d<nearest){ nearest=d; best=i; } }
+  });
+  return a.target=best;
+}
+function samEdit(cut){
+  const a=sam&&sam.answers[sam.k]; if(!a) return;
+  const t=samTarget(a);
+  if(t<0){ if(cut){ sam.note="There's no outline here to cut from."; draw(); } else samKeep("outline"); return; }
+  const name=shapes[t].label||"the outline", r=reshape(shapes[t].points,a.outline,cut);
+  if(r.why){ sam.note={apart:"That doesn't touch "+name+": nothing to join it to.",
+    inside:"That's wholly inside "+name+", and an outline can't have a hole.",all:"That would cut away all of "+name+"."}[r.why]; draw(); return; }
+  pushUndo(); shapes[t].points=r.points; sel=t; sam=null; draw();
+  if(r.split) flash("That cut "+name+" in two: kept the larger part");
+}
+function samKey(e){
+  const k=e.key.toLowerCase(), press=fn=>{ e.preventDefault(); fn(); return true; };
+  if(e.key==="Escape") return press(()=>{ sam=null; draw(); });
+  if(e.key==="Enter") return press(()=>samKeep("outline"));
+  if(k==="c"&&!e.ctrlKey&&!e.metaKey) return press(()=>samKeep("quad"));
+  if(k==="a"&&!e.ctrlKey&&!e.metaKey) return press(()=>samEdit(false));
+  if(k==="x"&&!e.ctrlKey&&!e.metaKey) return press(()=>samEdit(true));
+  if(e.key==="Tab") return press(()=>samStep(e.shiftKey?-1:1));
+  if(e.key>="1"&&e.key<="3"&&sam.answers[+e.key-1]) return press(()=>{ sam.k=+e.key-1; draw(); });
+  if(e.key==="Backspace"||e.key==="Delete"||((e.ctrlKey||e.metaKey)&&k==="z")) return press(samBack);
+  return false;
+}
+function drawSam(){
+  const dash=box=>{ ctx.save(); ctx.setLineDash([6,4]); ctx.strokeStyle="#00ffff"; ctx.lineWidth=1.4;
+    ctx.strokeRect(sX(box[0]),sY(box[1]),(box[2]-box[0])*view.scale,(box[3]-box[1])*view.scale); ctx.restore(); };
+  if(samDrag&&!samDrag.no) dash([samDrag.start.x,samDrag.start.y,samDrag.now.x,samDrag.now.y]);
+  if(!sam) return;
+  if(sam.box) dash(sam.box);
+  const a=sam.answers[sam.k], t=a?samTarget(a):-1;
+  if(t>=0){ polyPath(shapes[t].points); ctx.strokeStyle="#fff"; ctx.lineWidth=3; ctx.stroke(); }
+  if(a){ polyPath(a.outline); ctx.fillStyle="rgba(0,255,255,.16)"; ctx.fill(); ctx.strokeStyle="#00ffff"; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle="#00ff66"; a.corners.forEach(c=>{ ctx.beginPath();ctx.arc(sX(c[0]),sY(c[1]),3.5,0,Math.PI*2);ctx.fill(); }); }
+  sam.points.forEach(p=>{ ctx.beginPath();ctx.arc(sX(p.x),sY(p.y),5,0,Math.PI*2);
+    ctx.fillStyle=p.on?"#00ff66":"#ff2b2b"; ctx.fill(); ctx.strokeStyle="#000"; ctx.lineWidth=1.2; ctx.stroke(); });
+}
+function renderSamPanel(){
+  const a=sam.answers[sam.k], w=a?a.bounds[2]-a.bounds[0]:0, h=a?a.bounds[3]-a.bounds[1]:0, t=a?samTarget(a):-1;
+  panelEl.innerHTML=`<div>SAM${a?` answer ${sam.k+1} of ${sam.answers.length}`:""}</div>`+
+    (a?`<div class="row dim">${w}×${h} px at ${a.bounds[0]}, ${a.bounds[1]}  score ${a.score}</div>`+
+      `<div class="row dim">SAM saw ${a.crop[2]}×${a.crop[3]} px  ${t<0?"no outline here":"on "+((shapes[t].label||"an outline").replace(/</g,"&lt;"))}</div>`:"")+
+    (sam.busy?`<div class="row dim">asking… (the first ask starts SAM, which takes a few seconds)</div>`:"")+
+    (sam.note?`<div class="row">${sam.note.replace(/</g,"&lt;")}</div>`:"")+
+    `<div class="row"><button id="samPrev">◀</button><button id="samNext">▶</button>`+
+    `<button class="go" id="samAdd">Add</button><button class="go" id="samCut">Cut</button>`+
+    `<button class="go" id="samOutline">Outline</button><button class="go" id="samCorners">Corners</button>`+
+    `<button id="samCancel" style="margin-left:auto">Cancel</button></div>`;
+  document.getElementById("samPrev").onclick=()=>samStep(-1);
+  document.getElementById("samNext").onclick=()=>samStep(1);
+  document.getElementById("samAdd").onclick=()=>samEdit(false);
+  document.getElementById("samCut").onclick=()=>samEdit(true);
+  document.getElementById("samOutline").onclick=()=>samKeep("outline");
+  document.getElementById("samCorners").onclick=()=>samKeep("quad");
+  document.getElementById("samCancel").onclick=()=>{ sam=null; draw(); };
+}
+
+// ---- outlines as pixels ----
+// An outline is added to, or cut from, on pixels: both shapes filled in, one laid over the other, and the edge walked
+// again. Points the change didn't touch go back exactly where they were, so fixing one stretch leaves the rest alone,
+// however many times it's done.
+const EDGE_EPS=1;   // how far an outline may stray from the pixels' edge
+const RIBBON=3;     // half the width of the thin strips a change clears away beside itself (clearRibbons)
+const MARGIN=8;     // blank pixels round a mask, more than clearRibbons reaches
+const STEPS=[[1,0],[0,1],[-1,0],[0,-1]];  // east, south, west, north
+// A blank mask over both outlines, with blank margin on every side
+function maskOver(a,b){
+  const p=polyBounds(a), q=polyBounds(b), x=Math.floor(Math.min(p[0],q[0]))-MARGIN, y=Math.floor(Math.min(p[1],q[1]))-MARGIN;
+  const w=Math.ceil(Math.max(p[2],q[2]))+MARGIN-x, h=Math.ceil(Math.max(p[3],q[3]))+MARGIN-y;
+  return {x,y,w,h,px:new Uint8Array(w*h)};
+}
+// Set each pixel whose centre is inside
+function fillPoly(m,pts,on){
+  for(let row=0;row<m.h;row++){
+    const y=m.y+row+.5, xs=[];
+    for(let i=0,j=pts.length-1;i<pts.length;j=i++){ const [xi,yi]=pts[i],[xj,yj]=pts[j];
+      if((yi>y)!==(yj>y)) xs.push(xi+(y-yi)*(xj-xi)/(yj-yi)); }
+    xs.sort((a,b)=>a-b);
+    for(let k=0;k+1<xs.length;k+=2)
+      m.px.fill(on,row*m.w+Math.max(0,Math.ceil(xs[k]-m.x-.5)),row*m.w+Math.min(m.w,Math.ceil(xs[k+1]-m.x-.5)));
+  }
+}
+// Mark the pixels joined to start, side by side, that match it. The margin is blank, so a run can't wrap round a row's end.
+function flood(m,mark,start,id){
+  const {w,px}=m, todo=[start]; let n=0; mark[start]=id;
+  while(todo.length){ const i=todo.pop(); n++;
+    for(const j of [i-1,i+1,i-w,i+w]) if(j>=0&&j<px.length&&!mark[j]&&px[j]===px[start]){ mark[j]=id; todo.push(j); } }
+  return n;
+}
+// Down to the largest piece, with its holes filled: an outline can be neither two shapes nor a ring. Says how many it found.
+function solidify(m){
+  const mark=new Int32Array(m.px.length); let pieces=0, best=0, most=0;
+  m.px.forEach((v,i)=>{ if(v&&!mark[i]){ const n=flood(m,mark,i,++pieces); if(n>most){ most=n; best=pieces; } } });
+  m.px=m.px.map((v,i)=>mark[i]===best?1:0);
+  const outside=new Int32Array(m.px.length); flood(m,outside,0,1);
+  m.px=m.px.map((v,i)=>outside[i]?0:1);
+  return pieces;
+}
+// Grown r pixels each way, by a square, which leaves a square corner square
+function spread(px,w,r){
+  let a=px;
+  for(const step of [1,w]) for(let n=0;n<r;n++){ const b=a.slice();
+    a.forEach((v,i)=>{ if(v){ if(i>=step) b[i-step]=1; if(i+step<b.length) b[i+step]=1; } }); a=b; }
+  return a;
+}
+// A piece never quite meets the old edge. A cut along a door leaves a crust of the old shape outside it, which can close
+// the cut off into a hole, and an add leaves a slit. So strips under twice RIBBON wide go too, but only beside the piece.
+function clearRibbons(m,piece,cut){
+  const inverse=a=>a.map(v=>1-v), near=spread(piece,m.w,2*RIBBON+1), thin=cut?m.px:inverse(m.px);
+  const opened=spread(inverse(spread(inverse(thin),m.w,RIBBON)),m.w,RIBBON);
+  m.px=m.px.map((v,i)=>near[i]&&thin[i]&&!opened[i]?(cut?0:1):v);
+}
+// The mask's edge as a closed list of pixel corners, as sam_helper.py's trace walks it
+function traceMask(m){
+  const {w,px}=m, on=(x,y)=>px[y*w+x]===1, first=px.indexOf(1), x0=first%w, y0=Math.floor(first/w), path=[];
+  let x=x0, y=y0, heading=0;
+  do{ path.push([x+m.x,y+m.y]); x+=STEPS[heading][0]; y+=STEPS[heading][1];
+    const l=[[x,y-1],[x,y],[x-1,y],[x-1,y-1]][heading], r=[[x,y],[x-1,y],[x-1,y-1],[x,y-1]][heading];
+    if(on(l[0],l[1])) heading=(heading+3)%4; else if(!on(r[0],r[1])) heading=(heading+1)%4;
+  }while(x!==x0||y!==y0||heading!==0);
+  return path;
+}
+// Douglas-Peucker on an open run of corners
+function simplify(path,eps){
+  const keep=new Set([0,path.length-1]), runs=[[0,path.length-1]];
+  while(runs.length){ const [a,b]=runs.pop(); if(b-a<2) continue;
+    const dx=path[b][0]-path[a][0], dy=path[b][1]-path[a][1], n=Math.hypot(dx,dy)||1; let far=-1, most=eps;
+    for(let i=a+1;i<b;i++){ const d=Math.abs(dx*(path[i][1]-path[a][1])-dy*(path[i][0]-path[a][0]))/n; if(d>most){ most=d; far=i; } }
+    if(far>=0){ keep.add(far); runs.push([a,far],[far,b]); } }
+  return [...keep].sort((p,q)=>p-q).map(i=>path[i]);
+}
+// The walked edge as an outline, stopping at each old point that moved() doesn't rule out
+function redrawn(path,old,moved){
+  const pts=path.map(p=>p.slice()), stops=new Set();
+  old.forEach(v=>{ if(moved(v)) return; let at=-1, near=1.5;
+    path.forEach((p,i)=>{ const d=Math.hypot(p[0]-v[0],p[1]-v[1]); if(d<near){ near=d; at=i; } });
+    if(at>=0){ pts[at]=v.slice(); stops.add(at); } });
+  let at=[...stops].sort((a,b)=>a-b);
+  if(at.length<2){ let far=0, most=-1;
+    path.forEach((p,i)=>{ const d=Math.hypot(p[0]-path[0][0],p[1]-path[0][1]); if(d>most){ most=d; far=i; } });
+    at=[0,far]; }
+  return at.flatMap((a,k)=>{ const b=at[(k+1)%at.length];
+    return simplify(b>a?pts.slice(a,b+1):pts.slice(a).concat(pts.slice(0,b+1)),EDGE_EPS).slice(0,-1); });
+}
+// An outline with a piece added or cut: {points, split}, or {why} when there's nothing to do
+function reshape(old,piece,cut){
+  const m=maskOver(old,piece); fillPoly(m,old,1); solidify(m);
+  const before=m.px, area={...m,px:new Uint8Array(m.px.length)}; fillPoly(area,piece,1);
+  m.px=before.map((v,i)=>area.px[i]?(cut?0:1):v);
+  clearRibbons(m,area.px,cut);
+  const pieces=solidify(m);
+  if(cut&&m.px.indexOf(1)<0) return {why:"all"};
+  if(!cut&&pieces>1) return {why:"apart"};
+  if(m.px.every((v,i)=>v===before[i])) return {why:cut?"inside":"apart"};
+  const moved=v=>{ const cx=Math.floor(v[0])-m.x, cy=Math.floor(v[1])-m.y;
+    for(let y=Math.max(0,cy-3);y<Math.min(m.h,cy+3);y++) for(let x=Math.max(0,cx-3);x<Math.min(m.w,cx+3);x++)
+      if(m.px[y*m.w+x]!==before[y*m.w+x]) return true;
+    return false; };
+  return {points:redrawn(traceMask(m),old,moved),split:pieces>1};
 }
 
 document.getElementById("btnFit").onclick=()=>{ fit(); draw(); };
@@ -399,6 +707,7 @@ function serialize(s){
   const r=v=>+(+v).toFixed(1), o={type:s.type,label:s.label||"",color:s.color};
   if(s.type==="point"){o.x=r(s.x);o.y=r(s.y);}
   else if(s.type==="line"){o.x1=r(s.x1);o.y1=r(s.y1);o.x2=r(s.x2);o.y2=r(s.y2);}
+  else if(isPoly(s)){o.points=s.points.map(([x,y])=>[r(x),r(y)]);}
   else{o.cx=r(s.cx);o.cy=r(s.cy);o.rx=r(s.rx);o.ry=r(s.ry); if(s.type==="ellipse"&&Math.abs(normRot(rot(s)))>=.05) o.rotation=r(normRot(rot(s)));}
   return o;
 }
@@ -425,9 +734,18 @@ document.getElementById("btnCopy").onclick=async()=>{
 document.getElementById("btnLoad").onclick=()=>fileJson.click();
 fileJson.onchange=()=>{ const f=fileJson.files[0]; if(f) loadJsonFile(f); fileJson.value=""; };
 function loadJsonFile(f){ const rd=new FileReader(); rd.onload=()=>{ try{ applyJson(JSON.parse(rd.result), f.name); }catch(err){ flash("Bad JSON: "+err.message); } }; rd.readAsText(f); }
+// A doors.json from @overlore's SAM run: {image,width,height,doors:{name:[[x,y],...]}}, opened as outlines on the picture
+// already loaded, to fix rather than mark from nothing.
+function doorsToShapes(data){
+  if(!imgReady){ flash("Load its picture first"); return null; }
+  if(data.width!==ART_W||data.height!==ART_H){ flash("Those outlines are for a "+data.width+"×"+data.height+" picture"); return null; }
+  if(data.image&&data.image!==imgName&&!confirm("These outlines are for "+data.image+", and this is "+imgName+". Open them anyway?")) return null;
+  return {shapes:Object.entries(data.doors).map(([label,points])=>({type:"outline",label,points}))};
+}
 function applyJson(data,fname){
+  if(data&&data.doors&&!data.shapes){ data=doorsToShapes(data); if(!data) return; }
   if(!data||!Array.isArray(data.shapes)) return flash("Not a calibration file");
-  const load=()=>{ pushUndo(); shapes=data.shapes.map(s=>({label:"",color:currentColor,...s})); sel=-1;
+  const load=()=>{ pushUndo(); sam=null; shapes=data.shapes.map(s=>({label:"",color:currentColor,...s})); sel=-1;
     if(data.image&&data.image.width&&!data.image.data){ ART_W=data.image.width; ART_H=data.image.height; if(!imgReady){fit();} }
     draw(); flash("Loaded "+(fname||"json")+" ("+shapes.length+" shapes)"); };
   if(data.image&&data.image.data) setImage(data.image.data, data.image.name||fname, load); else load();

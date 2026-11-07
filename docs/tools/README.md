@@ -15,6 +15,7 @@ Most image commands need `RUNWARE_API_KEY` (read from the environment — source
 | `mj base <dir> [strength]` | Template → plain structural master (Stage 1) | yes | [base & decorate](base-and-decorate.md) |
 | `mj decorate <dir>` | Redraw a master decorated in a style/theme (Stage 2) | yes | [base & decorate](base-and-decorate.md) |
 | `/cyclochroma` (web) | Key a colour out, light the transparency with music-reactive colour | no | [cyclochroma](cyclochroma.md) |
+| `/calibrate.html` (web) | Mark a picture up in its own pixels; Segment Anything outlines a shape from a click | no | [calibrate](calibrate.md) |
 | `mj sfx <in.wav\|mp3> […]` | Reference sound → procedural Web Audio recipe (JSON) | no | [sfx](sfx.md) |
 | `mj listen <take>… [--ref REF]` | Check voice takes: glitches, words against the script, accent, processing | Gemini (not `--free`) | [listen](listen.md) |
 | `mj dungeon add\|list\|heard\|remove` | mj's own DataDungeon store: what waits for Thomas to hear, with mj's checks; `/dungeon` in `mj serve` | Gemini on `add` (not `--free`) | [dungeon](dungeon.md) |

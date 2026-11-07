@@ -27,6 +27,7 @@ Full CLI reference index: **[tools/README.md](tools/README.md)**. Running the lo
 | [`mj strip`](tools/strip.md) | Row of images → one long seamless panorama |
 | [`mj base` / `mj decorate`](tools/base-and-decorate.md) | Template → structural master → styled variation |
 | [`mj sfx`](tools/sfx.md) | Reference sound → procedural Web Audio recipe |
+| [Calibrate](tools/calibrate.md) | Mark a picture up in its own pixels; Segment Anything outlines a shape from a click |
 | [Diorama / backdrop / webp](tools/diorama.md) | Compose props+backdrops into parallax scenes and play them |
 | [`mj bus`](tools/bus.md) | Serve the image tools on the Arcana bus |
 

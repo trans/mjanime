@@ -103,6 +103,34 @@ module MJ
         end
       end
 
+      # -- Calibrate: Segment Anything on the page's picture (docs/tools/calibrate.md) --
+      post "/calibrate/sam/image" do |env|
+        env.response.content_type = "application/json"
+        begin
+          {image: Sam.store_image(env.request.body || IO::Memory.new)}.to_json
+        rescue ex : Sam::BadRequest
+          env.response.status_code = 400
+          {error: ex.message}.to_json
+        end
+      end
+
+      post "/calibrate/sam" do |env|
+        env.response.content_type = "application/json"
+        begin
+          Sam.answer(env.request.body.try(&.gets_to_end) || "")
+        rescue ex : Sam::BadRequest
+          env.response.status_code = 400
+          {error: ex.message}.to_json
+        rescue ex : Sam::NoImage
+          env.response.status_code = 410 # the server restarted: the page sends the picture again (not 404, whose body Kemal replaces)
+          {error: ex.message}.to_json
+        rescue ex : Sam::Failure
+          STDERR.puts "[calibrate/sam] #{ex.message}"
+          env.response.status_code = 502
+          {error: ex.message}.to_json
+        end
+      end
+
       # -- New cut form --
       get "/cuts/new" do |env|
         render "src/views/cuts/new.ecr", "src/views/layout.ecr"
